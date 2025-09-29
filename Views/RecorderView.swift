@@ -52,7 +52,9 @@ struct RecorderView: View {
         .sheet(isPresented: $showConsent) {
             ConsentSheet(isPresented: $showConsent, confirmed: $consentConfirmed) { log in
                 ConsentManager.shared.playStartBeep()
-                viewModel.start(consent: log)
+                Task {
+                    await viewModel.start(consent: log)
+                }
             }
         }
     }
@@ -61,3 +63,4 @@ struct RecorderView: View {
 #Preview {
     RecorderView(note: Note(title: "Demo"))
 }
+

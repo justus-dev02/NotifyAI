@@ -11,12 +11,18 @@ import UIKit
 import UserNotifications
 
 actor PipelineManager {
-    static let shared = PipelineManager()
-    private let storage = ServiceLocator.shared.storage
-    private let diarizer = ServiceLocator.shared.diarization
-    private let llm = ServiceLocator.shared.llm
-    private let highlight = ServiceLocator.shared.highlight
+    private let storage: StorageService
+    private let diarizer: DiarizationService
+    private let llm: LLMService
+    private let highlight: HighlightService
     private let search = SemanticSearchService.shared
+
+    init(storage: StorageService, diarizer: DiarizationService, llm: LLMService, highlight: HighlightService) {
+        self.storage = storage
+        self.diarizer = diarizer
+        self.llm = llm
+        self.highlight = highlight
+    }
 
     func registerBGTask() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.your.app.pipeline", using: nil) { task in
@@ -103,11 +109,13 @@ actor PipelineManager {
 
     private func runPending(task: BGProcessingTask) async {
         defer { task.setTaskCompleted(success: true) }
+        var cancelled = false
+        task.expirationHandler = { cancelled = true }
         // Lade offene Notes mit stage != .done und verarbeite
         let pending = await storage.pendingNotes()
         for p in pending {
             await run(noteId: p.id, audio: p.audioURL!)
-            if task.isCancelled { break }
+            if cancelled { break }
         }
     }
 

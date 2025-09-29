@@ -36,7 +36,7 @@ final class DashboardViewModel: ObservableObject {
         applyQuery()
     }
 
-    func search() {
+    func performSearch() {
         applyQuery()
     }
 
@@ -59,3 +59,4 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 }
+

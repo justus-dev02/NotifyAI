@@ -23,17 +23,15 @@ final class RecorderViewModel: ObservableObject {
         audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
     }
 
-    func start(consent: ConsentLog?) {
+    func start(consent: ConsentLog?) async {
         note.consent = consent
         do {
             try sl.recorder.start(to: audioURL)
             isRecording = true
             note.pipeline.stage = .transcribing
-            Task { try? await sl.transcription.startStreaming { [weak self] text, _, _ in
-                await MainActor.run {
-                    self?.liveText = text
-                }
-            }}
+            try await sl.transcription.startStreaming { [weak self] text, _, _ in
+                self?.liveText = text
+            }
         } catch { print(error) }
     }
 

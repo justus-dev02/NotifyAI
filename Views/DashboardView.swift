@@ -16,7 +16,7 @@ struct DashboardView: View {
                 HStack {
                     TextField("Suchen (semantisch + Schlagworte)…", text: $vm.query)
                         .textFieldStyle(.roundedBorder)
-                        .onSubmit { vm.search() }
+                        .onSubmit { vm.performSearch() }
                     Button { vm.newNote() } label: { Image(systemName: "plus.circle.fill") }
                 }
                 ScrollView {

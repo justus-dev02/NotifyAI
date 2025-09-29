@@ -20,7 +20,9 @@ final class ServiceLocator: ObservableObject {
     let highlight = HighlightService()
     let storage = StorageService()
     let redaction = RedactionService()
-    let pipeline = PipelineManager.shared
+    let pipeline: PipelineManager
 
-    private init() {}
+    private init() {
+        self.pipeline = PipelineManager(storage: storage, diarizer: diarization, llm: llm, highlight: highlight)
+    }
 }
