@@ -7,6 +7,7 @@
 
 import PDFKit
 import WebKit
+import UIKit
 
 final class ExportService {
     private let redact = RedactionService()

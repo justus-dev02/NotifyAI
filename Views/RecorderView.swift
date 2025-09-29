@@ -8,30 +8,56 @@
 import SwiftUI
 
 struct RecorderView: View {
-    @StateObject private var vm = RecorderViewModel()
+    @StateObject private var viewModel: RecorderViewModel
+    @State private var showConsent = false
+    @State private var consentConfirmed = false
     @State private var contextText = ""
-    @Binding var note: Note
+
+    init(note: Note) {
+        _viewModel = StateObject(wrappedValue: RecorderViewModel(note: note))
+    }
 
     var body: some View {
         VStack(spacing: 16) {
             ScrollView {
-                Text(vm.currentText.isEmpty ? "Sprich – ich schreibe mit…" : vm.currentText)
-                    .padding()
+                Text(viewModel.liveText.isEmpty ? "Sprich – ich schreibe mit…" : viewModel.liveText)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
                 TextField("Kontext hinzufügen…", text: $contextText, axis: .vertical)
                     .lineLimit(1...4)
-                    .onSubmit { ServiceLocator.shared.pipelineAddContext(contextText, for: note.id); contextText = "" }
+                    .textFieldStyle(.roundedBorder)
+                    .disabled(!viewModel.isRecording)
             }
-            Button(vm.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
-                if vm.isRecording {
-                    vm.stopAndSummarize(into: &note)
-                } else {
-                    vm.start()
+
+            HStack(spacing: 16) {
+                if viewModel.isRecording {
+                    Button(viewModel.isPaused ? "Fortsetzen" : "Pause") {
+                        viewModel.isPaused ? viewModel.resume() : viewModel.pause()
+                    }
+                    .buttonStyle(.bordered)
                 }
+
+                Button(viewModel.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
+                    if viewModel.isRecording {
+                        viewModel.stop()
+                    } else {
+                        showConsent = true
+                    }
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
         .navigationTitle("Aufnahme")
         .padding()
+        .sheet(isPresented: $showConsent) {
+            ConsentSheet(isPresented: $showConsent, confirmed: $consentConfirmed) { log in
+                ConsentManager.shared.playStartBeep()
+                viewModel.start(consent: log)
+            }
+        }
     }
+}
+
+#Preview {
+    RecorderView(note: Note(title: "Demo"))
 }
