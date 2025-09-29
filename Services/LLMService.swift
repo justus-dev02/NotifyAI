@@ -40,7 +40,7 @@ final class LLMService {
         return summary
     }
 
-    private static func extractJSONAndMarkdown(from s: String) throws -> (String, String) {
+    static func extractJSONAndMarkdown(from s: String) throws -> (String, String) {
         func between(_ text: String, _ open: String, _ close: String) -> String? {
             guard let r1 = text.range(of: open),
                   let r2 = text.range(of: close, range: r1.upperBound..<text.endIndex) else { return nil }
@@ -53,18 +53,18 @@ final class LLMService {
         return (json.trimmingCharacters(in: .whitespacesAndNewlines),
                 md.trimmingCharacters(in: .whitespacesAndNewlines))
     }
-    
-    extension LLMService {
-        func generateRaw(prompt: String, maxTokens: Int) async throws -> String {
-            try await MLCBridge.shared.generate(modelId: modelId, prompt: prompt, maxTokens: maxTokens)
-        }
-        static func extractJSON(from s: String) throws -> String {
-            // Falls der Bot reinen JSON liefert:
-            if let r = s.range(of: "{"), let e = s.range(of: "}", options: .backwards) {
-                return String(s[r.lowerBound...e.upperBound])
-            }
-            throw NSError(domain: "LLM", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON not found"])
-        }
-    }
 }
 
+extension LLMService {
+    func generateRaw(prompt: String, maxTokens: Int) async throws -> String {
+        try await MLCBridge.shared.generate(modelId: modelId, prompt: prompt, maxTokens: maxTokens)
+    }
+
+    static func extractJSON(from s: String) throws -> String {
+        // Falls der Bot reinen JSON liefert:
+        if let r = s.range(of: "{"), let e = s.range(of: "}", options: .backwards) {
+            return String(s[r.lowerBound...e.upperBound])
+        }
+        throw NSError(domain: "LLM", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON not found"])
+    }
+}

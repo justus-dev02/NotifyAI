@@ -20,9 +20,8 @@ final class RecorderViewModel: ObservableObject {
         audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
     }
 
-    func startWithConsent(_ consent: ConsentLog?) {
+    func start(consent: ConsentLog?) {
         note.consent = consent
-        ConsentManager.shared.playStartBeep()
         do {
             try sl.recorder.start(to: audioURL)
             isRecording = true

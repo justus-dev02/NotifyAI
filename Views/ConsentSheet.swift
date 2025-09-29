@@ -37,7 +37,6 @@ struct ConsentSheet: View {
                             location: location.isEmpty ? nil : location,
                             confirmed: confirmed
                         )
-                        ConsentManager.shared.playStartBeep()
                         onConfirm(log)
                         isPresented = false
                     }.disabled(!confirmed)

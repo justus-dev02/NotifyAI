@@ -7,7 +7,6 @@
 
 import Foundation
 import NaturalLanguage
-import Accelerate
 
 struct Vector {
     var values: [Float]
@@ -26,13 +25,13 @@ final class EmbeddingsService {
         var count: Float = 0
 
         for tok in tokens {
-            if let v = embedding.vector(for: tok) {
-                v.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
-                    let buf = ptr.bindMemory(to: Float.self)
-                    vDSP_vadd(sum, 1, buf.baseAddress!, 1, &sum, 1, v.count / MemoryLayout<Float>.size)
-                }
-                count += 1
+            guard let vector = embedding.vector(for: tok) else { continue }
+            // `vector(for:)` returns [Double]; convert to Float for accumulation.
+            let floatVector = vector.map { Float($0) }
+            for index in 0..<min(sum.count, floatVector.count) {
+                sum[index] += floatVector[index]
             }
+            count += 1
         }
         guard count > 0 else { return nil }
         var mean = sum.map { $0 / count }

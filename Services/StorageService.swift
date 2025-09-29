@@ -8,7 +8,7 @@
 import Foundation
 
 actor StorageService {
-    private let fm = FileManager.default
+    private nonisolated let fm = FileManager.default
     private var notes: [UUID: Note] = [:]
 
     func loadAll() async -> [Note] { Array(notes.values).sorted{ $0.createdAt > $1.createdAt } }
@@ -20,6 +20,7 @@ actor StorageService {
     func updateSummaries(noteId: UUID, summary: Summary, roleSummaries: [String: Summary], mindmap: Mindmap) async {
         guard var n = notes[noteId] else { return }
         n.summary = summary; n.roleSummaries = roleSummaries
+        n.mindmap = mindmap
 
         notes[noteId] = n; persist(n)
     }
@@ -29,7 +30,7 @@ actor StorageService {
     }
     func pendingNotes() async -> [Note] { notes.values.filter{ $0.pipeline.stage != .done && $0.audioURL != nil } }
 
-    func temporaryAudioURL(for id: UUID) -> URL {
+    nonisolated func temporaryAudioURL(for id: UUID) -> URL {
         fm.temporaryDirectory.appendingPathComponent("rec_\(id).caf")
     }
 
