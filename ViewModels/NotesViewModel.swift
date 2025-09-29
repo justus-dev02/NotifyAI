@@ -27,9 +27,11 @@ final class NotesViewModel: ObservableObject {
     }
 
     func createNew() {
-        var n = Note(title: "Neue Notiz")
-        notes.insert(n, at: 0)
+        let note = Note(title: "Neue Notiz")
+        notes.insert(note, at: 0)
+        results = notes
         search.buildIndex(notes: notes)
+        Task { await storage.save(note) }
     }
 
     func performSearch() {

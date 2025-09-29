@@ -8,11 +8,11 @@
 import Foundation
 import BackgroundTasks
 import UIKit
+import UserNotifications
 
 actor PipelineManager {
     static let shared = PipelineManager()
     private let storage = ServiceLocator.shared.storage
-    private let transcriber = ServiceLocator.shared.transcription
     private let diarizer = ServiceLocator.shared.diarization
     private let llm = ServiceLocator.shared.llm
     private let highlight = ServiceLocator.shared.highlight
@@ -32,7 +32,7 @@ actor PipelineManager {
     }
 
     func enqueue(noteId: UUID, audio: URL) async {
-        await run(noteId: noteId, audio: audio, isBackground: false)
+        await run(noteId: noteId, audio: audio)
         scheduleBG()
     }
 
@@ -48,7 +48,7 @@ actor PipelineManager {
         return [audio]
     }
 
-    private func run(noteId: UUID, audio: URL, isBackground: Bool) async {
+    private func run(noteId: UUID, audio: URL) async {
         do {
             await update(noteId, stage: .chunking, progress: 0.05, eta: nil, msg: "Audio wird in Abschnitte geteilt…")
             let parts = await chunks(for: audio)
@@ -106,7 +106,7 @@ actor PipelineManager {
         // Lade offene Notes mit stage != .done und verarbeite
         let pending = await storage.pendingNotes()
         for p in pending {
-            await run(noteId: p.id, audio: p.audioURL!, isBackground: true)
+            await run(noteId: p.id, audio: p.audioURL!)
             if task.isCancelled { break }
         }
     }
@@ -132,4 +132,8 @@ actor PipelineManager {
             return s
         }
     }
+}
+
+extension Notification.Name {
+    static let pipelineUpdated = Notification.Name("pipelineUpdated")
 }

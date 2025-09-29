@@ -19,14 +19,24 @@ struct Note: Identifiable, Codable {
     var segments: [TranscriptSegment]
     var summary: Summary?
     var roleSummaries: [String: Summary]
+    var mindmap: Mindmap?
     var consent: ConsentLog?
     var pipeline: PipelineState
 
-    init(title: String) {
-        id = UUID(); self.title = title
-        createdAt = Date(); location = nil; duration = nil; audioURL = nil
-        tags = []; participants = []; segments = []
-        summary = nil; roleSummaries = [:]
-        consent = nil; pipeline = .init()
+    init(id: UUID = UUID(), title: String, createdAt: Date = Date()) {
+        self.id = id
+        self.title = title
+        self.createdAt = createdAt
+        self.location = nil
+        self.duration = nil
+        self.audioURL = nil
+        self.tags = []
+        self.participants = []
+        self.segments = []
+        self.summary = nil
+        self.roleSummaries = [:]
+        self.mindmap = nil
+        self.consent = nil
+        self.pipeline = .init()
     }
 }

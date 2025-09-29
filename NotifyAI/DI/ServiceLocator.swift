@@ -7,6 +7,7 @@
 
 // App/DI/ServiceLocator.swift
 import Foundation
+import Combine
 
 final class ServiceLocator: ObservableObject {
     static let shared = ServiceLocator()
@@ -19,6 +20,7 @@ final class ServiceLocator: ObservableObject {
     let highlight = HighlightService()
     let storage = StorageService()
     let redaction = RedactionService()
+    let pipeline = PipelineManager.shared
 
     private init() {}
 }
