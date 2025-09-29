@@ -144,4 +144,5 @@ actor PipelineManager {
 
 extension Notification.Name {
     static let pipelineUpdated = Notification.Name("pipelineUpdated")
+    static let notesChanged = Notification.Name("notesChanged")
 }

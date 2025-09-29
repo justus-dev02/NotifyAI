@@ -15,9 +15,19 @@ final class NotesViewModel: ObservableObject {
 
     private let search = SemanticSearchService.shared
     private let storage = ServiceLocator.shared.storage
+    private var notesObserver: NSObjectProtocol?
 
     init() {
         Task { await load() }
+        notesObserver = NotificationCenter.default.addObserver(forName: .notesChanged, object: nil, queue: .main) { [weak self] _ in
+            Task { await self?.load() }
+        }
+    }
+
+    deinit {
+        if let notesObserver {
+            NotificationCenter.default.removeObserver(notesObserver)
+        }
     }
 
     func load() async {
@@ -26,12 +36,14 @@ final class NotesViewModel: ObservableObject {
         search.buildIndex(notes: notes)
     }
 
-    func createNew() {
-        let note = Note(title: "Neue Notiz")
+    @discardableResult
+    func createNew(title: String = "Neue Notiz") -> Note {
+        let note = Note(title: title)
         notes.insert(note, at: 0)
         results = notes
         search.buildIndex(notes: notes)
         Task { await storage.save(note) }
+        return note
     }
 
     func performSearch() {

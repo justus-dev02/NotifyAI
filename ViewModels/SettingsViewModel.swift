@@ -16,4 +16,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var modelId: String = "phi-3-mini-instruct-q4" {
         didSet { ServiceLocator.shared.llm.modelId = modelId }
     }
+    @Published var transcriptionBackend: TranscriptionService.Backend = ServiceLocator.shared.transcription.backend {
+        didSet { ServiceLocator.shared.transcription.backend = transcriptionBackend }
+    }
 }

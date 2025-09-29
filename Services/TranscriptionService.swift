@@ -8,7 +8,20 @@
 import Foundation
 
 final class TranscriptionService {
-    enum Backend { case whisperKit, appleSpeech }
+    enum Backend: String, CaseIterable, Identifiable {
+        case whisperKit
+        case appleSpeech
+
+        var id: String { rawValue }
+
+        var displayName: String {
+            switch self {
+            case .appleSpeech: return "Apple Speech"
+            case .whisperKit: return "WhisperKit"
+            }
+        }
+    }
+
     var backend: Backend = .appleSpeech  // <- standardmäßig Apple
 
     typealias TranscriptHandler = (_ text: String, _ start: TimeInterval?, _ end: TimeInterval?) -> Void
@@ -19,15 +32,14 @@ final class TranscriptionService {
             try await AppleSpeechBackend.shared.requestAuthorization()
             try AppleSpeechBackend.shared.start(handler: handler)
         case .whisperKit:
-            // ... wie zuvor (weggelassen)
-            throw NSError(domain: "NotImplemented", code: -1)
+            try await WhisperBackend.shared.start(handler: handler)
         }
     }
 
     func stop() {
         switch backend {
         case .appleSpeech: AppleSpeechBackend.shared.stop()
-        case .whisperKit:  /* WhisperBackend.shared.stop() */ break
+        case .whisperKit:  WhisperBackend.shared.stop()
         }
     }
 }
