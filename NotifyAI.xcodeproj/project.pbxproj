@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		272AB6952E8B19670083CE7B /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 272AB6942E8B195F0083CE7B /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		275D606C2E6F188300EB7BA5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		272AB6942E8B195F0083CE7B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		275D60592E6F188200EB7BA5 /* NotifyAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotifyAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		275D606B2E6F188300EB7BA5 /* NotifyAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotifyAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		275D60752E6F188300EB7BA5 /* NotifyAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotifyAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +100,7 @@
 		275D60502E6F188200EB7BA5 = {
 			isa = PBXGroup;
 			children = (
+				272AB6942E8B195F0083CE7B /* .gitignore */,
 				27022B122E827C000077F224 /* ViewModels */,
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
 				275D606E2E6F188300EB7BA5 /* NotifyAITests */,
@@ -240,6 +246,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				272AB6952E8B19670083CE7B /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
