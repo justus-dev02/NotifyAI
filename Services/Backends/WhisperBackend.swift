@@ -2,35 +2,55 @@
 //  WhisperBackend.swift
 //  NotifyAI
 //
-//  Created by Justus on 23.09.25.
+//  Created by OpenAI Assistant on 05.10.23.
 //
-/*
+
 import Foundation
 import AVFoundation
-import WhisperKit   // SPM
+
+#if canImport(WhisperKit)
+import WhisperKit
+#endif
 
 final class WhisperBackend {
     static let shared = WhisperBackend()
-    private var pipeline: WhisperKit?
-    private var task: Task<Void, Never>?
 
-    func start(format: AVAudioFormat, handler: @escaping TranscriptionService.TranscriptHandler) async throws {
-        // Model-Ladung: z.B. "base" DE/EN – in der App mitliefern oder per Onboarding laden
+    private init() {}
+
+    #if canImport(WhisperKit)
+    private var pipeline: WhisperKit?
+    private var streamTask: Task<Void, Never>?
+    #endif
+
+    func start(handler: @escaping TranscriptionService.TranscriptHandler) async throws {
+        #if canImport(WhisperKit)
         if pipeline == nil {
-            pipeline = try await WhisperKit(model: .base) // oder .small / quantisierte Variante
+            pipeline = try await WhisperKit(model: .small)
         }
-        // Microphone streamen
-        task = Task {
-            for await result in pipeline!.streamMicrophone() {
-                // result.text, result.t0/result.t1 enthalten Text und Wort-Timestamps (abhängig vom Modell/Config)
+
+        guard let pipeline else { return }
+
+        try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.allowBluetooth, .allowBluetoothA2DP, .duckOthers])
+        try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+
+        streamTask?.cancel()
+        streamTask = Task { [weak pipeline] in
+            guard let pipeline else { return }
+            for await result in pipeline.streamMicrophone() {
                 handler(result.text, result.t0, result.t1)
             }
         }
+        #else
+        throw NSError(domain: "WhisperBackend", code: -1, userInfo: [NSLocalizedDescriptionKey: "WhisperKit framework not available"])
+        #endif
     }
 
     func stop() {
-        task?.cancel()
+        #if canImport(WhisperKit)
+        streamTask?.cancel()
+        streamTask = nil
         pipeline?.stopStreamingMicrophone()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        #endif
     }
 }
-*/

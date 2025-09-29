@@ -15,6 +15,7 @@ final class DashboardViewModel: ObservableObject {
     private let storage = ServiceLocator.shared.storage
     private let search = SemanticSearchService.shared
     private var pipelineObserver: NSObjectProtocol?
+    private var notesObserver: NSObjectProtocol?
     private var allNotes: [Note] = []
 
     init() {
@@ -22,11 +23,17 @@ final class DashboardViewModel: ObservableObject {
         pipelineObserver = NotificationCenter.default.addObserver(forName: .pipelineUpdated, object: nil, queue: .main) { [weak self] _ in
             Task { await self?.refresh() }
         }
+        notesObserver = NotificationCenter.default.addObserver(forName: .notesChanged, object: nil, queue: .main) { [weak self] _ in
+            Task { await self?.refresh() }
+        }
     }
 
     deinit {
         if let pipelineObserver {
             NotificationCenter.default.removeObserver(pipelineObserver)
+        }
+        if let notesObserver {
+            NotificationCenter.default.removeObserver(notesObserver)
         }
     }
 
