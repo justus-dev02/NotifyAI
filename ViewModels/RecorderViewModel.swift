@@ -5,6 +5,9 @@
 //  Created by Justus on 23.09.25.
 //
 
+import Combine
+import Foundation
+
 @MainActor
 final class RecorderViewModel: ObservableObject {
     @Published var isRecording = false
