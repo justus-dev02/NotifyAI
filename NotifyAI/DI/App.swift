@@ -1,7 +1,6 @@
 // App/App.swift
 
-import SwiftSignalIO
-import ServiceLocator  // Add this line to import the module
+import ServiceLocator
 
 @_autoreleased
 struct App: AppProtocol {
@@ -14,3 +13,4 @@ struct App: AppProtocol {
     // Use services from the target that includes ServiceLocator.swift
   }
 }
+

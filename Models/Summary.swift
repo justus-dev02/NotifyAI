@@ -13,6 +13,7 @@ struct Summary: Codable {
     var actionItems: [ActionItem]
     var risks: [String]
     var markdown: String
+    var citations: [UUID]
 }
 
 struct ActionItem: Codable {

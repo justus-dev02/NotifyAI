@@ -5,37 +5,46 @@
 //  Created by Justus on 23.09.25.
 //
 
-import SwiftUI
+@MainActor
+final class RecorderViewModel: ObservableObject {
+    @Published var isRecording = false
+    @Published var isPaused = false
+    @Published var liveText = ""
+    @Published var note: Note
 
-struct RecorderView: View {
-    @StateObject private var vm = RecorderViewModel()
-    @Binding var note: Note
-    @State private var showConsent = true
-    @State private var consentConfirmed = false
+    private let sl = ServiceLocator.shared
+    private var audioURL: URL
 
-    var body: some View {
-        VStack(spacing: 16) {
-            ScrollView {
-                Text(vm.currentText.isEmpty ? "Sprich – ich schreibe mit…" : vm.currentText)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            Button(vm.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
-                if vm.isRecording {
-                    vm.stopAndSummarize(into: &note)
-                } else {
-                    showConsent = true
+    init(note: Note) {
+        self.note = note
+        audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
+    }
+
+    func startWithConsent(_ consent: ConsentLog?) {
+        note.consent = consent
+        ConsentManager.shared.playStartBeep()
+        do {
+            try sl.recorder.start(to: audioURL)
+            isRecording = true
+            note.pipeline.stage = .transcribing
+            Task { try? await sl.transcription.startStreaming { [weak self] text, _, _ in
+                await MainActor.run {
+                    self?.liveText = text
                 }
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .navigationTitle("Aufnahme")
-        .padding()
-        .sheet(isPresented: $showConsent) {
-            ConsentSheet(isPresented: $showConsent, confirmed: $consentConfirmed) { log in
-                note.consent = log
-                vm.start()
-            }
-        }
+            }}
+        } catch { print(error) }
+    }
+
+    func pause() { sl.recorder.pause(); isPaused = true }
+    func resume() { sl.recorder.resume(); isPaused = false }
+
+    func stop() {
+        let dur = sl.recorder.stop()
+        isRecording = false
+        note.duration = dur
+        note.audioURL = audioURL
+        sl.transcription.stop()
+
+        Task { await sl.pipeline.enqueue(noteId: note.id, audio: audioURL) }
     }
 }

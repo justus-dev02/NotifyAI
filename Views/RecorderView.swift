@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RecorderView: View {
     @StateObject private var vm = RecorderViewModel()
+    @State private var contextText = ""
     @Binding var note: Note
 
     var body: some View {
@@ -17,6 +18,9 @@ struct RecorderView: View {
                 Text(vm.currentText.isEmpty ? "Sprich – ich schreibe mit…" : vm.currentText)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
+                TextField("Kontext hinzufügen…", text: $contextText, axis: .vertical)
+                    .lineLimit(1...4)
+                    .onSubmit { ServiceLocator.shared.pipelineAddContext(contextText, for: note.id); contextText = "" }
             }
             Button(vm.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
                 if vm.isRecording {

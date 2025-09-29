@@ -11,7 +11,7 @@ struct TranscriptSegment: Identifiable, Codable {
     let id: UUID
     var start: TimeInterval
     var end: TimeInterval
-    var speakerId: String?   // "S1", "S2", ...
+    var speakerId: String?
     var text: String
     init(start: TimeInterval, end: TimeInterval, speakerId: String?, text: String) {
         self.id = UUID()
