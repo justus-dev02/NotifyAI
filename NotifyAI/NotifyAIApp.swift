@@ -9,12 +9,13 @@ import SwiftUI
 
 @main
 struct NotifyAIApp: App {
-    let persistenceController = PersistenceController.shared
+    @StateObject private var notesVM = NotesViewModel()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            NotesListView()
+                .environmentObject(notesVM)
+                .environmentObject(ServiceLocator.shared)
         }
     }
 }

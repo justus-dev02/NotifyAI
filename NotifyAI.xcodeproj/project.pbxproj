@@ -30,6 +30,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		27022B0F2E827BE40077F224 /* Models */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		27022B112E827BFB0077F224 /* Services */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Services;
+			sourceTree = "<group>";
+		};
+		27022B122E827C000077F224 /* ViewModels */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		27022B142E827C0F0077F224 /* Views */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Views;
+			sourceTree = "<group>";
+		};
 		275D605B2E6F188200EB7BA5 /* NotifyAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NotifyAI;
@@ -75,10 +95,14 @@
 		275D60502E6F188200EB7BA5 = {
 			isa = PBXGroup;
 			children = (
+				27022B122E827C000077F224 /* ViewModels */,
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
 				275D606E2E6F188300EB7BA5 /* NotifyAITests */,
 				275D60782E6F188300EB7BA5 /* NotifyAIUITests */,
 				275D605A2E6F188200EB7BA5 /* Products */,
+				27022B0F2E827BE40077F224 /* Models */,
+				27022B112E827BFB0077F224 /* Services */,
+				27022B142E827C0F0077F224 /* Views */,
 			);
 			sourceTree = "<group>";
 		};
@@ -108,6 +132,10 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				27022B0F2E827BE40077F224 /* Models */,
+				27022B112E827BFB0077F224 /* Services */,
+				27022B122E827C000077F224 /* ViewModels */,
+				27022B142E827C0F0077F224 /* Views */,
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
 			);
 			name = NotifyAI;
@@ -395,6 +423,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 36B9A7K3RP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -402,6 +431,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -422,6 +452,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 36B9A7K3RP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -429,6 +460,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
