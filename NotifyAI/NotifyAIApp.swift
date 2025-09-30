@@ -14,13 +14,22 @@ struct NotifyAIApp: App {
     @StateObject private var notesVM = NotesViewModel()
     @StateObject private var settingsVM = SettingsViewModel()
 
+    @StateObject private var onboardingVM = OnboardingViewModel()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environmentObject(serviceLocator)
-                .environmentObject(dashboardVM)
-                .environmentObject(notesVM)
-                .environmentObject(settingsVM)
+            Group {
+                if hasCompletedOnboarding {
+                    MainTabView()
+                } else {
+                    OnboardingFlowView(viewModel: onboardingVM)
+                }
+            }
+            .environmentObject(serviceLocator)
+            .environmentObject(dashboardVM)
+            .environmentObject(notesVM)
+            .environmentObject(settingsVM)
         }
     }
 }

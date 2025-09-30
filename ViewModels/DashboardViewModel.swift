@@ -9,8 +9,11 @@ import Foundation
 
 @MainActor
 final class DashboardViewModel: ObservableObject {
-    @Published var notes: [Note] = []
+    @Published private(set) var notes: [Note] = []
     @Published var query: String = ""
+    @Published var activeFilter: Filter = .all {
+        didSet { applyQuery() }
+    }
 
     private let storage = ServiceLocator.shared.storage
     private let search = SemanticSearchService.shared
@@ -57,12 +60,71 @@ final class DashboardViewModel: ObservableObject {
 
     private func applyQuery() {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let base: [Note]
         if trimmed.isEmpty {
-            notes = allNotes
+            base = allNotes
         } else {
             let ids = search.search(trimmed)
             let map = Dictionary(uniqueKeysWithValues: allNotes.map { ($0.id, $0) })
-            notes = ids.compactMap { map[$0] }
+            base = ids.compactMap { map[$0] }
+        }
+        notes = base.filter { activeFilter.matches($0) }
+    }
+
+    func toggle(filter: Filter) {
+        activeFilter = activeFilter == filter ? .all : filter
+    }
+
+    func startRecording() {
+        NotificationCenter.default.post(name: .dashboardStartRecording, object: nil)
+    }
+
+    func showImportHub() {
+        NotificationCenter.default.post(name: .dashboardOpenImport, object: nil)
+    }
+
+    func showScanner() {
+        NotificationCenter.default.post(name: .dashboardOpenScanner, object: nil)
+    }
+}
+
+extension DashboardViewModel {
+    enum Filter: String, CaseIterable, Identifiable {
+        case all
+        case meetings
+        case pdf
+        case web
+        case audio
+        case favorites
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .all: return "Alle"
+            case .meetings: return "Meetings"
+            case .pdf: return "PDFs"
+            case .web: return "Web"
+            case .audio: return "Audio"
+            case .favorites: return "Favoriten"
+            }
+        }
+
+        func matches(_ note: Note) -> Bool {
+            switch self {
+            case .all:
+                return true
+            case .meetings:
+                return note.sourceType == .meeting
+            case .pdf:
+                return note.sourceType == .pdf
+            case .web:
+                return note.sourceType == .web
+            case .audio:
+                return note.sourceType == .audio
+            case .favorites:
+                return note.isFavorite
+            }
         }
     }
 }

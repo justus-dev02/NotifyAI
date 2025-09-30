@@ -10,42 +10,84 @@ import SwiftUI
 struct MindmapView: View {
     let note: Note
 
+    @State private var zoom: Double = 1.0
+
     var body: some View {
-        List {
+        VStack(spacing: 16) {
             if let mindmap = note.mindmap {
-                Section(mindmap.root) {
-                    MindmapChildrenView(children: mindmap.children)
+                ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                    MindmapCanvas(node: mindmap, zoom: zoom)
+                        .padding()
                 }
             } else {
                 Text("Keine Mindmap verfügbar.")
                     .foregroundStyle(.secondary)
             }
+
+            HStack {
+                Slider(value: $zoom, in: 0.5...2, step: 0.1) {
+                    Text("Zoom")
+                }
+                .frame(maxWidth: 200)
+                Spacer()
+                Menu {
+                    Button("Export als Mermaid") {}
+                    Button("Export als PNG") {}
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+
+                Button("Expand by AI") {}
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding(.horizontal)
         }
         .navigationTitle("Mindmap")
     }
 }
 
-private struct MindmapChildrenView: View {
-    let children: [MindmapNode]
+private struct MindmapCanvas: View {
+    let node: Mindmap
+    let zoom: Double
 
     var body: some View {
-        ForEach(children) { node in
-            MindmapNodeRow(node: node)
+        VStack(spacing: 24 * zoom) {
+            MindmapNodeView(label: node.root, zoom: zoom)
+            MindmapBranch(children: node.children, zoom: zoom)
+        }
+        .scaleEffect(zoom)
+    }
+}
+
+private struct MindmapBranch: View {
+    let children: [MindmapNode]
+    let zoom: Double
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 32 * zoom) {
+            ForEach(children) { node in
+                VStack(spacing: 24 * zoom) {
+                    MindmapNodeView(label: node.label, zoom: zoom)
+                    if let grandchildren = node.children {
+                        MindmapBranch(children: grandchildren, zoom: zoom)
+                    }
+                }
+            }
         }
     }
 }
 
-private struct MindmapNodeRow: View {
-    let node: MindmapNode
+private struct MindmapNodeView: View {
+    let label: String
+    let zoom: Double
 
     var body: some View {
-        if let children = node.children, !children.isEmpty {
-            DisclosureGroup(node.label) {
-                MindmapChildrenView(children: children)
-            }
-        } else {
-            Text(node.label)
-        }
+        Text(label)
+            .font(.headline)
+            .padding(.horizontal, 16 * zoom)
+            .padding(.vertical, 10 * zoom)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16 * zoom, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16 * zoom).stroke(Color.white.opacity(0.08), lineWidth: 1))
     }
 }
 

@@ -20,9 +20,19 @@ struct MainTabView: View {
                     Label("Notizen", systemImage: "list.bullet.rectangle")
                 }
 
+            ImportHubView()
+                .tabItem {
+                    Label("Import", systemImage: "square.and.arrow.down.on.square")
+                }
+
             RecorderTabView()
                 .tabItem {
                     Label("Recorder", systemImage: "mic.fill")
+                }
+
+            SearchView()
+                .tabItem {
+                    Label("Suche", systemImage: "magnifyingglass")
                 }
 
             SettingsView()

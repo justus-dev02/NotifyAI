@@ -32,6 +32,13 @@ final class NotesViewModel: ObservableObject {
 
     func load() async {
         self.notes = await storage.loadAll()
+        if notes.isEmpty {
+            let seeded = SampleDataFactory.makeSampleNotes()
+            notes = seeded
+            for note in seeded {
+                await storage.save(note)
+            }
+        }
         self.results = notes
         search.buildIndex(notes: notes)
     }

@@ -20,30 +20,57 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Transkription") {
+                Section("ASR & Diarisierung") {
                     Picker("Backend", selection: $viewModel.transcriptionBackend) {
                         ForEach(TranscriptionService.Backend.allCases) { backend in
                             Text(backend.displayName).tag(backend)
                         }
                     }
-
                     Picker("Sprache", selection: $viewModel.locale) {
                         ForEach(availableLocales, id: \.self) { code in
                             Text(localeDescription(for: code)).tag(code)
                         }
                     }
+                    Toggle("File-ASR mit WhisperKit", isOn: $viewModel.fileASREnabled)
+                    Toggle("Speaker Re-ID aktiv", isOn: $viewModel.diarizationEnabled)
                 }
 
-                Section("Datenschutz") {
-                    Toggle("Personenbezogene Daten schwärzen", isOn: $viewModel.redactionEnabled)
-                }
-
-                Section("LLM Modell") {
-                    Picker("Lokal installiert", selection: $viewModel.modelId) {
+                Section("LLM & Performance") {
+                    Picker("LLM-Modell", selection: $viewModel.modelId) {
                         ForEach(availableModels, id: \.self) { model in
                             Text(model).tag(model)
                         }
                     }
+                    Toggle("Streaming-Generierung", isOn: $viewModel.streamingEnabled)
+                    Toggle("Performance-Modus", isOn: $viewModel.performanceMode)
+                }
+
+                Section("Sync & Workspaces") {
+                    Toggle("iCloud Sync aktiv", isOn: $viewModel.syncEnabled)
+                    Toggle("Shared Workspaces", isOn: $viewModel.sharedWorkspaceEnabled)
+                }
+
+                Section("Integrationen") {
+                    ForEach(viewModel.integrations) { integration in
+                        HStack {
+                            Label(integration.kind.title, systemImage: integration.kind.iconName)
+                            Spacer()
+                            Toggle("", isOn: binding(for: integration.kind))
+                                .labelsHidden()
+                        }
+                    }
+                }
+
+                Section("Templates") {
+                    NavigationLink("Vorlagen verwalten") {
+                        TemplateLibraryView()
+                    }
+                }
+
+                Section("Datenschutz") {
+                    Toggle("Personenbezogene Daten schwärzen", isOn: $viewModel.redactionEnabled)
+                    Toggle("Biometrischer Schutz", isOn: $viewModel.biometricLock)
+                    Toggle("E2E Verschlüsselung", isOn: $viewModel.endToEndEncryption)
                 }
             }
             .navigationTitle("Einstellungen")
@@ -56,6 +83,14 @@ struct SettingsView: View {
             return "\(name) (\(code))"
         }
         return code
+    }
+
+    private func binding(for kind: Integration.Kind) -> Binding<Bool> {
+        Binding(get: {
+            viewModel.connectedIntegrations.contains(kind)
+        }, set: { newValue in
+            viewModel.setIntegration(kind, enabled: newValue)
+        })
     }
 }
 
