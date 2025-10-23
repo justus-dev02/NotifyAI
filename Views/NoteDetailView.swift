@@ -104,7 +104,7 @@ struct NoteDetailView: View {
 
     private var transcriptView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            AudioPlayerView(url: note.audioURL)
+            AudioPlayerView(url: note.audioURL ?? URL(string: "https://example.com/placeholder.mp3")!)
             HStack {
                 TextField("Transkript durchsuchen", text: .constant(""))
                     .textFieldStyle(.roundedBorder)
@@ -240,6 +240,7 @@ private struct PipelineStepList: View {
         case .indexing: return "Index"
         case .done: return "Fertig"
         case .error: return "Fehler"
+        case .none: return "Kein Status"
         }
     }
 }
@@ -255,7 +256,7 @@ private struct SummarySection: View {
                     .font(.headline)
                 ForEach(items, id: \.self) { item in
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark.seal.fill").foregroundStyle(.accentColor)
+                        Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.accentColor)
                         Text(item)
                     }
                 }
