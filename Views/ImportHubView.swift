@@ -7,6 +7,7 @@ struct ImportHubView: View {
     @State private var isShowingFilePicker = false
     @State private var isShowingScanner = false
     @State private var importTasks: [ImportTask] = ImportTask.sample
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack {

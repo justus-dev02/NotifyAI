@@ -3,6 +3,7 @@ import SwiftUI
 struct OnboardingFlowView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         ZStack {
@@ -25,7 +26,7 @@ struct OnboardingFlowView: View {
 
     private func advanceOrFinish() {
         if viewModel.currentStep == .integrations {
-            hasCompletedOnboarding = true
+            appState.completeOnboarding()
         } else {
             viewModel.advance()
         }

@@ -11,6 +11,7 @@ struct RecorderTabView: View {
     @EnvironmentObject private var notesViewModel: NotesViewModel
     @EnvironmentObject private var dashboardViewModel: DashboardViewModel
     @State private var activeNote: Note?
+    @EnvironmentObject var appState: AppState
 
     private let titleFormatter: DateFormatter = {
         let formatter = DateFormatter()

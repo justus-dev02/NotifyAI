@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var vm: DashboardViewModel
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack {

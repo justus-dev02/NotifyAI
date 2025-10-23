@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NotesListView: View {
     @EnvironmentObject var notesVM: NotesViewModel
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack {

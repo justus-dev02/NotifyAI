@@ -22,6 +22,7 @@ struct NoteDetailView: View {
 
     @State private var selectedTab: Tab
     @State private var selectedRole: String
+    @EnvironmentObject var appState: AppState
 
     init(note: Note, initialTab: Tab = .summary) {
         self.note = note

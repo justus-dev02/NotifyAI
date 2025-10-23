@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MindmapView: View {
     let note: Note
-
+    @EnvironmentObject var appState: AppState
     @State private var zoom: Double = 1.0
 
     var body: some View {

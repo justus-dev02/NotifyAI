@@ -5,6 +5,7 @@ struct SearchView: View {
     @State private var selectedFacet: Facet = .allTime
     @State private var selectedParticipants: Set<Participant> = []
     @State private var selectedSource: SourceType? = nil
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack {

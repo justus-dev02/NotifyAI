@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var viewModel: SettingsViewModel
+    @EnvironmentObject var appState: AppState
 
     private let availableLocales = ["de-DE", "en-US", "en-GB", "fr-FR"]
     private let availableModels = [

@@ -14,6 +14,7 @@ struct RecorderView: View {
     @State private var contextText = ""
     @State private var showProcessing = false
     @State private var bookmarkName: String = ""
+    @EnvironmentObject var appState: AppState
 
     init(note: Note) {
         _viewModel = StateObject(wrappedValue: RecorderViewModel(note: note))

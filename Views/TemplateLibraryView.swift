@@ -3,6 +3,7 @@ import SwiftUI
 struct TemplateLibraryView: View {
     @State private var templates: [NoteTemplate] = TemplateLibraryView.defaultTemplates
     @State private var selectedAudience: NoteTemplate.Audience? = nil
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         List {
