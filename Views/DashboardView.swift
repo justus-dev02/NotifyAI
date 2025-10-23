@@ -10,6 +10,7 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var vm: DashboardViewModel
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
 
     var body: some View {
         NavigationStack {
@@ -20,20 +21,33 @@ struct DashboardView: View {
                     sectionHeader(title: "Aktuelle Notizen")
                     LazyVStack(spacing: 20) {
                         ForEach(vm.notes) { note in
-                            NoteCard(note: note)
-                                .padding(.horizontal, 24)
+                            NavigationLink(destination: EnhancedNoteDetailView(note: note)) {
+                                EnhancedNoteCard(note: note)
+                                    .padding(.horizontal, 24)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.bottom, 32)
                 }
                 .padding(.top, 24)
             }
-            .background(LinearGradient(colors: [Color(hex: "#EEF2FF") ?? .blue.opacity(0.05), Color.white], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+            .themedBackground(.primary)
             .navigationTitle("Zusammenfassungen")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: vm.newNote) {
-                        Label("Neue Notiz", systemImage: "plus")
+                    Menu {
+                        Button(action: { /* Show unified recording */ }) {
+                            Label("Neue Aufnahme", systemImage: "mic.fill")
+                        }
+                        Button(action: vm.newNote) {
+                            Label("Neue Notiz", systemImage: "plus")
+                        }
+                        Button(action: { /* Show import hub */ }) {
+                            Label("Import", systemImage: "square.and.arrow.down")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }

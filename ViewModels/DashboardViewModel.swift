@@ -96,6 +96,7 @@ extension DashboardViewModel {
         case web
         case audio
         case favorites
+        case tags
 
         var id: String { rawValue }
 
@@ -107,6 +108,7 @@ extension DashboardViewModel {
             case .web: return "Web"
             case .audio: return "Audio"
             case .favorites: return "Favoriten"
+            case .tags: return "Tags"
             }
         }
 
@@ -124,6 +126,8 @@ extension DashboardViewModel {
                 return note.sourceType == .audio
             case .favorites:
                 return note.isFavorite
+            case .tags:
+                return !note.tags.isEmpty
             }
         }
     }

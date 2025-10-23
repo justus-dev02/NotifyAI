@@ -9,14 +9,18 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
     @StateObject private var notesViewModel = NotesViewModel()
     @StateObject private var settingsViewModel = SettingsViewModel()
+    @StateObject private var templateLibrary = TemplateLibrary()
+    @StateObject private var learningGenerator = LearningGenerator()
     
     var body: some View {
         TabView {
             DashboardView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
+                .environmentObject(themeManager)
                 .tabItem {
                     Label("Dashboard", systemImage: "square.grid.2x2")
                 }
@@ -24,27 +28,30 @@ struct MainTabView: View {
             NotesListView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
+                .environmentObject(themeManager)
                 .tabItem {
                     Label("Notizen", systemImage: "list.bullet.rectangle")
+                }
+
+            UnifiedRecordingView()
+                .environmentObject(notesViewModel)
+                .environmentObject(themeManager)
+                .tabItem {
+                    Label("Aufnahme", systemImage: "mic.fill")
                 }
 
             ImportHubView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
+                .environmentObject(themeManager)
                 .tabItem {
                     Label("Import", systemImage: "square.and.arrow.down.on.square")
-                }
-
-            RecorderTabView()
-                .environmentObject(notesViewModel)
-                .environmentObject(settingsViewModel)
-                .tabItem {
-                    Label("Recorder", systemImage: "mic.fill")
                 }
 
             SearchView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
+                .environmentObject(themeManager)
                 .tabItem {
                     Label("Suche", systemImage: "magnifyingglass")
                 }
@@ -52,10 +59,13 @@ struct MainTabView: View {
             SettingsView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
+                .environmentObject(themeManager)
                 .tabItem {
                     Label("Einstellungen", systemImage: "gearshape")
                 }
         }
+        .accentColor(AppTheme.accent)
+        .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
     }
 }
 

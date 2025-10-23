@@ -281,7 +281,7 @@ private struct ActionItemSection: View {
                                 Text(item.task)
                                     .font(.subheadline)
                                 Spacer()
-                                StatusBadge(status: item.status)
+                                NoteStatusBadge(status: item.status)
                             }
                             HStack(spacing: 12) {
                                 if let owner = item.owner {
@@ -307,7 +307,7 @@ private struct ActionItemSection: View {
     }
 }
 
-private struct StatusBadge: View {
+private struct NoteStatusBadge: View {
     let status: ActionItem.Status
 
     var body: some View {

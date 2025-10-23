@@ -10,13 +10,14 @@ import SwiftUI
 
 struct Note: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
-        case id, title, createdAt, location, duration, audioURL, tags, participants, segments, summary, roleSummaries, mindmap, consent, pipeline, actionItems, highlights, decisions, risks, sourceType, relatedNoteIDs, isFavorite
+        case id, title, createdAt, location, context, duration, audioURL, tags, participants, segments, summary, roleSummaries, mindmap, consent, pipeline, actionItems, highlights, decisions, risks, sourceType, relatedNoteIDs, isFavorite
     }
 
     let id: UUID
     var title: String
     var createdAt: Date
     var location: String?
+    var context: String?
     var duration: TimeInterval?
     var audioURL: URL?
     var tags: [String]
@@ -40,6 +41,7 @@ struct Note: Identifiable, Codable {
         self.title = title
         self.createdAt = createdAt
         self.location = nil
+        self.context = nil
         self.duration = nil
         self.audioURL = nil
         self.tags = []
@@ -65,6 +67,7 @@ struct Note: Identifiable, Codable {
         title = try container.decodeIfPresent(String.self, forKey: .title) ?? "Unbenannte Notiz"
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         location = try container.decodeIfPresent(String.self, forKey: .location)
+        context = try container.decodeIfPresent(String.self, forKey: .context)
         duration = try container.decodeIfPresent(TimeInterval.self, forKey: .duration)
         audioURL = try container.decodeIfPresent(URL.self, forKey: .audioURL)
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
@@ -90,6 +93,7 @@ struct Note: Identifiable, Codable {
         try container.encode(title, forKey: .title)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(location, forKey: .location)
+        try container.encodeIfPresent(context, forKey: .context)
         try container.encodeIfPresent(duration, forKey: .duration)
         try container.encodeIfPresent(audioURL, forKey: .audioURL)
         try container.encode(tags, forKey: .tags)
