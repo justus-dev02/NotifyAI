@@ -34,6 +34,10 @@ struct SettingsView: View {
                     }
                     Toggle("File-ASR mit WhisperKit", isOn: $viewModel.fileASREnabled)
                     Toggle("Speaker Re-ID aktiv", isOn: $viewModel.diarizationEnabled)
+                    
+                    NavigationLink("Spracherkennung konfigurieren") {
+                       // TranscriptionSettingsView()
+                    }
                 }
 
                 Section("LLM & Performance") {

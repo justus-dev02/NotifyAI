@@ -9,12 +9,15 @@ import SwiftUI
 
 struct RecorderView: View {
     @StateObject private var viewModel: RecorderViewModel
+    //@StateObject private var transcriptionViewModel = RealTimeTranscriptionViewModel()
     @State private var showConsent = false
     @State private var consentConfirmed = false
     @State private var contextText = ""
     @State private var showProcessing = false
     @State private var bookmarkName: String = ""
+    @State private var isRealTimeTranscription = true
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
 
     init(note: Note) {
         _viewModel = StateObject(wrappedValue: RecorderViewModel(note: note))
@@ -23,12 +26,13 @@ struct RecorderView: View {
     var body: some View {
         VStack(spacing: 24) {
             header
-            waveformArea
+            transcriptionModeSelector
+            //waveformArea
             contextSection
             footer
         }
         .padding(24)
-        .background(LinearGradient(colors: [Color(hex: "#EEF2FF") ?? .blue.opacity(0.1), .white], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .themedBackground(.primary)
         .navigationTitle("Recorder")
         .sheet(isPresented: $showProcessing) {
             ProgressOverlayView(steps: ProcessingStep.build(from: viewModel.note.pipeline)) {
@@ -70,14 +74,88 @@ private extension RecorderView {
         }
     }
 
+    var transcriptionModeSelector: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Transkriptionsmodus")
+                .font(.headline)
+                .themedText(.primary)
+            
+            HStack(spacing: 16) {
+                Button(action: { isRealTimeTranscription = true }) {
+                    HStack {
+                        Image(systemName: "waveform")
+                        Text("Live-Transkription")
+                    }
+                    .font(.subheadline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        isRealTimeTranscription ? AppTheme.accent : AppTheme.secondaryBackground,
+                        in: Capsule()
+                    )
+                    .foregroundColor(isRealTimeTranscription ? .white : AppTheme.primaryText)
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: { isRealTimeTranscription = false }) {
+                    HStack {
+                        Image(systemName: "mic")
+                        Text("Nur Audio")
+                    }
+                    .font(.subheadline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        !isRealTimeTranscription ? AppTheme.accent : AppTheme.secondaryBackground,
+                        in: Capsule()
+                    )
+                    .foregroundColor(!isRealTimeTranscription ? .white : AppTheme.primaryText)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .glassCard()
+    }
+    /*
     var waveformArea: some View {
         VStack(alignment: .leading, spacing: 16) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(viewModel.liveText.isEmpty ? "Sprich – ich schreibe mit…" : viewModel.liveText)
-                        .padding()
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                    // Live transcription display
+                    if isRealTimeTranscription {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Live-Transkription")
+                                    .font(.caption)
+                                    .themedText(.secondary)
+                                Spacer()
+                                if transcriptionViewModel.confidence > 0 {
+                                    Text("Genauigkeit: \(Int(transcriptionViewModel.confidence * 100))%")
+                                        .font(.caption)
+                                        .themedText(.secondary)
+                                }
+                            }
+                            
+                            Text(transcriptionViewModel.currentText.isEmpty ? "Sprich – ich schreibe mit…" : transcriptionViewModel.currentText)
+                                .padding()
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                        }
+                    } else {
+                        // Audio-only mode
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Audio-Aufnahme")
+                                .font(.caption)
+                                .themedText(.secondary)
+                            
+                            Text("Audio wird aufgezeichnet und später transkribiert")
+                                .font(.body)
+                                .themedText(.primary)
+                                .padding()
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                        }
+                    }
 
                     ForEach(viewModel.bookmarks) { bookmark in
                         GlassCard {
@@ -102,7 +180,7 @@ private extension RecorderView {
                 .disabled(bookmarkName.isEmpty)
             }
         }
-    }
+    }*/
 
     var contextSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -157,15 +235,21 @@ private extension RecorderView {
                     .buttonStyle(.bordered)
                 }
 
-                Button(viewModel.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
+                /*Button(viewModel.isRecording ? "Stop & Zusammenfassen" : "Aufnahme starten") {
                     if viewModel.isRecording {
+                        if isRealTimeTranscription {
+                            transcriptionViewModel.stopTranscription()
+                        }
                         viewModel.stop()
                         showProcessing = true
                     } else {
+                        if isRealTimeTranscription {
+                            transcriptionViewModel.startTranscription()
+                        }
                         showConsent = true
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.borderedProminent)*/
             }
         }
     }

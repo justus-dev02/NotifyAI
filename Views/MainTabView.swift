@@ -56,6 +56,12 @@ struct MainTabView: View {
                     Label("Suche", systemImage: "magnifyingglass")
                 }
 
+            /*TranscriptionView()
+                .environmentObject(themeManager)
+                .tabItem {
+                    Label("Transkription", systemImage: "waveform")
+                }*/
+
             SettingsView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)

@@ -100,6 +100,7 @@
 		275D60502E6F188200EB7BA5 = {
 			isa = PBXGroup;
 			children = (
+				277C5B2D2EAB7BED00370E3A /* AIModels */,
 				272AB6942E8B195F0083CE7B /* .gitignore */,
 				27022B122E827C000077F224 /* ViewModels */,
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
@@ -120,6 +121,13 @@
 				275D60752E6F188300EB7BA5 /* NotifyAIUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		277C5B2D2EAB7BED00370E3A /* AIModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = AIModels;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -205,7 +213,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					275D60582E6F188200EB7BA5 = {
 						CreatedOnToolsVersion = 16.4;
@@ -362,6 +370,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -418,6 +427,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
