@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 final class RecorderViewModel: ObservableObject {
@@ -17,6 +18,20 @@ final class RecorderViewModel: ObservableObject {
     @Published var bookmarks: [RecorderBookmark] = []
     @Published private var elapsed: TimeInterval = 0
     @Published var isRealTimeTranscriptionEnabled = true // <- Hinzugefügt: Steuert den Modus
+
+    var timerDisplay: String {
+        timeString(elapsed)
+    }
+
+    var levelDisplay: String {
+        isRecording ? "0 dB" : "--"
+    }
+
+    var diarizationStatus: String {
+        // For now, return a default status since we can't access settings
+        // In a real implementation, you'd need to access settings differently
+        return "Inaktiv"  // Default to inactive
+    }
 
     private let sl = ServiceLocator.shared
     private var audioURL: URL
@@ -126,7 +141,18 @@ final class RecorderViewModel: ObservableObject {
         bookmarks.append(bookmark)
     }
 
-    // ... (restliche Methoden wie addParticipant, timerDisplay etc. bleiben) ...
+    func addParticipant() {
+        // Create a new participant with a default name
+        let newParticipant = Participant(
+            name: "Neuer Teilnehmer",
+            role: ""
+            // Using default colorHex and avatarSymbol
+        )
+
+        // Add to the note's participants
+        note.participants.append(newParticipant)
+    }
+
     private func startTimer() {
         timer?.invalidate()
         elapsed = 0
