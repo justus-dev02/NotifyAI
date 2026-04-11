@@ -33,13 +33,6 @@ struct MainTabView: View {
                     Label("Notizen", systemImage: "list.bullet.rectangle")
                 }
 
-            UnifiedRecordingView()
-                .environmentObject(notesViewModel)
-                .environmentObject(themeManager)
-                .tabItem {
-                    Label("Aufnahme", systemImage: "mic.fill")
-                }
-
             ImportHubView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)

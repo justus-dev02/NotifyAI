@@ -12,80 +12,81 @@ struct EnhancedNoteCard: View {
     @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
+        VStack(alignment: .leading, spacing: 14) {
+            // Header: Topic and Status
             HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(note.title)
-                        .font(.headline)
-                        .themedText(.primary)
-                        .lineLimit(2)
-                    
-                    Text(metaInformation)
-                        .font(.caption)
-                        .themedText(.secondary)
+                HStack(spacing: 6) {
+                    Image(systemName: note.sourceType.icon)
+                        .font(.caption2)
+                    Text(note.sourceType.displayName)
+                        .font(.caption2.bold())
+                        .textCase(.uppercase)
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(AppTheme.accent.opacity(0.15), in: Capsule())
+                .foregroundColor(AppTheme.accent)
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 8) {
-                    PipelineStatusChip(state: note.pipeline)
-                    
-                    if note.isFavorite {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(.red)
-                            .font(.caption)
-                    }
+                PipelineStatusChip(state: note.pipeline)
+            }
+            
+            // Title
+            VStack(alignment: .leading, spacing: 4) {
+                Text(note.title)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .themedText(.primary)
+                    .lineLimit(2)
+                
+                if !note.tags.isEmpty {
+                    TagsRow(tags: note.tags)
+                        .padding(.top, 2)
                 }
-            }
-            
-            // Tags
-            if !note.tags.isEmpty {
-                TagsRow(tags: note.tags)
-            }
-            
-            // Participants
-            if !note.participants.isEmpty {
-                ParticipantsRow(participants: note.participants)
             }
             
             // Summary Preview
-            if let summary = note.summary {
-                Text(summary.markdown.prefix(120))
-                    .font(.subheadline)
-                    .themedText(.secondary)
-                    .lineLimit(3)
-            }
-            
-            // Highlights
-            if !note.highlights.isEmpty {
-                HighlightsPreview(highlights: note.highlights)
-            }
-            
-            // Footer
-            HStack {
-                HStack(spacing: 16) {
-                    Label("\(note.segments.count) Segmente", systemImage: "text.quote")
-                        .font(.caption)
+            if let summary = note.summary, !summary.markdown.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Zusammenfassung")
+                        .font(.caption.bold())
                         .themedText(.secondary)
+                        .textCase(.uppercase)
                     
-                    if let duration = note.duration {
-                        Label(formatDuration(duration), systemImage: "clock")
-                            .font(.caption)
-                            .themedText(.secondary)
-                    }
+                    Text(summary.markdown)
+                        .font(.subheadline)
+                        .themedText(.secondary)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+            } else {
+                // Placeholder for empty summary
+                Text("Keine Zusammenfassung verfügbar.")
+                    .font(.subheadline.italic())
+                    .themedText(.secondary)
+                    .padding(.vertical, 4)
+            }
+            
+            // Footer: Meta and Actions
+            HStack {
+                Text(metaInformation)
+                    .font(.caption2)
+                    .themedText(.secondary)
                 
                 Spacer()
                 
                 HStack(spacing: 12) {
-                    Button(action: { /* Share */ }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.caption)
+                    if let duration = note.duration {
+                        Label(formatDuration(duration), systemImage: "clock")
+                            .font(.caption2)
+                            .themedText(.secondary)
                     }
-                    .buttonStyle(.plain)
                     
-                    Button(action: { /* Favorite */ }) {
+                    Button(action: { /* Favorite toggle would go here */ }) {
                         Image(systemName: note.isFavorite ? "heart.fill" : "heart")
                             .font(.caption)
                             .foregroundColor(note.isFavorite ? .red : AppTheme.secondaryText)

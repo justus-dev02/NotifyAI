@@ -14,6 +14,7 @@ final class DashboardViewModel: ObservableObject {
     @Published var activeFilter: Filter = .all {
         didSet { applyQuery() }
     }
+    @Published var showRecordingSheet: Bool = false
 
     private let storage = ServiceLocator.shared.storage
     private let search = SemanticSearchService.shared

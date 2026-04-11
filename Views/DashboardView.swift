@@ -11,6 +11,7 @@ struct DashboardView: View {
     @EnvironmentObject var vm: DashboardViewModel
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var notesViewModel: NotesViewModel
 
     var body: some View {
         NavigationStack {
@@ -37,19 +38,28 @@ struct DashboardView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button(action: { /* Show unified recording */ }) {
+                        NavigationLink {
+                            UnifiedRecordingView()
+                                .environmentObject(notesViewModel)
+                                .environmentObject(themeManager)
+                        } label: {
                             Label("Neue Aufnahme", systemImage: "mic.fill")
                         }
                         Button(action: vm.newNote) {
                             Label("Neue Notiz", systemImage: "plus")
                         }
-                        Button(action: { /* Show import hub */ }) {
+                        Button(action: vm.showImportHub) {
                             Label("Import", systemImage: "square.and.arrow.down")
                         }
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
+            }
+            .fullScreenCover(isPresented: $vm.showRecordingSheet) {
+                UnifiedRecordingView()
+                    .environmentObject(notesViewModel)
+                    .environmentObject(themeManager)
             }
         }
     }
@@ -87,7 +97,12 @@ struct DashboardView: View {
             sectionHeader(title: "Quick Actions")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    QuickActionButton(title: "Neue Aufnahme", icon: "mic.circle.fill", action: vm.startRecording)
+                    NavigationLink(destination: UnifiedRecordingView()
+                                    .environmentObject(notesViewModel)
+                                    .environmentObject(themeManager)) {
+                        QuickActionButton(title: "Neue Aufnahme", icon: "mic.circle.fill", action: {})
+                    }
+                    .buttonStyle(.plain)
                     QuickActionButton(title: "URL einfügen", icon: "link.circle.fill", action: vm.showImportHub)
                     QuickActionButton(title: "PDF importieren", icon: "doc.circle.fill", action: vm.showImportHub)
                     QuickActionButton(title: "Bild scannen", icon: "viewfinder.circle.fill", action: vm.showScanner)
