@@ -22,31 +22,31 @@ class ThemeManager: ObservableObject {
 
 struct AppTheme {
     // Background Colors
-    static let primaryBackground = Color("PrimaryBackground")
-    static let secondaryBackground = Color("SecondaryBackground")
-    static let tertiaryBackground = Color("TertiaryBackground")
+    static let primaryBackground = Color.adaptiveBackground
+    static let secondaryBackground = Color.adaptiveSecondaryBackground
+    static let tertiaryBackground = Color.adaptiveTertiaryBackground
     
     // Text Colors
-    static let primaryText = Color("PrimaryText")
-    static let secondaryText = Color("SecondaryText")
-    static let tertiaryText = Color("TertiaryText")
+    static let primaryText = Color.adaptiveLabel
+    static let secondaryText = Color.adaptiveSecondaryLabel
+    static let tertiaryText = Color.adaptiveTertiaryLabel
     
     // Accent Colors
-    static let accent = Color("AccentColor")
-    static let accentSecondary = Color("AccentSecondary")
+    static let accent = Color("AccentColor") // Using the existing AccentColor.colorset
+    static let accentSecondary = Color.adaptiveSecondaryLabel
     
     // Status Colors
-    static let success = Color("SuccessColor")
-    static let warning = Color("WarningColor")
-    static let error = Color("ErrorColor")
+    static let success = Color.green
+    static let warning = Color.orange
+    static let error = Color.red
     
     // Card Colors
-    static let cardBackground = Color("CardBackground")
-    static let cardBorder = Color("CardBorder")
+    static let cardBackground = Color.adaptiveSecondaryBackground
+    static let cardBorder = Color.adaptiveSeparator
     
     // Glass Effect Colors
-    static let glassBackground = Color("GlassBackground")
-    static let glassBorder = Color("GlassBorder")
+    static let glassBackground = Color.adaptiveBackground.opacity(0.8)
+    static let glassBorder = Color.adaptiveSeparator
 }
 
 // MARK: - Color Extensions

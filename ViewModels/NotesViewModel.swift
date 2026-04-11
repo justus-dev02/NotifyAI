@@ -61,4 +61,22 @@ final class NotesViewModel: ObservableObject {
         let map = Dictionary(uniqueKeysWithValues: notes.map { ($0.id, $0) })
         results = ids.compactMap { map[$0] }
     }
+
+    func delete(note: Note) {
+        Task {
+            await storage.delete(noteId: note.id)
+            if let index = notes.firstIndex(where: { $0.id == note.id }) {
+                notes.remove(at: index)
+                performSearch()
+            }
+        }
+    }
+
+    func update(note: Note) {
+        if let index = notes.firstIndex(where: { $0.id == note.id }) {
+            notes[index] = note
+            performSearch()
+        }
+        Task { await storage.save(note) }
+    }
 }
