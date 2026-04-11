@@ -7,15 +7,21 @@
 
 import SwiftUI
 import AVKit
+import UIKit
 
 struct EnhancedNoteDetailView: View {
-    let note: Note
+    @State var note: Note
     @EnvironmentObject var themeManager: ThemeManager
     @StateObject private var audioPlayer = AudioPlayerManager()
     @State private var selectedTab: DetailTab = .overview
     @State private var isPlaying = false
     @State private var currentTime: TimeInterval = 0
     @State private var duration: TimeInterval = 0
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var notesViewModel: NotesViewModel
+    @State private var activityItem: Any?
+    @State private var isShowingActivityView = false
+    @State private var isShowingEditSheet = false
     
     enum DetailTab: String, CaseIterable, Identifiable {
         case overview, transcript, summary, mindmap, actionItems
@@ -72,6 +78,16 @@ struct EnhancedNoteDetailView: View {
         }
         .onAppear {
             setupAudioPlayer()
+        }
+        .sheet(isPresented: $isShowingActivityView) {
+            if let activityItem = activityItem {
+                ActivityViewController(activityItems: [activityItem])
+            }
+        }
+        .sheet(isPresented: $isShowingEditSheet) {
+            EditNoteView(note: $note)
+                .environmentObject(notesViewModel)
+                .environmentObject(themeManager)
         }
     }
     
@@ -216,24 +232,120 @@ struct EnhancedNoteDetailView: View {
         }
     }
     
+    private func getFullNoteContent() -> String {
+        var content = "# \(note.title)\n\n"
+
+        if let summary = note.summary?.markdown {
+            content += "## Zusammenfassung\n\n\(summary)\n\n"
+        } else {
+            content += "## Zusammenfassung\n\nKeine Zusammenfassung verfügbar.\n\n"
+        }
+
+        if let transcript = note.transcript {
+            content += "## Transkript\n\n"
+            for block in transcript.blocks {
+                let speaker = block.speaker ?? "Sprecher"
+                content += "**\(speaker)**: \(block.text)\n\n"
+            }
+        }
+
+        return content
+    }
+
     private func exportAsMarkdown() {
-        // Implementation for Markdown export
+        let markdownContent = getFullNoteContent()
+
+        let safeTitle = note.title.replacingOccurrences(of: "/", with: "-")
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(safeTitle).md")
+        do {
+            try markdownContent.write(to: tempURL, atomically: true, encoding: .utf8)
+            activityItem = tempURL
+            isShowingActivityView = true
+        } catch {
+            print("Failed to write markdown file: \(error)")
+        }
     }
     
     private func exportAsPDF() {
-        // Implementation for PDF export
+        let markdownContent = getFullNoteContent()
+
+        let exportService = ExportService()
+        Task {
+            if let pdfURL = await exportService.pdf(fromMarkdown: markdownContent, redacted: false) {
+                await MainActor.run {
+                    activityItem = pdfURL
+                    isShowingActivityView = true
+                }
+            }
+        }
     }
     
     private func shareNote() {
-        // Implementation for sharing
+        activityItem = getFullNoteContent()
+        isShowingActivityView = true
     }
     
     private func editNote() {
-        // Implementation for editing
+        isShowingEditSheet = true
     }
     
     private func deleteNote() {
-        // Implementation for deletion
+        notesViewModel.delete(note: note)
+        dismiss()
+    }
+}
+
+struct ActivityViewController: UIViewControllerRepresentable {
+    var activityItems: [Any]
+    var applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<ActivityViewController>) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ActivityViewController>) {}
+}
+
+struct EditNoteView: View {
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var notesViewModel: NotesViewModel
+    @Binding var note: Note
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("Titel")) {
+                    TextField("Titel", text: $note.title)
+                }
+                if var summary = note.summary {
+                    Section(header: Text("Zusammenfassung")) {
+                        TextEditor(text: Binding(
+                            get: { summary.markdown },
+                            set: { newValue in
+                                summary.markdown = newValue
+                                note.summary = summary
+                            }
+                        ))
+                        .frame(minHeight: 200)
+                    }
+                }
+            }
+            .navigationTitle("Notiz bearbeiten")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Speichern") {
+                        notesViewModel.update(note: note)
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

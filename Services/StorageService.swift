@@ -40,6 +40,14 @@ actor StorageService {
         persist(n)
         broadcastChange()
     }
+
+    func delete(noteId: UUID) async {
+        notes.removeValue(forKey: noteId)
+        let dir = documentsURL().appendingPathComponent(noteId.uuidString, isDirectory: true)
+        try? fm.removeItem(at: dir)
+        broadcastChange()
+    }
+
     func pendingNotes() async -> [Note] { notes.values.filter{ $0.pipeline.stage != .done && $0.audioURL != nil } }
 
     nonisolated func temporaryAudioURL(for id: UUID) -> URL {
