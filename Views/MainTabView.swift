@@ -33,14 +33,6 @@ struct MainTabView: View {
                     Label("Notizen", systemImage: "list.bullet.rectangle")
                 }
 
-            ImportHubView()
-                .environmentObject(notesViewModel)
-                .environmentObject(settingsViewModel)
-                .environmentObject(themeManager)
-                .tabItem {
-                    Label("Import", systemImage: "square.and.arrow.down.on.square")
-                }
-
             SearchView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
