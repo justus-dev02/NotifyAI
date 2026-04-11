@@ -20,10 +20,22 @@ final class RecordingService: NSObject {
     var amplitudeCallback: ((Float) -> Void)?
 
     func start(to url: URL) throws {
+        // 1. Activate session FIRST to ensure hardware format is known
+        try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.allowBluetooth, .duckOthers])
+        try AVAudioSession.sharedInstance().setActive(true)
+        
         startTS = Date()
-        file = try AVAudioFile(forWriting: url, settings: fileFormat.settings, commonFormat: .pcmFormatFloat32, interleaved: false)
         let input = engine.inputNode
-        let format = input.outputFormat(forBus: 0)
+        var format = input.outputFormat(forBus: 0)
+        
+        // 2. Safety check: If the format is invalid (common in Simulator), use a standard fallback
+        if format.sampleRate <= 0 {
+            format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
+        }
+        
+        // 3. Create the file with the determined format
+        file = try AVAudioFile(forWriting: url, settings: format.settings)
+        
         input.removeTap(onBus: 0)
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
             guard let self, !self.isPaused else { return }
@@ -44,8 +56,7 @@ final class RecordingService: NSObject {
                 self.bufferConsumer?(buffer)
             } catch { print("write error", error) }
         }
-        try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.allowBluetooth, .duckOthers])
-        try AVAudioSession.sharedInstance().setActive(true)
+        
         try engine.start()
     }
 
