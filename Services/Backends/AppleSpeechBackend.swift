@@ -17,9 +17,38 @@ final class AppleSpeechBackend: NSObject {
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
 
-    // Konfigurierbar
+    /// Current locale identifier (e.g. "de-DE")
     var localeIdentifier: String = "de-DE" {
-        didSet { recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier)) }
+        didSet {
+            guard oldValue != localeIdentifier else { return }
+            recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
+        }
+    }
+
+    /// Whether on-device recognition is available for the current locale
+    var isOnDeviceRecognitionAvailable: Bool {
+        recognizer?.supportsOnDeviceRecognition ?? false
+    }
+
+    /// Whether the recognizer is currently available
+    var isRecognizerAvailable: Bool {
+        recognizer?.isAvailable ?? false
+    }
+
+    /// All locales supported by SFSpeechRecognizer
+    static var supportedLocales: [Locale] {
+        SFSpeechRecognizer.supportedLocales().sorted { a, b in
+            a.identifier.localizedCompare(b.identifier) == .orderedAscending
+        }
+    }
+
+    /// Human-readable description for a locale code
+    static func localeDescription(for code: String) -> String {
+        let locale = Locale(identifier: code)
+        if let name = locale.localizedString(forIdentifier: code) {
+            return "\(name) (\(code))"
+        }
+        return code
     }
 
     override init() {
@@ -27,10 +56,21 @@ final class AppleSpeechBackend: NSObject {
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
     }
 
-    enum AppleSpeechError: Error {
+    enum AppleSpeechError: Error, LocalizedError {
         case notAuthorized
         case onDeviceNotSupported
         case recognizerUnavailable
+
+        var errorDescription: String? {
+            switch self {
+            case .notAuthorized:
+                return "Spracherkennung nicht autorisiert. Bitte in den Einstellungen aktivieren."
+            case .onDeviceNotSupported:
+                return "On-Device-Erkennung für diese Sprache nicht verfügbar."
+            case .recognizerUnavailable:
+                return "Spracherkennung ist derzeit nicht verfügbar."
+            }
+        }
     }
 
     func requestAuthorization() async throws {
@@ -42,7 +82,6 @@ final class AppleSpeechBackend: NSObject {
 
     func start(handler: @escaping TranscriptionService.TranscriptHandler) throws {
         guard let recognizer, recognizer.isAvailable else { throw AppleSpeechError.recognizerUnavailable }
-        guard recognizer.supportsOnDeviceRecognition else { throw AppleSpeechError.onDeviceNotSupported }
 
         try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP])
         try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
@@ -52,16 +91,14 @@ final class AppleSpeechBackend: NSObject {
 
         request = SFSpeechAudioBufferRecognitionRequest()
         request?.shouldReportPartialResults = true
-        request?.requiresOnDeviceRecognition = true
+        request?.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
 
         task = recognizer.recognitionTask(with: request!) { result, error in
             if let result {
                 let text = result.bestTranscription.formattedString
-                // Apple liefert Wort-Timestamps über segments; hier vereinfachen wir:
                 handler(text, nil, nil)
             }
             if error != nil {
-                // Bei Fehlern Aufnahme stoppen
                 self.stop()
             }
         }

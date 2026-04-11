@@ -11,13 +11,6 @@ struct SettingsView: View {
     @EnvironmentObject private var viewModel: SettingsViewModel
     @EnvironmentObject var appState: AppState
 
-    private let availableLocales = ["de-DE", "en-US", "en-GB", "fr-FR"]
-    private let availableModels = [
-        "phi-3-mini-instruct-q4",
-        "llama-3-8b-instruct-q4",
-        "mistral-7b-instruct-q4"
-    ]
-
     var body: some View {
         NavigationStack {
             Form {
@@ -27,16 +20,41 @@ struct SettingsView: View {
                             Text(backend.displayName).tag(backend)
                         }
                     }
+
                     Picker("Sprache", selection: $viewModel.locale) {
-                        ForEach(availableLocales, id: \.self) { code in
+                        ForEach(viewModel.supportedLocaleIdentifiers, id: \.self) { code in
                             Text(localeDescription(for: code)).tag(code)
                         }
                     }
+
+                    // On-Device Recognition status
+                    if viewModel.transcriptionBackend == .appleSpeech {
+                        HStack {
+                            Image(systemName: viewModel.isOnDeviceRecognitionAvailable
+                                  ? "checkmark.circle.fill"
+                                  : "exclamationmark.triangle.fill")
+                                .foregroundColor(viewModel.isOnDeviceRecognitionAvailable ? .green : .orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(viewModel.isOnDeviceRecognitionAvailable
+                                     ? "On-Device-Erkennung verfügbar"
+                                     : "On-Device-Erkennung nicht verfügbar")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Text(viewModel.isOnDeviceRecognitionAvailable
+                                     ? "Spracherkennung läuft offline auf dem Gerät."
+                                     : "Für diese Sprache ist ggf. ein Sprachmodell-Download nötig.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+
                     Toggle("File-ASR mit WhisperKit", isOn: $viewModel.fileASREnabled)
                     Toggle("Speaker Re-ID aktiv", isOn: $viewModel.diarizationEnabled)
-                    
+
                     NavigationLink("Spracherkennung konfigurieren") {
-                       // TranscriptionSettingsView()
+                        TranscriptionSettingsView()
                     }
                 }
 
@@ -82,12 +100,14 @@ struct SettingsView: View {
         }
     }
 
+    private let availableModels = [
+        "phi-3-mini-instruct-q4",
+        "llama-3-8b-instruct-q4",
+        "mistral-7b-instruct-q4"
+    ]
+
     private func localeDescription(for code: String) -> String {
-        let locale = Locale(identifier: code)
-        if let name = locale.localizedString(forIdentifier: code) {
-            return "\(name) (\(code))"
-        }
-        return code
+        AppleSpeechBackend.localeDescription(for: code)
     }
 
     private func binding(for kind: Integration.Kind) -> Binding<Bool> {

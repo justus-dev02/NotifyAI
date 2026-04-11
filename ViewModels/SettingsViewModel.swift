@@ -6,9 +6,15 @@
 //
 
 import Foundation
+import SwiftUI
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
+    /// All locales supported by Apple Speech, as locale identifiers (e.g. "de-DE")
+    var supportedLocaleIdentifiers: [String] {
+        AppleSpeechBackend.supportedLocales.map(\.identifier)
+    }
+
     @Published var locale: String = "de-DE" {
         didSet { AppleSpeechBackend.shared.localeIdentifier = locale }
     }
@@ -31,6 +37,11 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var integrations: [Integration] = Integration.Kind.allCases.map { Integration(kind: $0) }
     @Published private(set) var connectedIntegrations: Set<Integration.Kind> = []
 
+    /// Whether on-device recognition is available for the current locale
+    var isOnDeviceRecognitionAvailable: Bool {
+        AppleSpeechBackend.shared.isOnDeviceRecognitionAvailable
+    }
+
     func setIntegration(_ kind: Integration.Kind, enabled: Bool) {
         if enabled {
             connectedIntegrations.insert(kind)
@@ -44,5 +55,11 @@ final class SettingsViewModel: ObservableObject {
             updated.details = enabled ? "Verbunden" : "Nicht verbunden"
             return updated
         }
+    }
+
+    /// Opens the system settings app so the user can download speech recognition models
+    func openSystemSettingsForSpeech() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 }
