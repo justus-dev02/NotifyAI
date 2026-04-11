@@ -15,6 +15,9 @@ final class RecordingService: NSObject {
     private var startTS: Date?
     private(set) var recordedDuration: TimeInterval = 0
 
+    // Optional consumer to forward live audio buffers (for STT backends)
+    var bufferConsumer: ((AVAudioPCMBuffer) -> Void)?
+
     func start(to url: URL) throws {
         startTS = Date()
         file = try AVAudioFile(forWriting: url, settings: fileFormat.settings)
@@ -22,7 +25,11 @@ final class RecordingService: NSObject {
         input.removeTap(onBus: 0)
         input.installTap(onBus: 0, bufferSize: 2048, format: input.outputFormat(forBus: 0)) { [weak self] buffer, _ in
             guard let self, !self.isPaused else { return }
-            do { try self.file?.write(from: buffer) } catch { print("write error", error) }
+            do { 
+                try self.file?.write(from: buffer)
+                // Forward buffer to any live transcription backend
+                self.bufferConsumer?(buffer)
+            } catch { print("write error", error) }
         }
         try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.allowBluetooth, .duckOthers])
         try AVAudioSession.sharedInstance().setActive(true)
@@ -40,3 +47,4 @@ final class RecordingService: NSObject {
         return recordedDuration
     }
 }
+

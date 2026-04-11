@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Speech
 
 final class TranscriptionService {
     enum Backend: String, CaseIterable, Identifiable {
@@ -30,7 +31,7 @@ final class TranscriptionService {
         switch backend {
         case .appleSpeech:
             try await AppleSpeechBackend.shared.requestAuthorization()
-            try AppleSpeechBackend.shared.start(handler: handler)
+            try await AppleSpeechBackend.shared.start(handler: handler)
         case .whisperKit:
             try await WhisperBackend.shared.start(handler: handler)
         }
@@ -38,8 +39,10 @@ final class TranscriptionService {
 
     func stop() {
         switch backend {
-        case .appleSpeech: AppleSpeechBackend.shared.stop()
-        case .whisperKit:  WhisperBackend.shared.stop()
+        case .appleSpeech:
+            AppleSpeechBackend.shared.stop()
+        case .whisperKit:
+            WhisperBackend.shared.stop()
         }
     }
 }

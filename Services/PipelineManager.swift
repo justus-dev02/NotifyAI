@@ -9,6 +9,7 @@ import Foundation
 import BackgroundTasks
 import UIKit
 import UserNotifications
+import AVFoundation
 
 actor PipelineManager {
     private let storage: StorageService
@@ -66,7 +67,25 @@ actor PipelineManager {
                 let p = Double(c) / Double(parts.count)
                 await update(noteId, stage: .transcribing, progress: 0.1 + 0.6*p, eta: estimateETA(parts.count - c, perChunk: 60), msg: "Transkription…")
 
-                let segmentsPart: [TranscriptSegment] = [] // TODO
+                let segmentsPart: [TranscriptSegment]
+                do {
+                    if ServiceLocator.shared.transcription.backend == .appleSpeech {
+                        let text: String = try await withCheckedThrowingContinuation { cont in
+                            AppleSpeechService.shared.recognizeFile(url: part) { result in
+                                cont.resume(with: result)
+                            }
+                        }
+                        let asset = AVURLAsset(url: part)
+                        let duration = CMTimeGetSeconds(asset.duration)
+                        let segment = TranscriptSegment(start: 0, end: duration, speakerId: nil, text: text)
+                        segmentsPart = [segment]
+                    } else {
+                        // TODO: Implement WhisperKit offline transcription
+                        segmentsPart = []
+                    }
+                } catch {
+                    throw error
+                }
 
                 allSegments.append(contentsOf: segmentsPart)
             }

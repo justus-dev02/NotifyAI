@@ -44,8 +44,7 @@ final class RecorderViewModel: ObservableObject {
     init(note: Note) {
         self.note = note
         audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
-        // Setze den Backend-Typ im TranscriptionService basierend auf der Einstellung
-        sl.transcription.backend = .appleSpeech // Oder basierend auf SettingsViewModel
+        // Backend is selected via settings; default is set in TranscriptionService
     }
     
     func start(consent: ConsentLog?) async {
