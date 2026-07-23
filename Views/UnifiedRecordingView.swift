@@ -420,7 +420,10 @@ class RecordingViewModel: ObservableObject {
     func stopRecording() async {
         let duration = recorder.stop()
         timer?.invalidate()
-        recognitionTask?.cancel()
+        recognitionRequest?.endAudio()
+        recognitionTask?.finish()
+        recognitionTask = nil
+        recognitionRequest = nil
         
         if var finalNote = note {
             finalNote.duration = duration
@@ -466,28 +469,34 @@ class RecordingViewModel: ObservableObject {
     }
     
     private func startLiveTranscription() {
-        SFSpeechRecognizer.requestAuthorization { authStatus in
+        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
             DispatchQueue.main.async {
-                if authStatus == .authorized {
-                    self.speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "de-DE"))
-                    self.speechRecognizer?.supportsOnDeviceRecognition = true
+                guard let self = self, authStatus == .authorized else { return }
+                
+                guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "de-DE")) ?? SFSpeechRecognizer() else { return }
+                self.speechRecognizer = recognizer
+                
+                let request = SFSpeechAudioBufferRecognitionRequest()
+                request.shouldReportPartialResults = true
+                if recognizer.supportsOnDeviceRecognition {
+                    request.requiresOnDeviceRecognition = true
                 }
-            }
-        }
-        
-        // Live fallback simulation to guarantee live feedback
-        Task {
-            let phrases = [
-                "Herzlich Willkommen.",
-                "Wir starten jetzt die Besprechung.",
-                "Alle Themen werden lokal verarbeitet.",
-                "Die Zusammenfassung wird automatisch erstellt."
-            ]
-            for phrase in phrases {
-                if self.isPaused { continue }
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                if !self.isPaused && self.liveTranscript.count < 300 {
-                    self.liveTranscript += phrase + " "
+                self.recognitionRequest = request
+                
+                // Route live microphone audio buffers directly to SFSpeechAudioBufferRecognitionRequest
+                self.recorder.bufferConsumer = { buffer in
+                    request.append(buffer)
+                }
+                
+                self.recognitionTask = recognizer.recognitionTask(with: request) { result, error in
+                    if let result = result {
+                        let text = result.bestTranscription.formattedString
+                        DispatchQueue.main.async {
+                            if !text.isEmpty {
+                                self.liveTranscript = text
+                            }
+                        }
+                    }
                 }
             }
         }
