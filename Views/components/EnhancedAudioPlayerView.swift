@@ -24,20 +24,20 @@ struct EnhancedAudioPlayerView: View {
                         get: { currentTime },
                         set: { audioPlayer.seek(to: $0) }
                     ),
-                    in: 0...duration
+                    in: 0...max(1.0, duration)
                 )
-                .accentColor(AppTheme.accent)
+                .accentColor(Color.indigo)
                 
                 HStack {
                     Text(formatTime(currentTime))
                         .font(.caption)
-                        .themedText(.secondary)
+                        .foregroundStyle(.secondary)
                     
                     Spacer()
                     
                     Text(formatTime(duration))
                         .font(.caption)
-                        .themedText(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             
@@ -46,19 +46,19 @@ struct EnhancedAudioPlayerView: View {
                 Button(action: { audioPlayer.skipBackward() }) {
                     Image(systemName: "gobackward.15")
                         .font(.title2)
-                        .foregroundColor(AppTheme.accent)
+                        .foregroundColor(Color.indigo)
                 }
                 
                 Button(action: { togglePlayback() }) {
                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.largeTitle)
-                        .foregroundColor(AppTheme.accent)
+                        .font(.system(size: 44))
+                        .foregroundColor(Color.indigo)
                 }
                 
                 Button(action: { audioPlayer.skipForward() }) {
                     Image(systemName: "goforward.15")
                         .font(.title2)
-                        .foregroundColor(AppTheme.accent)
+                        .foregroundColor(Color.indigo)
                 }
             }
         }
@@ -76,7 +76,9 @@ struct EnhancedAudioPlayerView: View {
             currentTime = time
         }
         audioPlayer.onDurationUpdate = { dur in
-            duration = dur
+            if dur > 0 {
+                duration = dur
+            }
         }
         audioPlayer.onPlaybackStateChange = { playing in
             isPlaying = playing
@@ -110,13 +112,32 @@ class AudioPlayerManager: NSObject, ObservableObject, AVAudioPlayerDelegate {
     
     func setupPlayer(url: URL) {
         do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            var targetURL = url
+            if !FileManager.default.fileExists(atPath: targetURL.path) {
+                let filename = targetURL.lastPathComponent
+                let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                let candidate1 = docsDir.appendingPathComponent(filename)
+                let candidate2 = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+                
+                if FileManager.default.fileExists(atPath: candidate1.path) {
+                    targetURL = candidate1
+                } else if FileManager.default.fileExists(atPath: candidate2.path) {
+                    targetURL = candidate2
+                }
+            }
+            
+            audioPlayer = try AVAudioPlayer(contentsOf: targetURL)
             audioPlayer?.delegate = self
             audioPlayer?.prepareToPlay()
             
-            onDurationUpdate?(audioPlayer?.duration ?? 0)
+            if let dur = audioPlayer?.duration, dur > 0 {
+                onDurationUpdate?(dur)
+            }
         } catch {
-            print("Error setting up audio player: \(error)")
+            print("Error setting up audio player for URL \(url): \(error)")
         }
     }
     

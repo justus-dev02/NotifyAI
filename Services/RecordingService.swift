@@ -66,7 +66,8 @@ final class RecordingService: NSObject {
     func stop() -> TimeInterval {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
-        try? AVAudioSession.sharedInstance().setActive(false)
+        file = nil // Finalize & flush audio file headers to disk
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         if let start = startTS { recordedDuration = Date().timeIntervalSince(start) }
         return recordedDuration
     }

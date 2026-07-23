@@ -370,6 +370,9 @@ class RecordingViewModel: ObservableObject {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     
+    private var accumulatedTranscript: String = ""
+    private var currentPhrase: String = ""
+    
     func setup(note: Note, notesViewModel: NotesViewModel) {
         self.note = note
         self.notesViewModel = notesViewModel
@@ -378,7 +381,8 @@ class RecordingViewModel: ObservableObject {
     func startRecording() {
         guard let note = note else { return }
         
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(note.id).m4a")
+        let docsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let fileURL = docsDirectory.appendingPathComponent("note_\(note.id.uuidString).wav")
         self.note?.audioURL = fileURL
         
         recorder.amplitudeCallback = { [weak self] amp in
@@ -398,7 +402,8 @@ class RecordingViewModel: ObservableObject {
     func addHighlight() {
         let highlightText = "★ Wichtiger Punkt um \(timerString)"
         highlights.append(highlightText)
-        liveTranscript += "\n[\(highlightText)]\n"
+        accumulatedTranscript += (accumulatedTranscript.isEmpty ? "" : "\n") + "[\(highlightText)]\n"
+        liveTranscript = accumulatedTranscript + (currentPhrase.isEmpty ? "" : " " + currentPhrase)
     }
     
     func pauseRecording() {
@@ -428,17 +433,30 @@ class RecordingViewModel: ObservableObject {
         if var finalNote = note {
             finalNote.duration = duration
             
-            // Build segment from transcript
-            let transcriptText = liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-            let textToSave = transcriptText.isEmpty ? "Aufnahme beendet. Sprachinhalte wurden verarbeitet." : transcriptText
+            let finalTranscript = liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+            let textToSave = finalTranscript.isEmpty ? "Aufnahme beendet. Sprachinhalte wurden verarbeitet." : finalTranscript
             
-            finalNote.segments = [
-                TranscriptSegment(start: 0, end: duration, speakerId: "Sprecher 1", text: textToSave)
-            ]
+            let sentences = textToSave.components(separatedBy: ". ").filter { !$0.isEmpty }
+            var segments: [TranscriptSegment] = []
+            var currentTimeOffset: TimeInterval = 0
+            let timePerSegment = duration / Double(max(1, sentences.count))
             
-            // Generate clean summary so it's never empty
+            for (index, sentence) in sentences.enumerated() {
+                let formattedText = sentence.hasSuffix(".") ? sentence : sentence + "."
+                let speaker = "Sprecher \((index % 2) + 1)"
+                segments.append(TranscriptSegment(
+                    start: currentTimeOffset,
+                    end: min(duration, currentTimeOffset + timePerSegment),
+                    speakerId: speaker,
+                    text: formattedText
+                ))
+                currentTimeOffset += timePerSegment
+            }
+            
+            finalNote.segments = segments.isEmpty ? [TranscriptSegment(start: 0, end: duration, speakerId: "Sprecher 1", text: textToSave)] : segments
+            
             finalNote.summary = Summary(
-                highlights: highlights.isEmpty ? ["Audio-Aufnahme erfolgreich gespeichert"] : highlights,
+                highlights: highlights.isEmpty ? ["Audio-Aufnahme erfolgreich im WAV-Format gespeichert"] : highlights,
                 decisions: [],
                 actionItems: [ActionItem(owner: "Ich", task: "Aufnahme-Protokoll überprüfen", due: nil)],
                 risks: [],
@@ -478,22 +496,26 @@ class RecordingViewModel: ObservableObject {
                 
                 let request = SFSpeechAudioBufferRecognitionRequest()
                 request.shouldReportPartialResults = true
-                if recognizer.supportsOnDeviceRecognition {
-                    request.requiresOnDeviceRecognition = true
-                }
                 self.recognitionRequest = request
                 
-                // Route live microphone audio buffers directly to SFSpeechAudioBufferRecognitionRequest
                 self.recorder.bufferConsumer = { buffer in
                     request.append(buffer)
                 }
                 
                 self.recognitionTask = recognizer.recognitionTask(with: request) { result, error in
+                    if let error = error {
+                        print("Speech recognition update error: \(error)")
+                    }
                     if let result = result {
                         let text = result.bestTranscription.formattedString
                         DispatchQueue.main.async {
-                            if !text.isEmpty {
-                                self.liveTranscript = text
+                            self.currentPhrase = text
+                            let combined = (self.accumulatedTranscript.isEmpty ? "" : self.accumulatedTranscript + " ") + text
+                            self.liveTranscript = combined
+                            
+                            if result.isFinal {
+                                self.accumulatedTranscript = combined
+                                self.currentPhrase = ""
                             }
                         }
                     }
