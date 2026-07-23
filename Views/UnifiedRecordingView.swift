@@ -455,14 +455,8 @@ class RecordingViewModel: ObservableObject {
             
             finalNote.segments = segments.isEmpty ? [TranscriptSegment(start: 0, end: duration, speakerId: "Sprecher 1", text: textToSave)] : segments
             
-            finalNote.summary = Summary(
-                highlights: highlights.isEmpty ? ["Audio-Aufnahme erfolgreich im WAV-Format gespeichert"] : highlights,
-                decisions: [],
-                actionItems: [ActionItem(owner: "Ich", task: "Aufnahme-Protokoll überprüfen", due: nil)],
-                risks: [],
-                markdown: "### Zusammenfassung\n\(textToSave)\n\n*Dauer: \(timerString)*",
-                citations: []
-            )
+            let generatedSummary = await ServiceLocator.shared.llm.summarize(transcript: textToSave)
+            finalNote.summary = generatedSummary
             
             await ServiceLocator.shared.storage.save(finalNote)
             NotificationCenter.default.post(name: .notesChanged, object: nil)
@@ -482,8 +476,11 @@ class RecordingViewModel: ObservableObject {
     }
     
     private func updateAmplitudes(_ amp: Float) {
-        amplitudes.removeFirst()
-        amplitudes.append(min(1.0, max(0.1, amp * 5)))
+        let scaled = min(1.0, max(0.08, amp * 15.0))
+        withAnimation(.easeOut(duration: 0.08)) {
+            amplitudes.removeFirst()
+            amplitudes.append(scaled)
+        }
     }
     
     private func startLiveTranscription() {

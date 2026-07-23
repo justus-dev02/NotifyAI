@@ -181,7 +181,7 @@ struct EnhancedNoteDetailView: View {
                         Text("Zusammenfassung")
                             .font(.headline)
                             .foregroundStyle(Color.adaptiveLabel)
-                        Text(summary.markdown)
+                        Text(LocalizedStringKey(summary.markdown))
                             .font(.body)
                             .lineSpacing(4)
                     }

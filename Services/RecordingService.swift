@@ -41,10 +41,25 @@ final class RecordingService: NSObject {
             guard let self, !self.isPaused else { return }
             
             // Calculate RMS for amplitude visualization
-            if let channelData = buffer.floatChannelData?[0] {
-                let channelDataArray = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
-                let sumOfSquares = channelDataArray.reduce(0) { $0 + $1 * $1 }
-                let rms = sqrt(sumOfSquares / Float(buffer.frameLength))
+            var rms: Float = 0
+            let frameLength = Int(buffer.frameLength)
+            if let floatData = buffer.floatChannelData?[0] {
+                var sum: Float = 0
+                for i in 0..<frameLength {
+                    let sample = floatData[i]
+                    sum += sample * sample
+                }
+                rms = sqrt(sum / Float(max(1, frameLength)))
+            } else if let int16Data = buffer.int16ChannelData?[0] {
+                var sum: Float = 0
+                for i in 0..<frameLength {
+                    let sample = Float(int16Data[i]) / 32768.0
+                    sum += sample * sample
+                }
+                rms = sqrt(sum / Float(max(1, frameLength)))
+            }
+
+            if rms > 0 {
                 DispatchQueue.main.async {
                     self.amplitudeCallback?(rms)
                 }

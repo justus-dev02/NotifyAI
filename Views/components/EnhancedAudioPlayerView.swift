@@ -142,8 +142,10 @@ class AudioPlayerManager: NSObject, ObservableObject, AVAudioPlayerDelegate {
     }
     
     func play() {
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
         try? AVAudioSession.sharedInstance().setActive(true)
+        
         audioPlayer?.play()
         startTimer()
         onPlaybackStateChange?(true)
