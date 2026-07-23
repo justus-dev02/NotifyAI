@@ -2,409 +2,268 @@ import SwiftUI
 
 struct NoteDetailView: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case transcript
         case summary
-        case mindmap
+        case transcript
 
         var id: String { rawValue }
 
         var label: String {
             switch self {
-            case .transcript: return "Transkription"
             case .summary: return "Zusammenfassung"
-            case .mindmap: return "Mindmap"
+            case .transcript: return "Transkription"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .summary: return "doc.text.fill"
+            case .transcript: return "text.quote"
             }
         }
     }
 
     let note: Note
-    var initialTab: Tab = .summary
-
-    @State private var selectedTab: Tab
-    @State private var selectedRole: String
-    @EnvironmentObject var appState: AppState
-
-    init(note: Note, initialTab: Tab = .summary) {
-        self.note = note
-        self.initialTab = initialTab
-        _selectedTab = State(initialValue: initialTab)
-        _selectedRole = State(initialValue: note.roleSummaries.keys.sorted().first ?? "Sales")
-    }
+    @State private var selectedTab: Tab = .summary
+    @State private var isPlaying = false
+    @State private var currentTime: TimeInterval = 0
+    @State private var duration: TimeInterval = 0
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                header
+            VStack(alignment: .leading, spacing: 20) {
+                headerCard
+                
+                if let audioURL = note.audioURL {
+                    audioPlayerSection(url: audioURL)
+                }
+                
                 tabPicker
-                content
+                
+                switch selectedTab {
+                case .summary:
+                    summaryView
+                case .transcript:
+                    transcriptView
+                }
             }
-            .padding(24)
+            .padding(20)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(
+            LinearGradient(
+                colors: [Color.adaptiveBackground, Color.indigo.opacity(0.04)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .navigationTitle(note.title)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(metaLine(note))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    ParticipantRow(participants: note.participants)
-                }
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(note.title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.adaptiveLabel)
                 Spacer()
-                Menu {
-                    Button("Export als Markdown") {}
-                    Button("Export als PDF") {}
-                    Button("Action Items → Erinnerungen") {}
-                    Button("Action Items → Kalender") {}
-                    Button("Mindmap als Mermaid exportieren") {}
-                } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
-                        .labelStyle(.titleAndIcon)
+            }
+            
+            HStack(spacing: 12) {
+                Label(formattedDate(note.createdAt), systemImage: "calendar")
+                if let dur = note.duration {
+                    Label(formatDuration(dur), systemImage: "clock")
                 }
             }
+            .font(.caption)
+            .foregroundStyle(.secondary)
 
-            GlassCard {
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Pipeline")
-                            .font(.headline)
-                        PipelineStepList(state: note.pipeline)
-                    }
-                    Spacer()
-                    AskYourNotesPanel(note: note)
-                        .frame(maxWidth: 260)
+            if !note.participants.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.2.fill")
+                        .font(.caption)
+                        .foregroundStyle(Color.indigo)
+                    Text(note.participants.map { $0.name }.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
+        .padding(18)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.indigo.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    private func audioPlayerSection(url: URL) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "waveform.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(Color.indigo)
+                Text("Audio-Wiedergabe")
+                    .font(.headline)
+                    .foregroundStyle(Color.adaptiveLabel)
+                Spacer()
+            }
+            
+            EnhancedAudioPlayerView(
+                url: url,
+                isPlaying: $isPlaying,
+                currentTime: $currentTime,
+                duration: $duration
+            )
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private var tabPicker: some View {
-        Picker("Ansicht", selection: $selectedTab) {
+        HStack(spacing: 0) {
             ForEach(Tab.allCases) { tab in
-                Text(tab.label).tag(tab)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedTab = tab
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: tab.icon)
+                        Text(tab.label)
+                    }
+                    .font(.subheadline)
+                    .fontWeight(selectedTab == tab ? .bold : .medium)
+                    .foregroundStyle(selectedTab == tab ? Color.white : Color.adaptiveLabel)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        selectedTab == tab ? Color.indigo : Color.clear,
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+                }
             }
         }
-        .pickerStyle(.segmented)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch selectedTab {
-        case .transcript:
-            transcriptView
-        case .summary:
-            summaryView
-        case .mindmap:
-            MindmapView(note: note)
-        }
-    }
-
-    private var transcriptView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            AudioPlayerView(url: note.audioURL ?? URL(string: "https://example.com/placeholder.mp3")!)
-            HStack {
-                TextField("Transkript durchsuchen", text: .constant(""))
-                    .textFieldStyle(.roundedBorder)
-                Toggle("Nur Treffer", isOn: .constant(false))
-                    .toggleStyle(.switch)
-            }
-
-            ForEach(note.segments) { segment in
-                TranscriptSegmentView(segment: segment, participants: note.participants)
-            }
-        }
+        .padding(4)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var summaryView: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 16) {
             if let summary = note.summary {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Kurzfassung")
-                        .font(.headline)
-                    Text(summary.markdown)
-                }
-
-                roleSwitcher
-
-                SummarySection(title: "Highlights", items: summary.highlights)
-                SummarySection(title: "Decisions", items: summary.decisions)
-                ActionItemSection(items: summary.actionItems)
-                SummarySection(title: "Risiken", items: summary.risks)
-            }
-
-            if !note.relatedNoteIDs.isEmpty {
-                SummarySection(title: "Ähnliche Notizen", items: note.relatedNoteIDs.map { $0.uuidString.prefix(8) + "…" })
-            }
-        }
-    }
-
-    private var roleSwitcher: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Rollenspezifische Ausgabe")
-                .font(.headline)
-            Picker("Rolle", selection: $selectedRole) {
-                ForEach(note.roleSummaries.keys.sorted(), id: \.self) { key in
-                    Text(key).tag(key)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            if let roleSummary = note.roleSummaries[selectedRole] {
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Ausgabe für \(selectedRole)")
+                if !summary.highlights.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Highlights")
                             .font(.headline)
-                        Text(roleSummary.markdown)
-                    }
-                }
-            }
-        }
-    }
-
-    private func metaLine(_ note: Note) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        let dateString = formatter.string(from: note.createdAt)
-        let duration = note.duration.map { String(format: "%.0f min", $0/60) } ?? "–"
-        return [dateString, note.location ?? "Ort unbekannt", duration].joined(separator: " · ")
-    }
-}
-
-private struct ParticipantRow: View {
-    let participants: [Participant]
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(participants) { participant in
-                    Label {
-                        Text(participant.name)
-                    } icon: {
-                        Image(systemName: participant.avatarSymbol)
-                    }
-                    .font(.caption)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(participant.color.opacity(0.15), in: Capsule())
-                }
-            }
-        }
-    }
-}
-
-private struct PipelineStepList: View {
-    let state: PipelineState
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(PipelineState.Stage.progression, id: \.self) { stage in
-                HStack {
-                    Image(systemName: icon(for: stage, current: state.stage))
-                        .foregroundStyle(color(for: stage, current: state.stage))
-                    Text(label(for: stage))
-                        .font(.caption)
-                    Spacer()
-                    if stage == state.stage {
-                        ProgressView(value: state.progress)
-                            .frame(width: 80)
-                    }
-                }
-            }
-        }
-    }
-
-    private func icon(for stage: PipelineState.Stage, current: PipelineState.Stage) -> String {
-        if stage == current { return "circle.dashed.inset.filled" }
-        if stage.rawValue < current.rawValue { return "checkmark.circle.fill" }
-        return "circle"
-    }
-
-    private func color(for stage: PipelineState.Stage, current: PipelineState.Stage) -> Color {
-        if stage == current { return .accentColor }
-        if stage.rawValue < current.rawValue { return .green }
-        return .secondary
-    }
-
-    private func label(for stage: PipelineState.Stage) -> String {
-        switch stage {
-        case .chunking: return "Sprache analysiert"
-        case .transcribing: return "Diarization"
-        case .diarizing: return "Sprecher"
-        case .summarizing: return "TODOs"
-        case .roleSummaries: return "Kurz-Summary"
-        case .mindmap: return "Mindmap"
-        case .indexing: return "Index"
-        case .done: return "Fertig"
-        case .error: return "Fehler"
-        case .none: return "Kein Status"
-        }
-    }
-}
-
-private struct SummarySection: View {
-    let title: String
-    let items: [String]
-
-    var body: some View {
-        if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.headline)
-                ForEach(items, id: \.self) { item in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.accentColor)
-                        Text(item)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct ActionItemSection: View {
-    let items: [ActionItem]
-
-    var body: some View {
-        if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Action Items")
-                    .font(.headline)
-                ForEach(items) { item in
-                    GlassCard {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(item.task)
-                                    .font(.subheadline)
-                                Spacer()
-                                NoteStatusBadge(status: item.status)
-                            }
-                            HStack(spacing: 12) {
-                                if let owner = item.owner {
-                                    Label(owner, systemImage: "person.fill")
-                                        .font(.caption)
-                                }
-                                if let due = item.due {
-                                    Label(due.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
-                                        .font(.caption)
-                                }
-                                if let url = item.sourceURL {
-                                    Link(destination: url) {
-                                        Label("Quelle", systemImage: "link")
-                                    }
+                            .foregroundStyle(Color.indigo)
+                        ForEach(summary.highlights, id: \.self) { highlight in
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(Color.indigo)
                                     .font(.caption)
+                                    .padding(.top, 2)
+                                Text(highlight)
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                if !summary.markdown.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Zusammenfassung")
+                            .font(.headline)
+                            .foregroundStyle(Color.adaptiveLabel)
+                        Text(summary.markdown)
+                            .font(.body)
+                            .lineSpacing(4)
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                
+                if !summary.actionItems.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("To-Dos & Action Items")
+                            .font(.headline)
+                            .foregroundStyle(Color.indigo)
+                        ForEach(summary.actionItems) { item in
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(Color.indigo)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.task)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    if let owner = item.owner {
+                                        Text("Zuständig: \(owner)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
+            } else {
+                Text("Keine Zusammenfassung verfügbar.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(24)
             }
         }
     }
-}
 
-private struct NoteStatusBadge: View {
-    let status: ActionItem.Status
-
-    var body: some View {
-        Text(status.displayName)
-            .font(.caption2)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.15), in: Capsule())
-    }
-
-    private var color: Color {
-        switch status {
-        case .open: return .orange
-        case .inProgress: return .blue
-        case .completed: return .green
-        case .blocked: return .red
-        }
-    }
-}
-
-private struct AskYourNotesPanel: View {
-    @State private var prompt: String = "Was sind die Risiken für das Leadership-Team?"
-    let note: Note
-
-    var body: some View {
+    private var transcriptView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Ask your Notes")
-                .font(.headline)
-            TextField("Frage stellen", text: $prompt, axis: .vertical)
-                .lineLimit(1...3)
-                .textFieldStyle(.roundedBorder)
-            Button {
-                // Trigger local RAG pipeline
-            } label: {
-                Label("Antwort generieren", systemImage: "sparkles")
-            }
-            .buttonStyle(.borderedProminent)
-            Divider()
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Letzte Antwort")
-                    .font(.caption)
+            if note.segments.isEmpty {
+                Text("Kein Transkript vorhanden.")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("• Risiko: Lieferverzug wegen fehlender Freigabe (Zitat 12:32)\n• Nächste Schritte: PM @ Lea informiert Stakeholder")
-                    .font(.caption)
-            }
-        }
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1))
-    }
-}
-
-private struct TranscriptSegmentView: View {
-    let segment: TranscriptSegment
-    let participants: [Participant]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(timeString(segment.start))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let speakerId = segment.speakerId,
-                   let participant = participants.first(where: { $0.id.uuidString == speakerId || $0.name == speakerId }) {
-                    Label(participant.name, systemImage: participant.avatarSymbol)
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(participant.color.opacity(0.2), in: Capsule())
+                    .padding(24)
+            } else {
+                ForEach(note.segments) { segment in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(speakerName(for: segment.speakerId))
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.indigo)
+                            Spacer()
+                            Text(formatDuration(segment.start))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(segment.text)
+                            .font(.body)
+                    }
+                    .padding(14)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
-            Text(segment.text)
-            HStack {
-                Button("Bereich korrigieren") {}
-                Spacer()
-                Button("Neu zusammenfassen") {}
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            Divider()
         }
     }
 
-    private func timeString(_ interval: TimeInterval) -> String {
-        let minutes = Int(interval) / 60
-        let seconds = Int(interval) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+    private func speakerName(for speakerId: String?) -> String {
+        guard let speakerId = speakerId else { return "Sprecher" }
+        return note.participants.first { $0.id.uuidString == speakerId }?.name ?? "Sprecher"
     }
-}
 
-#Preview {
-    var note = Note(title: "Vertriebscall")
-    note.participants = [Participant(name: "Lea", role: "AE", colorHex: "#6E5DE7"), Participant(name: "Tim", role: "PM", colorHex: "#65D6FF")]
-    note.summary = Summary(highlights: ["Kunde möchte Pilot verlängern"], decisions: ["Preisnachlass 10%"], actionItems: [ActionItem(owner: "Lea", task: "Folgeangebot senden", status: .inProgress)], risks: ["Budget-Freigabe fehlt"], markdown: "Kurz-Summary")
-    note.roleSummaries = ["Sales": Summary(markdown: "Sales-Fokus auf Deal-Close."), "Leadership": Summary(markdown: "Achte auf Budget.")]
-    note.segments = [TranscriptSegment(start: 12, end: 60, speakerId: note.participants.first?.id.uuidString, text: "Hallo zusammen, wir starten den Call."), TranscriptSegment(start: 62, end: 120, speakerId: note.participants.last?.id.uuidString, text: "Budget Approval steht noch aus.")]
-    note.pipeline = .init(stage: .summarizing, progress: 0.4)
-    return NavigationStack { NoteDetailView(note: note) }
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let min = Int(seconds) / 60
+        let sec = Int(seconds) % 60
+        return String(format: "%02d:%02d", min, sec)
+    }
 }

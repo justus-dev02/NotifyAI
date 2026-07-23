@@ -12,8 +12,6 @@ struct MainTabView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @StateObject private var notesViewModel = NotesViewModel()
     @StateObject private var settingsViewModel = SettingsViewModel()
-    @StateObject private var templateLibrary = TemplateLibrary()
-    @StateObject private var learningGenerator = LearningGenerator()
     
     var body: some View {
         TabView {
@@ -22,7 +20,7 @@ struct MainTabView: View {
                 .environmentObject(settingsViewModel)
                 .environmentObject(themeManager)
                 .tabItem {
-                    Label("Dashboard", systemImage: "square.grid.2x2")
+                    Label("Dashboard", systemImage: "square.grid.2x2.fill")
                 }
 
             NotesListView()
@@ -30,7 +28,7 @@ struct MainTabView: View {
                 .environmentObject(settingsViewModel)
                 .environmentObject(themeManager)
                 .tabItem {
-                    Label("Notizen", systemImage: "list.bullet.rectangle")
+                    Label("Notizen", systemImage: "note.text")
                 }
 
             SearchView()
@@ -41,28 +39,21 @@ struct MainTabView: View {
                     Label("Suche", systemImage: "magnifyingglass")
                 }
 
-            /*TranscriptionView()
-                .environmentObject(themeManager)
-                .tabItem {
-                    Label("Transkription", systemImage: "waveform")
-                }*/
-
             SettingsView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
                 .environmentObject(themeManager)
                 .tabItem {
-                    Label("Einstellungen", systemImage: "gearshape")
+                    Label("Einstellungen", systemImage: "gearshape.fill")
                 }
         }
-        .accentColor(AppTheme.accent)
+        .tint(Color.indigo)
         .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
     }
 }
 
 #Preview {
     MainTabView()
-        .environmentObject(DashboardViewModel())
-        .environmentObject(NotesViewModel())
-        .environmentObject(SettingsViewModel())
+        .environmentObject(AppState())
+        .environmentObject(ThemeManager())
 }

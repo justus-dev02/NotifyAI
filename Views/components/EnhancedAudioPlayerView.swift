@@ -121,6 +121,8 @@ class AudioPlayerManager: NSObject, ObservableObject, AVAudioPlayerDelegate {
     }
     
     func play() {
+        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        try? AVAudioSession.sharedInstance().setActive(true)
         audioPlayer?.play()
         startTimer()
         onPlaybackStateChange?(true)

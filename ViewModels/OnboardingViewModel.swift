@@ -6,7 +6,6 @@ final class OnboardingViewModel: ObservableObject {
         case privacy
         case speech
         case model
-        case integrations
 
         var id: Int { rawValue }
 
@@ -15,32 +14,20 @@ final class OnboardingViewModel: ObservableObject {
             case .privacy: return "Datenschutz"
             case .speech: return "Sprachpaket"
             case .model: return "LLM-Modell"
-            case .integrations: return "Integrationen"
             }
         }
     }
 
-    @Published var analyticsEnabled = false
     @Published var selectedLocale = "de-DE"
     @Published var testPhrase = "Das ist ein kurzer Testsatz."
     @Published var selectedModelQuality: ModelQuality = .balanced
     @Published var selectedModelSize: ModelSize = .phiMini
-    @Published var selectedIntegrations: Set<Integration.Kind> = []
     @Published var downloadProgress: Double = 0
     @Published var isDownloading = false
     @Published var currentStep: Step = .privacy
 
     let availableLocales = ["de-DE", "en-US", "fr-FR", "es-ES"]
     let availableModels: [ModelSize] = [.phiMini, .phiMiniInt8, .llama8bInt4]
-    let integrationOptions: [Integration.Kind] = Integration.Kind.allCases
-
-    func toggleIntegration(_ kind: Integration.Kind) {
-        if selectedIntegrations.contains(kind) {
-            selectedIntegrations.remove(kind)
-        } else {
-            selectedIntegrations.insert(kind)
-        }
-    }
 
     func startDownload() {
         guard !isDownloading else { return }

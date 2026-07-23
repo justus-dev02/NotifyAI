@@ -51,14 +51,10 @@ struct AppTheme {
 
 // MARK: - Color Extensions
 extension Color {
-    init(_ colorName: String) {
-        self.init(colorName, bundle: .main)
-    }
-    
     // Dynamic colors that adapt to light/dark mode
-    static let adaptiveBackground = Color(UIColor.systemBackground)
-    static let adaptiveSecondaryBackground = Color(UIColor.secondarySystemBackground)
-    static let adaptiveTertiaryBackground = Color(UIColor.tertiarySystemBackground)
+    static let adaptiveBackground = Color(UIColor.systemGroupedBackground)
+    static let adaptiveSecondaryBackground = Color(UIColor.secondarySystemGroupedBackground)
+    static let adaptiveTertiaryBackground = Color(UIColor.tertiarySystemGroupedBackground)
     
     static let adaptiveLabel = Color(UIColor.label)
     static let adaptiveSecondaryLabel = Color(UIColor.secondaryLabel)

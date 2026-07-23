@@ -7,709 +7,267 @@
 
 import SwiftUI
 import AVKit
-import UIKit
 
 struct EnhancedNoteDetailView: View {
     @State var note: Note
     @EnvironmentObject var themeManager: ThemeManager
-    @StateObject private var audioPlayer = AudioPlayerManager()
-    @State private var selectedTab: DetailTab = .overview
+    @EnvironmentObject var notesViewModel: NotesViewModel
+    
+    enum Tab: String, CaseIterable, Identifiable {
+        case summary = "Zusammenfassung"
+        case transcript = "Transkription"
+
+        var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .summary: return "doc.text.fill"
+            case .transcript: return "text.quote"
+            }
+        }
+    }
+    
+    @State private var selectedTab: Tab = .summary
     @State private var isPlaying = false
     @State private var currentTime: TimeInterval = 0
     @State private var duration: TimeInterval = 0
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var notesViewModel: NotesViewModel
-    @State private var activityItem: Any?
-    @State private var isShowingActivityView = false
-    @State private var isShowingEditSheet = false
-    
-    enum DetailTab: String, CaseIterable, Identifiable {
-        case overview, transcript, summary, mindmap, actionItems
-        
-        var id: String { rawValue }
-        
-        var title: String {
-            switch self {
-            case .overview: return "Übersicht"
-            case .transcript: return "Transkript"
-            case .summary: return "Zusammenfassung"
-            case .mindmap: return "Mindmap"
-            case .actionItems: return "Action Items"
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .overview: return "doc.text"
-            case .transcript: return "text.quote"
-            case .summary: return "list.bullet.rectangle"
-            case .mindmap: return "tree"
-            case .actionItems: return "checkmark.circle"
-            }
-        }
-    }
-    
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                headerSection
-                audioPlayerSection
+            VStack(alignment: .leading, spacing: 20) {
+                headerCard
+                
+                if let audioURL = note.audioURL {
+                    audioSection(url: audioURL)
+                }
+                
                 tabPicker
-                contentSection
+                
+                switch selectedTab {
+                case .summary:
+                    summarySection
+                case .transcript:
+                    transcriptSection
+                }
             }
-            .padding(24)
+            .padding(20)
         }
-        .themedBackground(.primary)
+        .background(
+            LinearGradient(
+                colors: [Color.adaptiveBackground, Color.indigo.opacity(0.04)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .navigationTitle(note.title)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button("Export als Markdown") { exportAsMarkdown() }
-                    Button("Export als PDF") { exportAsPDF() }
-                    Button("Teilen") { shareNote() }
-                    Divider()
-                    Button("Bearbeiten") { editNote() }
-                    Button("Löschen", role: .destructive) { deleteNote() }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .onAppear {
-            setupAudioPlayer()
-        }
-        .sheet(isPresented: $isShowingActivityView) {
-            if let activityItem = activityItem {
-                ActivityViewController(activityItems: [activityItem])
-            }
-        }
-        .sheet(isPresented: $isShowingEditSheet) {
-            EditNoteView(note: $note)
-                .environmentObject(notesViewModel)
-                .environmentObject(themeManager)
-        }
+        .navigationBarTitleDisplayMode(.inline)
     }
-    
-    // MARK: - Header Section
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Title and Status
+
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(note.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .themedText(.primary)
-                    
-                    Text(metaInformation)
-                        .font(.subheadline)
-                        .themedText(.secondary)
-                }
-                
+                Text(note.title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.adaptiveLabel)
                 Spacer()
-                
-                PipelineStatusView(state: note.pipeline)
             }
             
-            // Participants
-            if !note.participants.isEmpty {
-                ParticipantChipsView(participants: note.participants)
-            }
-            
-            // Tags
-            if !note.tags.isEmpty {
-                TagsView(tags: note.tags)
-            }
-        }
-        .glassCard()
-    }
-    
-    // MARK: - Audio Player Section
-    private var audioPlayerSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Image(systemName: "waveform")
-                    .foregroundColor(AppTheme.accent)
-                Text("Audio-Aufnahme")
-                    .font(.headline)
-                    .themedText(.primary)
-                Spacer()
-                if let duration = note.duration {
-                    Text(formatDuration(duration))
-                        .font(.caption)
-                        .themedText(.secondary)
-                }
-            }
-            
-            if let audioURL = note.audioURL {
-                EnhancedAudioPlayerView(url: audioURL, isPlaying: $isPlaying, currentTime: $currentTime, duration: $duration)
-            } else {
-                Text("Keine Audio-Datei verfügbar")
-                    .font(.subheadline)
-                    .themedText(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.secondaryBackground)
-                    .cornerRadius(12)
-            }
-        }
-        .glassCard()
-    }
-    
-    // MARK: - Tab Picker
-    private var tabPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(DetailTab.allCases) { tab in
-                    Button(action: { selectedTab = tab }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: tab.icon)
-                            Text(tab.title)
-                        }
-                        .font(.subheadline)
-                        .fontWeight(selectedTab == tab ? .semibold : .regular)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            selectedTab == tab ? AppTheme.accent : AppTheme.secondaryBackground,
-                            in: Capsule()
-                        )
-                        .foregroundColor(selectedTab == tab ? .white : AppTheme.primaryText)
-                    }
+                Label(formattedDate(note.createdAt), systemImage: "calendar")
+                if let dur = note.duration {
+                    Label(formatDuration(dur), systemImage: "clock")
                 }
             }
-            .padding(.horizontal, 24)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            if !note.participants.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.2.fill")
+                        .font(.caption)
+                        .foregroundStyle(Color.indigo)
+                    Text(note.participants.map { $0.name }.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(18)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.indigo.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    private func audioSection(url: URL) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "waveform.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(Color.indigo)
+                Text("Audio-Wiedergabe")
+                    .font(.headline)
+                    .foregroundStyle(Color.adaptiveLabel)
+                Spacer()
+            }
+            
+            EnhancedAudioPlayerView(
+                url: url,
+                isPlaying: $isPlaying,
+                currentTime: $currentTime,
+                duration: $duration
+            )
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var tabPicker: some View {
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases) { tab in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedTab = tab
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: tab.icon)
+                        Text(tab.rawValue)
+                    }
+                    .font(.subheadline)
+                    .fontWeight(selectedTab == tab ? .bold : .medium)
+                    .foregroundStyle(selectedTab == tab ? Color.white : Color.adaptiveLabel)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        selectedTab == tab ? Color.indigo : Color.clear,
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+                }
+            }
+        }
+        .padding(4)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let summary = note.summary {
+                if !summary.highlights.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Highlights")
+                            .font(.headline)
+                            .foregroundStyle(Color.indigo)
+                        ForEach(summary.highlights, id: \.self) { highlight in
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(Color.indigo)
+                                    .font(.caption)
+                                    .padding(.top, 2)
+                                Text(highlight)
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                if !summary.markdown.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Zusammenfassung")
+                            .font(.headline)
+                            .foregroundStyle(Color.adaptiveLabel)
+                        Text(summary.markdown)
+                            .font(.body)
+                            .lineSpacing(4)
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                if !summary.actionItems.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("To-Dos & Action Items")
+                            .font(.headline)
+                            .foregroundStyle(Color.indigo)
+                        ForEach(summary.actionItems) { item in
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(Color.indigo)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.task)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    if let owner = item.owner {
+                                        Text("Zuständig: \(owner)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+            } else {
+                Text("Keine Zusammenfassung vorhanden.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(24)
+            }
         }
     }
-    
-    // MARK: - Content Section
-    @ViewBuilder
-    private var contentSection: some View {
-        switch selectedTab {
-        case .overview:
-            OverviewTabView(note: note)
-        case .transcript:
-            TranscriptTabView(note: note)
-        case .summary:
-            SummaryTabView(note: note)
-        case .mindmap:
-            MindmapTabView(note: note)
-        case .actionItems:
-            ActionItemsTabView(note: note)
+
+    private var transcriptSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if note.segments.isEmpty {
+                Text("Keine Transkription vorhanden.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(24)
+            } else {
+                ForEach(note.segments) { segment in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(speakerName(for: segment.speakerId))
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.indigo)
+                            Spacer()
+                            Text(formatDuration(segment.start))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(segment.text)
+                            .font(.body)
+                    }
+                    .padding(14)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+            }
         }
     }
-    
-    // MARK: - Helper Methods
-    private var metaInformation: String {
+
+    private func speakerName(for speakerId: String?) -> String {
+        guard let speakerId = speakerId else { return "Sprecher" }
+        return note.participants.first { $0.id.uuidString == speakerId }?.name ?? "Sprecher"
+    }
+
+    private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        let dateString = formatter.string(from: note.createdAt)
-        
-        var components = [dateString]
-        
-        if let location = note.location {
-            components.append(location)
-        }
-        
-        if let duration = note.duration {
-            components.append(formatDuration(duration))
-        }
-        
-        return components.joined(separator: " • ")
-    }
-    
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-    
-    private func setupAudioPlayer() {
-        if let audioURL = note.audioURL {
-            audioPlayer.setupPlayer(url: audioURL)
-        }
-    }
-    
-    private func getFullNoteContent() -> String {
-        var content = "# \(note.title)\n\n"
-
-        if let summary = note.summary?.markdown {
-            content += "## Zusammenfassung\n\n\(summary)\n\n"
-        } else {
-            content += "## Zusammenfassung\n\nKeine Zusammenfassung verfügbar.\n\n"
-        }
-
-        if let transcript = note.transcript {
-            content += "## Transkript\n\n"
-            for block in transcript.blocks {
-                let speaker = block.speaker ?? "Sprecher"
-                content += "**\(speaker)**: \(block.text)\n\n"
-            }
-        }
-
-        return content
+        return formatter.string(from: date)
     }
 
-    private func exportAsMarkdown() {
-        let markdownContent = getFullNoteContent()
-
-        let safeTitle = note.title.replacingOccurrences(of: "/", with: "-")
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(safeTitle).md")
-        do {
-            try markdownContent.write(to: tempURL, atomically: true, encoding: .utf8)
-            activityItem = tempURL
-            isShowingActivityView = true
-        } catch {
-            print("Failed to write markdown file: \(error)")
-        }
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let min = Int(seconds) / 60
+        let sec = Int(seconds) % 60
+        return String(format: "%02d:%02d", min, sec)
     }
-    
-    private func exportAsPDF() {
-        let markdownContent = getFullNoteContent()
-
-        let exportService = ExportService()
-        Task {
-            if let pdfURL = await exportService.pdf(fromMarkdown: markdownContent, redacted: false) {
-                await MainActor.run {
-                    activityItem = pdfURL
-                    isShowingActivityView = true
-                }
-            }
-        }
-    }
-    
-    private func shareNote() {
-        activityItem = getFullNoteContent()
-        isShowingActivityView = true
-    }
-    
-    private func editNote() {
-        isShowingEditSheet = true
-    }
-    
-    private func deleteNote() {
-        notesViewModel.delete(note: note)
-        dismiss()
-    }
-}
-
-struct ActivityViewController: UIViewControllerRepresentable {
-    var activityItems: [Any]
-    var applicationActivities: [UIActivity]? = nil
-
-    func makeUIViewController(context: UIViewControllerRepresentableContext<ActivityViewController>) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ActivityViewController>) {}
-}
-
-struct EditNoteView: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var notesViewModel: NotesViewModel
-    @Binding var note: Note
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("Titel")) {
-                    TextField("Titel", text: $note.title)
-                }
-                if var summary = note.summary {
-                    Section(header: Text("Zusammenfassung")) {
-                        TextEditor(text: Binding(
-                            get: { summary.markdown },
-                            set: { newValue in
-                                summary.markdown = newValue
-                                note.summary = summary
-                            }
-                        ))
-                        .frame(minHeight: 200)
-                    }
-                }
-            }
-            .navigationTitle("Notiz bearbeiten")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Speichern") {
-                        notesViewModel.update(note: note)
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Supporting Views
-
-struct PipelineStatusView: View {
-    let state: PipelineState
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            ProgressView(value: state.progress)
-                .frame(width: 60)
-                .tint(AppTheme.accent)
-            
-            Text(statusText)
-                .font(.caption)
-                .themedText(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(AppTheme.secondaryBackground)
-        .cornerRadius(8)
-    }
-    
-    private var statusText: String {
-        switch state.stage {
-        case .done: return "Fertig"
-        case .transcribing: return "Transkription"
-        case .diarizing: return "Sprecher"
-        case .summarizing: return "Zusammenfassung"
-        case .roleSummaries: return "Rollen"
-        case .mindmap: return "Mindmap"
-        case .indexing: return "Indexierung"
-        case .error: return "Fehler"
-        default: return "Verarbeitung"
-        }
-    }
-}
-
-struct ParticipantChipsView: View {
-    let participants: [Participant]
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(participants) { participant in
-                    HStack(spacing: 6) {
-                        Image(systemName: participant.avatarSymbol)
-                            .font(.caption)
-                        Text(participant.name)
-                            .font(.caption)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(participant.color.opacity(0.2), in: Capsule())
-                    .foregroundColor(participant.color)
-                }
-            }
-            .padding(.horizontal, 4)
-        }
-    }
-}
-
-struct TagsView: View {
-    let tags: [String]
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(tags, id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(AppTheme.accent.opacity(0.2), in: Capsule())
-                        .foregroundColor(AppTheme.accent)
-                }
-            }
-            .padding(.horizontal, 4)
-        }
-    }
-}
-
-// MARK: - Tab Views
-
-struct OverviewTabView: View {
-    let note: Note
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            if let summary = note.summary {
-                SummaryCard(summary: summary)
-            }
-            
-            if !note.highlights.isEmpty {
-                HighlightsCard(highlights: note.highlights)
-            }
-            
-            if !note.decisions.isEmpty {
-                DecisionsCard(decisions: note.decisions)
-            }
-        }
-    }
-}
-
-struct TranscriptTabView: View {
-    let note: Note
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if note.segments.isEmpty {
-                Text("Kein Transkript verfügbar")
-                    .font(.subheadline)
-                    .themedText(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.secondaryBackground)
-                    .cornerRadius(12)
-            } else {
-                ForEach(note.segments) { segment in
-                    TranscriptSegmentCard(segment: segment, participants: note.participants)
-                }
-            }
-        }
-    }
-}
-
-struct SummaryTabView: View {
-    let note: Note
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            if let summary = note.summary {
-                SummaryCard(summary: summary)
-            } else {
-                Text("Keine Zusammenfassung verfügbar")
-                    .font(.subheadline)
-                    .themedText(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.secondaryBackground)
-                    .cornerRadius(12)
-            }
-        }
-    }
-}
-
-struct MindmapTabView: View {
-    let note: Note
-    
-    var body: some View {
-        if let mindmap = note.mindmap {
-            MindmapView(note: note)
-        } else {
-            Text("Keine Mindmap verfügbar")
-                .font(.subheadline)
-                .themedText(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(AppTheme.secondaryBackground)
-                .cornerRadius(12)
-        }
-    }
-}
-
-struct ActionItemsTabView: View {
-    let note: Note
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if note.actionItems.isEmpty {
-                Text("Keine Action Items verfügbar")
-                    .font(.subheadline)
-                    .themedText(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppTheme.secondaryBackground)
-                    .cornerRadius(12)
-            } else {
-                ForEach(note.actionItems) { item in
-                    ActionItemCard(item: item)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Card Views
-
-struct SummaryCard: View {
-    let summary: Summary
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Zusammenfassung")
-                .font(.headline)
-                .themedText(.primary)
-            
-            Text(summary.markdown)
-                .font(.body)
-                .themedText(.primary)
-        }
-        .glassCard()
-    }
-}
-
-struct HighlightsCard: View {
-    let highlights: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Highlights")
-                .font(.headline)
-                .themedText(.primary)
-            
-            ForEach(highlights, id: \.self) { highlight in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(AppTheme.accent)
-                        .font(.caption)
-                    Text(highlight)
-                        .font(.body)
-                        .themedText(.primary)
-                }
-            }
-        }
-        .glassCard()
-    }
-}
-
-struct DecisionsCard: View {
-    let decisions: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Entscheidungen")
-                .font(.headline)
-                .themedText(.primary)
-            
-            ForEach(decisions, id: \.self) { decision in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(AppTheme.success)
-                        .font(.caption)
-                    Text(decision)
-                        .font(.body)
-                        .themedText(.primary)
-                }
-            }
-        }
-        .glassCard()
-    }
-}
-
-struct TranscriptSegmentCard: View {
-    let segment: TranscriptSegment
-    let participants: [Participant]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(formatTime(segment.start))
-                    .font(.caption)
-                    .themedText(.secondary)
-                
-                Spacer()
-                
-                if let speakerId = segment.speakerId,
-                   let participant = participants.first(where: { $0.id.uuidString == speakerId }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: participant.avatarSymbol)
-                            .font(.caption)
-                        Text(participant.name)
-                            .font(.caption)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(participant.color.opacity(0.2), in: Capsule())
-                    .foregroundColor(participant.color)
-                }
-            }
-            
-            Text(segment.text)
-                .font(.body)
-                .themedText(.primary)
-        }
-        .padding(16)
-        .background(AppTheme.secondaryBackground)
-        .cornerRadius(12)
-    }
-    
-    private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-}
-
-struct ActionItemCard: View {
-    let item: ActionItem
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(item.task)
-                    .font(.body)
-                    .themedText(.primary)
-                
-                Spacer()
-                
-                StatusBadge(status: item.status)
-            }
-            
-            if let owner = item.owner {
-                HStack {
-                    Image(systemName: "person.fill")
-                        .font(.caption)
-                    Text(owner)
-                        .font(.caption)
-                        .themedText(.secondary)
-                }
-            }
-            
-            if let due = item.due {
-                HStack {
-                    Image(systemName: "calendar")
-                        .font(.caption)
-                    Text(due.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
-                        .themedText(.secondary)
-                }
-            }
-        }
-        .padding(16)
-        .background(AppTheme.secondaryBackground)
-        .cornerRadius(12)
-    }
-}
-
-struct StatusBadge: View {
-    let status: ActionItem.Status
-    
-    var body: some View {
-        Text(status.displayName)
-            .font(.caption2)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(statusColor.opacity(0.2), in: Capsule())
-            .foregroundColor(statusColor)
-    }
-    
-    private var statusColor: Color {
-        switch status {
-        case .open: return AppTheme.warning
-        case .inProgress: return AppTheme.accent
-        case .completed: return AppTheme.success
-        case .blocked: return AppTheme.error
-        }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        EnhancedNoteDetailView(note: SampleDataFactory.makeSampleNotes().first!)
-    }
-    .environmentObject(ThemeManager())
 }

@@ -7,25 +7,35 @@ struct OnboardingFlowView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: "#C8D7FF") ?? .blue.opacity(0.2), Color(hex: "#F1E6FF") ?? .purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [
+                    Color.indigo.opacity(0.25),
+                    Color.purple.opacity(0.2),
+                    Color.blue.opacity(0.15)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
             VStack(spacing: 24) {
                 welcomeSection
+                
                 TabView(selection: $viewModel.currentStep) {
                     privacyCard.tag(OnboardingViewModel.Step.privacy)
                     speechCard.tag(OnboardingViewModel.Step.speech)
                     modelCard.tag(OnboardingViewModel.Step.model)
-                    integrationCard.tag(OnboardingViewModel.Step.integrations)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .frame(maxHeight: 420)
+                .frame(maxHeight: 440)
+                
                 progressAndButtonsSection
             }
         }
     }
 
     private func advanceOrFinish() {
-        if viewModel.currentStep == .integrations {
+        if viewModel.currentStep == .model {
             appState.completeOnboarding()
         } else {
             viewModel.advance()
@@ -33,7 +43,7 @@ struct OnboardingFlowView: View {
     }
 }
 
-// MARK: - Subviews (als Computed Properties)
+// MARK: - Subviews
 private extension OnboardingFlowView {
     var welcomeSection: some View {
         VStack(spacing: 12) {
@@ -41,7 +51,7 @@ private extension OnboardingFlowView {
                 .font(.largeTitle)
                 .bold()
                 .padding(.top, 32)
-            Text("Alles bleibt lokal – dein persönlicher Capture-Hub für Meetings, Dokumente und Web.")
+            Text("100% Lokale KI-Notizen & Transkription. Deine Daten bleiben garantiert privat auf deinem Gerät.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
@@ -53,8 +63,9 @@ private extension OnboardingFlowView {
         VStack(spacing: 12) {
             ProgressView(value: Double(viewModel.currentStep.rawValue), total: Double(OnboardingViewModel.Step.allCases.count - 1))
                 .progressViewStyle(.linear)
-                .tint(.accentColor)
+                .tint(.purple)
                 .padding(.horizontal, 32)
+                
             HStack(spacing: 16) {
                 if viewModel.currentStep != .privacy {
                     Button("Zurück") { viewModel.goBack() }
@@ -62,10 +73,11 @@ private extension OnboardingFlowView {
                 }
                 Spacer()
                 Button(action: advanceOrFinish) {
-                    Label(viewModel.currentStep == .integrations ? "Loslegen" : "Weiter", systemImage: viewModel.currentStep == .integrations ? "checkmark.circle.fill" : "arrow.right.circle.fill")
+                    Label(viewModel.currentStep == .model ? "Loslegen" : "Weiter", systemImage: viewModel.currentStep == .model ? "checkmark.circle.fill" : "arrow.right.circle.fill")
                         .labelStyle(.titleAndIcon)
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.indigo)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 24)

@@ -40,7 +40,12 @@ struct RecorderView: View {
              }
         }
         .sheet(isPresented: $showConsent) {
-            ConsentSheet(isPresented: $showConsent, confirmed: $consentConfirmed) { log in
+            ConsentSheet(
+                isPresented: $showConsent,
+                confirmed: $consentConfirmed,
+                participantsInput: viewModel.note.participants.map { $0.name }.joined(separator: ", "),
+                locationInput: viewModel.note.location ?? ""
+            ) { log in
                 ConsentManager.shared.playStartBeep()
                 Task {
                     // Update note details from local state before starting

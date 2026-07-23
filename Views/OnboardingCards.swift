@@ -9,19 +9,33 @@ import SwiftUI
 
 extension OnboardingFlowView {
     var privacyCard: some View {
-        OnboardingCard(icon: "lock.shield.fill", title: "Datenschutz", step: viewModel.currentStep) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Alle Verarbeitung passiert on-device. Deine Daten verlassen das Gerät nur, wenn du eine Integration aktivierst.")
-                    .font(.body)
-                Toggle(isOn: $viewModel.analyticsEnabled) {
-                    VStack(alignment: .leading) {
-                        Text("Anonyme Nutzungsanalyse")
-                        Text("Hilf uns bei der Optimierung – optional.")
-                            .font(.caption)
+        OnboardingCard(icon: "lock.shield.fill", title: "100% Datenschutz", step: viewModel.currentStep) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.title2)
+                        .foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Keine Datenerfassung")
+                            .font(.headline)
+                        Text("Deine Notizen & Aufnahmen bleiben zu 100% auf deinem Gerät.")
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                 }
-                .toggleStyle(.switch)
+                
+                HStack(spacing: 12) {
+                    Image(systemName: "cpu.fill")
+                        .font(.title2)
+                        .foregroundStyle(.purple)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("On-Device KI")
+                            .font(.headline)
+                        Text("Spracherkennung und KI-Analysen laufen ohne Cloud-Server.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .padding(.top, 8)
         }
@@ -30,13 +44,18 @@ extension OnboardingFlowView {
     var speechCard: some View {
         OnboardingCard(icon: "waveform", title: "Sprachpaket", step: viewModel.currentStep) {
             VStack(alignment: .leading, spacing: 16) {
+                Text("Wähle deine primäre Sprache für die Offline-Spracherkennung:")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
                 Picker("Sprache", selection: $viewModel.selectedLocale) {
                     ForEach(viewModel.availableLocales, id: \.self) { locale in
                         Text(localeDescription(locale))
                             .tag(locale)
                     }
                 }
-                .pickerStyle(.wheel)
+                .pickerStyle(.segmented)
+                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Testausgabe")
                         .font(.caption)
@@ -54,27 +73,6 @@ extension OnboardingFlowView {
                 qualityPicker
                 modelSelectionGrid
                 downloadSection
-            }
-        }
-    }
-
-    var integrationCard: some View {
-        OnboardingCard(icon: "puzzlepiece.extension.fill", title: "Integrationen", step: viewModel.currentStep) {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Verbinde Tools für Push & Pull Workflows. Du kannst Integrationen später jederzeit anpassen.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                LazyVGrid(columns: Array(repeating: .init(.flexible(), spacing: 16), count: 2), spacing: 16) {
-                    ForEach(viewModel.integrationOptions, id: \.self) { kind in
-                        let isSelected = viewModel.selectedIntegrations.contains(kind)
-                        Button {
-                            viewModel.toggleIntegration(kind)
-                        } label: {
-                            integrationButton(for: kind, isSelected: isSelected)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
             }
         }
     }
@@ -136,44 +134,14 @@ extension OnboardingFlowView {
                 Button("Modell laden") {
                     viewModel.startDownload()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
             }
         }
-    }
-
-    private func integrationButton(for kind: Integration.Kind, isSelected: Bool) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: kind.iconName)
-                .font(.largeTitle)
-            Text(kind.title)
-                .font(.headline)
-            Text(kindDescription(kind))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(isSelected ? Color.accentColor.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 
     // MARK: - Helper Functions
     func localeDescription(_ code: String) -> String {
         let locale = Locale(identifier: code)
         return locale.localizedString(forIdentifier: code) ?? code
-    }
-
-    func kindDescription(_ kind: Integration.Kind) -> String {
-        switch kind {
-        case .notion: return "Exportiere Zusammenfassungen direkt in deine Notion-Datenbanken."
-        case .googleDrive: return "Lege Audios und PDFs strukturiert in Drive ab."
-        case .googleDocs: return "Pushe Highlights in vorbereitete Docs."
-        case .calendar: return "Ziehe Meetings automatisch aus deinem Kalender."
-        case .zoom: return "Importiere fertige Aufnahmen aus Zoom automatisch."
-        }
     }
 }
