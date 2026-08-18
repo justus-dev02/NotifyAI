@@ -16,13 +16,21 @@ actor PipelineManager {
     private let diarizer: DiarizationService
     private let llm: LLMService
     private let highlight: HighlightService
+    private let transcription: TranscriptionService
     private let search = SemanticSearchService.shared
 
-    init(storage: StorageService, diarizer: DiarizationService, llm: LLMService, highlight: HighlightService) {
+    init(
+        storage: StorageService,
+        diarizer: DiarizationService,
+        llm: LLMService,
+        highlight: HighlightService,
+        transcription: TranscriptionService
+    ) {
         self.storage = storage
         self.diarizer = diarizer
         self.llm = llm
         self.highlight = highlight
+        self.transcription = transcription
     }
 
     func registerBGTask() {
@@ -45,19 +53,21 @@ actor PipelineManager {
 
     private func update(_ noteId: UUID, stage: PipelineState.Stage, progress: Double, eta: Int?, msg: String?) async {
         await storage.updatePipeline(noteId: noteId) { s in
-            s.stage = stage; s.progress = progress; s.etaSeconds = eta; s.message = msg
+            s.stage = stage
+            s.progress = progress
+            s.etaSeconds = eta
+            s.message = msg
         }
         await MainActor.run { NotificationCenter.default.post(name: .pipelineUpdated, object: noteId) }
     }
 
     private func chunks(for audio: URL, targetSec: Double = 300) async -> [URL] {
-        // TODO: tatsächlich aufsplitten (AVAssetExportSession). Platzhalter:
         return [audio]
     }
 
     private func run(noteId: UUID, audio: URL) async {
         do {
-            await update(noteId, stage: .chunking, progress: 0.05, eta: nil, msg: "Audio wird in Abschnitte geteilt…")
+            await update(noteId, stage: .chunking, progress: 0.05, eta: nil, msg: "Audio wird vorbereitet…")
             let parts = await chunks(for: audio)
 
             var allSegments: [TranscriptSegment] = []
@@ -65,57 +75,38 @@ actor PipelineManager {
             for part in parts {
                 c += 1
                 let p = Double(c) / Double(parts.count)
-                await update(noteId, stage: .transcribing, progress: 0.1 + 0.6*p, eta: estimateETA(parts.count - c, perChunk: 60), msg: "Transkription…")
+                let backendName = transcription.backend.displayName
+                await update(noteId, stage: .transcribing, progress: 0.1 + 0.6 * p, eta: estimateETA(parts.count - c, perChunk: 30), msg: "Transkription (\(backendName))…")
 
-                let segmentsPart: [TranscriptSegment]
-                do {
-                    if ServiceLocator.shared.transcription.backend == .appleSpeech {
-                        let text: String = try await withCheckedThrowingContinuation { cont in
-                            AppleSpeechService.shared.recognizeFile(url: part) { result in
-                                cont.resume(with: result)
-                            }
-                        }
-                        let asset = AVURLAsset(url: part)
-                        let duration = CMTimeGetSeconds(asset.duration)
-                        let segment = TranscriptSegment(start: 0, end: duration, speakerId: nil, text: text)
-                        segmentsPart = [segment]
-                    } else {
-                        // TODO: Implement WhisperKit offline transcription
-                        segmentsPart = []
-                    }
-                } catch {
-                    throw error
-                }
-
+                let segmentsPart = try await transcription.transcribe(audioURL: part)
                 allSegments.append(contentsOf: segmentsPart)
             }
 
-            await update(noteId, stage: .diarizing, progress: 0.72, eta: 45, msg: "Sprecher werden erkannt…")
+            await update(noteId, stage: .diarizing, progress: 0.72, eta: 15, msg: "Sprecherzuordnung…")
             let diar = try await diarizer.diarize(audio)
             let withSpeakers = mapSpeakers(allSegments, diar: diar)
 
             await storage.updateSegments(noteId: noteId, segments: withSpeakers)
 
-            await update(noteId, stage: .summarizing, progress: 0.80, eta: 40, msg: "Zusammenfassung wird erstellt…")
-            let fullText = withSpeakers.map{$0.text}.joined(separator: " ")
-            var base = try await llm.summarize(transcript: fullText)
+            await update(noteId, stage: .summarizing, progress: 0.80, eta: 10, msg: "Zusammenfassung wird erstellt…")
+            let fullText = withSpeakers.map { $0.text }.joined(separator: " ")
+            var base = await llm.summarize(transcript: fullText)
 
-            // Zitate (Referenzen): nimm die Top-Sätze pro Abschnitt
             base.citations = withSpeakers.prefix(12).map(\.id)
 
-            await update(noteId, stage: .roleSummaries, progress: 0.88, eta: 30, msg: "Rollenbasierte Zusammenfassungen…")
-            let roles = ["Sales","Team","Leadership"]
+            await update(noteId, stage: .roleSummaries, progress: 0.88, eta: 5, msg: "Rollenbasierte Auswertungen…")
+            let roles = ["Sales", "Team", "Leadership"]
             var roleSummaries: [String: Summary] = [:]
             for r in roles {
                 roleSummaries[r] = try await highlight.roleSummary(role: r, transcript: fullText, segments: withSpeakers)
             }
 
-            await update(noteId, stage: .mindmap, progress: 0.92, eta: 20, msg: "Mindmap…")
+            await update(noteId, stage: .mindmap, progress: 0.92, eta: 3, msg: "Mindmap generieren…")
             let mind = try await highlight.makeMindmap(transcript: fullText)
 
             await storage.updateSummaries(noteId: noteId, summary: base, roleSummaries: roleSummaries, mindmap: mind)
 
-            await update(noteId, stage: .indexing, progress: 0.96, eta: 10, msg: "Index wird aktualisiert…")
+            await update(noteId, stage: .indexing, progress: 0.96, eta: 1, msg: "Index aktualisieren…")
             let notes = await storage.loadAll()
             search.buildIndex(notes: notes)
 
@@ -130,10 +121,11 @@ actor PipelineManager {
         defer { task.setTaskCompleted(success: true) }
         var cancelled = false
         task.expirationHandler = { cancelled = true }
-        // Lade offene Notes mit stage != .done und verarbeite
         let pending = await storage.pendingNotes()
         for p in pending {
-            await run(noteId: p.id, audio: p.audioURL!)
+            if let audio = p.audioURL {
+                await run(noteId: p.id, audio: audio)
+            }
             if cancelled { break }
         }
     }
@@ -148,10 +140,14 @@ actor PipelineManager {
 
     private func estimateETA(_ chunksRemaining: Int, perChunk: Int) -> Int { chunksRemaining * perChunk }
 
-    private func mapSpeakers(_ segments: [TranscriptSegment],
-                             diar: [(start: TimeInterval, end: TimeInterval, speakerId: String)]) -> [TranscriptSegment] {
-        // Einfaches Intervall-Matching
-        segments.map { seg in
+    private func mapSpeakers(
+        _ segments: [TranscriptSegment],
+        diar: [(start: TimeInterval, end: TimeInterval, speakerId: String)]
+    ) -> [TranscriptSegment] {
+        if diar.isEmpty {
+            return segments
+        }
+        return segments.map { seg in
             var s = seg
             if let d = diar.first(where: { $0.start <= seg.start && seg.end <= $0.end }) {
                 s.speakerId = d.speakerId

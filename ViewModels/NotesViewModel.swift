@@ -32,13 +32,6 @@ final class NotesViewModel: ObservableObject {
 
     func load() async {
         self.notes = await storage.loadAll()
-        if notes.isEmpty {
-            let seeded = SampleDataFactory.makeSampleNotes()
-            notes = seeded
-            for note in seeded {
-                await storage.save(note)
-            }
-        }
         self.results = notes
         search.buildIndex(notes: notes)
     }
@@ -55,7 +48,8 @@ final class NotesViewModel: ObservableObject {
 
     func performSearch() {
         guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            results = notes; return
+            results = notes
+            return
         }
         let ids = search.search(query)
         let map = Dictionary(uniqueKeysWithValues: notes.map { ($0.id, $0) })

@@ -17,13 +17,13 @@ final class TranscriptionService {
 
         var displayName: String {
             switch self {
-            case .appleSpeech: return "Apple Speech"
-            case .whisperKit: return "WhisperKit"
+            case .appleSpeech: return "Apple Speech (System On-Device)"
+            case .whisperKit: return "Whisper (WhisperKit Neural Engine)"
             }
         }
     }
 
-    var backend: Backend = .appleSpeech  // <- standardmäßig Apple
+    var backend: Backend = .appleSpeech
 
     typealias TranscriptHandler = (_ text: String, _ start: TimeInterval?, _ end: TimeInterval?) -> Void
 
@@ -31,9 +31,18 @@ final class TranscriptionService {
         switch backend {
         case .appleSpeech:
             try await AppleSpeechBackend.shared.requestAuthorization()
-            try await AppleSpeechBackend.shared.start(handler: handler)
+            try AppleSpeechBackend.shared.start(handler: handler)
         case .whisperKit:
             try await WhisperBackend.shared.start(handler: handler)
+        }
+    }
+
+    func transcribe(audioURL: URL) async throws -> [TranscriptSegment] {
+        switch backend {
+        case .appleSpeech:
+            return try await AppleSpeechBackend.shared.transcribe(audioURL: audioURL)
+        case .whisperKit:
+            return try await WhisperBackend.shared.transcribe(audioURL: audioURL)
         }
     }
 
@@ -46,4 +55,3 @@ final class TranscriptionService {
         }
     }
 }
-

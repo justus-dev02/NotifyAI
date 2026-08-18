@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2727B5553034A5DC00EDD2C1 /* WhisperKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		275D606C2E6F188300EB7BA5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -86,6 +90,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,6 +168,7 @@
 			);
 			name = NotifyAI;
 			packageProductDependencies = (
+				2727B5553034A5DC00EDD2C1 /* WhisperKit */,
 			);
 			productName = NotifyAI;
 			productReference = 275D60592E6F188200EB7BA5 /* NotifyAI.app */;
@@ -246,6 +252,9 @@
 			);
 			mainGroup = 275D60502E6F188200EB7BA5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 275D605A2E6F188200EB7BA5 /* Products */;
 			projectDirPath = "";
@@ -611,6 +620,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2727B5553034A5DC00EDD2C1 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 275D60512E6F188200EB7BA5 /* Project object */;
 }

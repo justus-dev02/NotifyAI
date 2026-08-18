@@ -266,102 +266,66 @@ struct CategoryAnalytics: Codable {
 // MARK: - Learning Generator
 
 class LearningGenerator: ObservableObject {
-    private let llmService = LocalLLMService.shared
-    
     func generateFlashcards(from text: String, count: Int = 10) async throws -> [Flashcard] {
-        let prompt = """
-        Erstelle \(count) Lernkarten aus folgendem Text. 
-        Jede Karte sollte eine Frage auf der Vorderseite und eine präzise Antwort auf der Rückseite haben.
-        Text: \(text)
-        """
+        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanText.isEmpty else { return [] }
         
-        // In a real implementation, this would use the LLM service
-        // For now, we'll return mock flashcards
-        return generateMockFlashcards(from: text, count: count)
+        let sentences = cleanText.components(separatedBy: CharacterSet(charactersIn: ".!?\n"))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 10 }
+        
+        var cards: [Flashcard] = []
+        for sentence in sentences.prefix(count) {
+            let words = sentence.components(separatedBy: .whitespacesAndNewlines).filter { $0.count > 3 }
+            let topic = words.first ?? "Kernpunkt"
+            cards.append(Flashcard(
+                front: "Welcher Aspekt wird bezüglich '\(topic)' festgehalten?",
+                back: sentence,
+                category: "Lerninhalt",
+                difficulty: .medium
+            ))
+        }
+        return cards
     }
     
     func generateQuiz(from text: String, questionCount: Int = 5) async throws -> Quiz {
-        let prompt = """
-        Erstelle ein Quiz mit \(questionCount) Fragen aus folgendem Text.
-        Jede Frage sollte 4 Antwortmöglichkeiten haben, wobei nur eine korrekt ist.
-        Text: \(text)
-        """
+        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sentences = cleanText.components(separatedBy: CharacterSet(charactersIn: ".!?\n"))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 12 }
         
-        // In a real implementation, this would use the LLM service
-        // For now, we'll return a mock quiz
-        return generateMockQuiz(from: text, questionCount: questionCount)
-    }
-    
-    func generateSummaryForLearning(from text: String) async throws -> String {
-        let prompt = """
-        Erstelle eine lernfreundliche Zusammenfassung des folgenden Textes.
-        Fokussiere auf Schlüsselkonzepte, Definitionen und wichtige Zusammenhänge.
-        Text: \(text)
-        """
-        
-        // In a real implementation, this would use the LLM service
-        return generateMockLearningSummary(from: text)
-    }
-    
-    // MARK: - Mock Implementations
-    
-    private func generateMockFlashcards(from text: String, count: Int) -> [Flashcard] {
-        let sentences = text.components(separatedBy: ". ").filter { !$0.isEmpty }
-        let flashcards = sentences.prefix(count).enumerated().map { index, sentence in
-            Flashcard(
-                front: "Was ist das Hauptthema von: \(sentence.prefix(50))...?",
-                back: sentence,
-                category: "Generated",
+        var questions: [QuizQuestion] = []
+        for (index, sentence) in sentences.prefix(questionCount).enumerated() {
+            let options = [
+                sentence,
+                "Wurde im Gespräch nicht explizit thematisiert.",
+                "Es wurde das Gegenteil vereinbart.",
+                "Steht noch unter Vorbehalt."
+            ].shuffled()
+            
+            let correctIdx = options.firstIndex(of: sentence) ?? 0
+            
+            questions.append(QuizQuestion(
+                question: "Welche der folgenden Aussagen entspricht dem Inhalt aus Abschnitt \(index + 1)?",
+                options: options,
+                correctAnswer: correctIdx,
+                explanation: "Der korrekte Inhalt lautet: \"\(sentence)\"",
+                category: "Verständnis",
                 difficulty: .medium
-            )
-        }
-        return Array(flashcards)
-    }
-    
-    private func generateMockQuiz(from text: String, questionCount: Int) -> Quiz {
-        let questions = (0..<questionCount).map { index in
-            QuizQuestion(
-                question: "Frage \(index + 1) zum Text?",
-                options: [
-                    "Antwort A",
-                    "Antwort B",
-                    "Antwort C",
-                    "Antwort D"
-                ],
-                correctAnswer: index % 4,
-                explanation: "Erklärung für Frage \(index + 1)",
-                category: "Generated",
-                difficulty: .medium
-            )
+            ))
         }
         
         return Quiz(
-            title: "Quiz zum Text",
-            description: "Generiertes Quiz basierend auf dem Text",
+            title: "Verständnis-Quiz zum Gespräch",
+            description: "Automatisch generiertes Quiz basierend auf den transkribierten Inhalten.",
             questions: questions,
-            category: "Generated",
+            category: "Gesprächsinhalt",
             difficulty: .medium
         )
     }
     
-    private func generateMockLearningSummary(from text: String) -> String {
-        return """
-        Lernzusammenfassung:
-        
-        Hauptthemen:
-        • Thema 1: Wichtiger Punkt aus dem Text
-        • Thema 2: Weitere wichtige Information
-        • Thema 3: Zusätzliche Erkenntnisse
-        
-        Schlüsselkonzepte:
-        - Konzept 1: Definition und Bedeutung
-        - Konzept 2: Anwendung und Beispiele
-        - Konzept 3: Zusammenhänge und Verbindungen
-        
-        Wichtige Fakten:
-        1. Fakt 1 aus dem Text
-        2. Fakt 2 aus dem Text
-        3. Fakt 3 aus dem Text
-        """
+    func generateSummaryForLearning(from text: String) async throws -> String {
+        let summary = await ServiceLocator.shared.llm.summarize(transcript: text)
+        return summary.markdown
     }
 }

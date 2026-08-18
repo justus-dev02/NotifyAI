@@ -80,6 +80,52 @@ final class AppleSpeechBackend: NSObject {
         guard status == .authorized else { throw AppleSpeechError.notAuthorized }
     }
 
+    /// Transcribes an audio file using SFSpeechURLRecognitionRequest
+    func transcribe(audioURL: URL) async throws -> [TranscriptSegment] {
+        guard let recognizer = recognizer, recognizer.isAvailable else {
+            throw AppleSpeechError.recognizerUnavailable
+        }
+        try await requestAuthorization()
+
+        let recognitionRequest = SFSpeechURLRecognitionRequest(url: audioURL)
+        recognitionRequest.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        recognitionRequest.shouldReportPartialResults = false
+
+        return try await withCheckedThrowingContinuation { continuation in
+            var hasResumed = false
+            recognizer.recognitionTask(with: recognitionRequest) { result, error in
+                if let error = error {
+                    if !hasResumed {
+                        hasResumed = true
+                        continuation.resume(throwing: error)
+                    }
+                } else if let result = result, result.isFinal {
+                    if !hasResumed {
+                        hasResumed = true
+                        let rawSegments = result.bestTranscription.segments
+                        if !rawSegments.isEmpty {
+                            let mapped = rawSegments.map { seg in
+                                TranscriptSegment(
+                                    start: seg.timestamp,
+                                    end: seg.timestamp + seg.duration,
+                                    speakerId: nil,
+                                    text: seg.substring
+                                )
+                            }
+                            continuation.resume(returning: mapped)
+                        } else {
+                            let text = result.bestTranscription.formattedString
+                            let asset = AVURLAsset(url: audioURL)
+                            let duration = CMTimeGetSeconds(asset.duration)
+                            let segment = TranscriptSegment(start: 0, end: duration.isFinite ? duration : 0, speakerId: nil, text: text)
+                            continuation.resume(returning: [segment])
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     func start(handler: @escaping TranscriptionService.TranscriptHandler) throws {
         guard let recognizer, recognizer.isAvailable else { throw AppleSpeechError.recognizerUnavailable }
 

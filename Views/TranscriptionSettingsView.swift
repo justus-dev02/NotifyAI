@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by AI Assistant on 23.10.25.
+//  Updated with WhisperKit & Apple Speech Switcher.
 //
 
 import SwiftUI
@@ -13,105 +14,131 @@ struct TranscriptionSettingsView: View {
 
     var body: some View {
         Form {
-            // Status Section
+            // Engine Selection Section
             Section {
-                HStack(spacing: 12) {
-                    Image(systemName: "waveform")
-                        .font(.title2)
-                        .foregroundColor(.accentColor)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Apple Speech Erkennung")
-                            .font(.headline)
-                        Text("Systemintegrierte Spracherkennung mit On-Device-Unterstützung")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                Picker("Transkriptions-Engine", selection: $settingsVM.transcriptionBackend) {
+                    ForEach(TranscriptionService.Backend.allCases) { backend in
+                        Text(backend.displayName).tag(backend)
                     }
                 }
+                .pickerStyle(.segmented)
                 .padding(.vertical, 4)
-            }
-
-            // Language Selection
-            Section {
-                Picker("Sprache", selection: $settingsVM.locale) {
-                    ForEach(settingsVM.supportedLocaleIdentifiers, id: \.self) { code in
-                        Text(localeDescription(for: code)).tag(code)
-                    }
-                }
-                .pickerStyle(.navigationLink)
             } header: {
-                Text("Sprache")
+                Text("Erkennungs-Technologie")
             } footer: {
-                Text("Die Spracherkennung wird für die ausgewählte Sprache optimiert. On-Device-Modelle werden von iOS automatisch verwaltet.")
+                Text(settingsVM.transcriptionBackend == .whisperKit
+                     ? "WhisperKit führt OpenAIs Whisper-Modell direkt auf der Apple Neural Engine aus – ideal für komplexe Fachbegriffe und Hintergrundgeräusche."
+                     : "Apple Speech nutzt das systemintegrierte On-Device-Sprachmodell von iOS.")
             }
 
-            // On-Device Recognition Info
-            Section {
-                HStack(spacing: 12) {
-                    Image(systemName: settingsVM.isOnDeviceRecognitionAvailable
-                          ? "checkmark.shield.fill"
-                          : "shield.slash")
-                        .font(.title3)
-                        .foregroundColor(settingsVM.isOnDeviceRecognitionAvailable ? .green : .orange)
+            // Backend specific configuration
+            if settingsVM.transcriptionBackend == .whisperKit {
+                Section {
+                    Picker("Whisper Modell", selection: $settingsVM.whisperModel) {
+                        ForEach(WhisperBackend.WhisperModelVariant.allCases) { variant in
+                            Text(variant.displayName).tag(variant)
+                        }
+                    }
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(settingsVM.isOnDeviceRecognitionAvailable
-                             ? "On-Device-Erkennung aktiv"
-                             : "On-Device-Erkennung nicht verfügbar")
+                    HStack(spacing: 12) {
+                        Image(systemName: "bolt.badge.clock.fill")
+                            .font(.title3)
+                            .foregroundColor(.indigo)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("On-Device Whisper KI aktiv")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("Modelle laufen lokal via CoreML & Apple Neural Engine ohne Cloud-Abhängigkeit.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Whisper Konfiguration")
+                } footer: {
+                    Text("Das Modell wird beim ersten Start automatisch initialisiert und lokal zwischengespeichert.")
+                }
+            } else {
+                // Apple Speech Section
+                Section {
+                    Picker("Sprache", selection: $settingsVM.locale) {
+                        ForEach(settingsVM.supportedLocaleIdentifiers, id: \.self) { code in
+                            Text(localeDescription(for: code)).tag(code)
+                        }
+                    }
+                    .pickerStyle(.navigationLink)
+
+                    HStack(spacing: 12) {
+                        Image(systemName: settingsVM.isOnDeviceRecognitionAvailable
+                              ? "checkmark.shield.fill"
+                              : "shield.slash")
+                            .font(.title3)
+                            .foregroundColor(settingsVM.isOnDeviceRecognitionAvailable ? .green : .orange)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(settingsVM.isOnDeviceRecognitionAvailable
+                                 ? "On-Device-Erkennung aktiv"
+                                 : "On-Device-Erkennung nicht verfügbar")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text(settingsVM.isOnDeviceRecognitionAvailable
+                                 ? "Alle Erkennungen laufen lokal auf deinem Gerät. Keine Audiodaten verlassen das iPhone."
+                                 : "Für diese Sprache wird ggf. das Offline-Paket aus den iOS-Einstellungen benötigt.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Apple Speech Konfiguration")
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Sprachmodell in iOS herunterladen", systemImage: "arrow.down.circle")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        Text(settingsVM.isOnDeviceRecognitionAvailable
-                             ? "Alle Erkennungen laufen lokal auf deinem Gerät. Keine Daten werden an Apple gesendet."
-                             : "Für diese Sprache wird ggf. eine Internetverbindung benötigt. Lade das Sprachmodell in den iOS-Einstellungen herunter.")
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            stepRow(number: 1, text: "Öffne die iOS-Einstellungen")
+                            stepRow(number: 2, text: "Tippe auf \"Allgemein\" > \"Sprache & Region\"")
+                            stepRow(number: 3, text: "Wähle \"Spracherkennung\" und lade deine Sprache herunter")
+                        }
+                        .font(.caption)
+
+                        Button("iOS-Einstellungen öffnen") {
+                            settingsVM.openSystemSettingsForSpeech()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("System-Modelle")
+                }
+            }
+
+            // Privacy Section
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.title2)
+                        .foregroundColor(.green)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("100% Privatsphäre")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text("Sowohl Whisper als auch Apple Speech und die Textzusammenfassung laufen vollständig offline auf deinem Gerät.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 4)
-            }
-
-            // Model Download Guidance
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Label("Sprachmodell herunterladen", systemImage: "arrow.down.circle")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Text("iOS lädt Sprachmodelle automatisch herunter, wenn sie benötigt werden. So gehst du vor:")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        stepRow(number: 1, text: "Öffne die iOS-Einstellungen")
-                        stepRow(number: 2, text: "Tippe auf \"Allgemein\" > \"Sprache & Region\"")
-                        stepRow(number: 3, text: "Wähle \"Spracherkennung\"")
-                        stepRow(number: 4, text: "Lade die gewünschte Sprache herunter")
-                    }
-                    .font(.caption)
-
-                    Button("iOS-Einstellungen öffnen") {
-                        settingsVM.openSystemSettingsForSpeech()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
-                .padding(.vertical, 4)
             } header: {
-                Text("Modell-Download")
-            }
-
-            // Privacy Info
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Datenschutz", systemImage: "hand.raised.fill")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Text("Apple Speech mit On-Device-Erkennung verarbeitet alle Audiodaten lokal auf deinem Gerät. Keine Daten werden an Server gesendet.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 4)
+                Text("Datenschutz")
             }
         }
         .navigationTitle("Spracherkennung")

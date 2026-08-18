@@ -434,32 +434,38 @@ class RecordingViewModel: ObservableObject {
             finalNote.duration = duration
             
             let finalTranscript = liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-            let textToSave = finalTranscript.isEmpty ? "Aufnahme beendet. Sprachinhalte wurden verarbeitet." : finalTranscript
             
-            let sentences = textToSave.components(separatedBy: ". ").filter { !$0.isEmpty }
-            var segments: [TranscriptSegment] = []
-            var currentTimeOffset: TimeInterval = 0
-            let timePerSegment = duration / Double(max(1, sentences.count))
-            
-            for (index, sentence) in sentences.enumerated() {
-                let formattedText = sentence.hasSuffix(".") ? sentence : sentence + "."
-                let speaker = "Sprecher \((index % 2) + 1)"
-                segments.append(TranscriptSegment(
-                    start: currentTimeOffset,
-                    end: min(duration, currentTimeOffset + timePerSegment),
-                    speakerId: speaker,
-                    text: formattedText
-                ))
-                currentTimeOffset += timePerSegment
+            if !finalTranscript.isEmpty {
+                let sentences = finalTranscript.components(separatedBy: ". ").filter { !$0.isEmpty }
+                var segments: [TranscriptSegment] = []
+                var currentTimeOffset: TimeInterval = 0
+                let timePerSegment = duration / Double(max(1, sentences.count))
+                
+                for sentence in sentences {
+                    let formattedText = sentence.hasSuffix(".") ? sentence : sentence + "."
+                    segments.append(TranscriptSegment(
+                        start: currentTimeOffset,
+                        end: min(duration, currentTimeOffset + timePerSegment),
+                        speakerId: nil,
+                        text: formattedText
+                    ))
+                    currentTimeOffset += timePerSegment
+                }
+                
+                finalNote.segments = segments.isEmpty ? [TranscriptSegment(start: 0, end: duration, speakerId: nil, text: finalTranscript)] : segments
+                
+                let generatedSummary = await ServiceLocator.shared.llm.summarize(transcript: finalTranscript)
+                finalNote.summary = generatedSummary
+                let mind = try? await ServiceLocator.shared.highlight.makeMindmap(transcript: finalTranscript)
+                finalNote.mindmap = mind
+                finalNote.pipeline.stage = .done
+                finalNote.pipeline.progress = 1.0
+                
+                await ServiceLocator.shared.storage.save(finalNote)
+                NotificationCenter.default.post(name: .notesChanged, object: nil)
+            } else if let audioURL = finalNote.audioURL {
+                await ServiceLocator.shared.pipeline.enqueue(noteId: finalNote.id, audio: audioURL)
             }
-            
-            finalNote.segments = segments.isEmpty ? [TranscriptSegment(start: 0, end: duration, speakerId: "Sprecher 1", text: textToSave)] : segments
-            
-            let generatedSummary = await ServiceLocator.shared.llm.summarize(transcript: textToSave)
-            finalNote.summary = generatedSummary
-            
-            await ServiceLocator.shared.storage.save(finalNote)
-            NotificationCenter.default.post(name: .notesChanged, object: nil)
         }
         
         shouldDismiss = true

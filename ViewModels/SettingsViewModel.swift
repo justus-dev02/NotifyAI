@@ -21,11 +21,14 @@ final class SettingsViewModel: ObservableObject {
     @Published var redactionEnabled: Bool = true
     @Published var biometricLock: Bool = false
     @Published var endToEndEncryption: Bool = false
-    @Published var modelId: String = "phi-3-mini-instruct-q4" {
+    @Published var modelId: String = "on-device-nlp" {
         didSet { ServiceLocator.shared.llm.modelId = modelId }
     }
     @Published var transcriptionBackend: TranscriptionService.Backend = ServiceLocator.shared.transcription.backend {
         didSet { ServiceLocator.shared.transcription.backend = transcriptionBackend }
+    }
+    @Published var whisperModel: WhisperBackend.WhisperModelVariant = WhisperBackend.shared.selectedModel {
+        didSet { WhisperBackend.shared.selectedModel = whisperModel }
     }
     @Published var fileASREnabled: Bool = false
     @Published var diarizationEnabled: Bool = false
