@@ -7,14 +7,15 @@
 
 import Foundation
 
-struct TranscriptSegment: Identifiable, Codable {
+struct TranscriptSegment: Identifiable, Codable, Hashable {
     let id: UUID
     var start: TimeInterval
     var end: TimeInterval
     var speakerId: String?
     var text: String
-    init(start: TimeInterval, end: TimeInterval, speakerId: String?, text: String) {
-        self.id = UUID()
+
+    init(id: UUID = UUID(), start: TimeInterval, end: TimeInterval, speakerId: String? = nil, text: String) {
+        self.id = id
         self.start = start
         self.end = end
         self.speakerId = speakerId

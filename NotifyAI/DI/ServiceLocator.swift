@@ -23,7 +23,7 @@ final class ServiceLocator: ObservableObject {
 
     private init() {
         let audioSession = AudioSessionService()
-        let recorder = RecordingService()
+        let recorder = RecordingService(audioSessionService: audioSession)
         let transcription = TranscriptionService()
         let diarization = DiarizationService()
         let llm = LLMService()

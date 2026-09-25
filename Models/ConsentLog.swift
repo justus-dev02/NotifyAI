@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct ConsentLog: Codable {
+struct ConsentLog: Codable, Hashable {
     var date: Date
-    var participants: [String]     // optionale Namen/Teams
-    var location: String?          // Ort/Meetingraum
-    var confirmed: Bool            // explizite Zustimmung
+    var participants: [String]
+    var location: String?
+    var confirmed: Bool
 }

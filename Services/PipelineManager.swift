@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by Justus on 29.09.25.
+//  Updated for Robust End-to-End Processing & Proportional Speaker Overlap Mapping.
 //
 
 import Foundation
@@ -12,6 +13,8 @@ import UserNotifications
 import AVFoundation
 
 actor PipelineManager {
+    static let backgroundTaskIdentifier = "com.justus.NotifyAI.pipeline"
+
     private let storage: StorageService
     private let diarizer: DiarizationService
     private let llm: LLMService
@@ -34,13 +37,13 @@ actor PipelineManager {
     }
 
     func registerBGTask() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.your.app.pipeline", using: nil) { task in
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.backgroundTaskIdentifier, using: nil) { task in
             Task { await self.runPending(task: task as! BGProcessingTask) }
         }
     }
 
     func scheduleBG() {
-        let req = BGProcessingTaskRequest(identifier: "com.your.app.pipeline")
+        let req = BGProcessingTaskRequest(identifier: Self.backgroundTaskIdentifier)
         req.requiresNetworkConnectivity = false
         req.requiresExternalPower = false
         try? BGTaskScheduler.shared.submit(req)
@@ -61,55 +64,48 @@ actor PipelineManager {
         await MainActor.run { NotificationCenter.default.post(name: .pipelineUpdated, object: noteId) }
     }
 
-    private func chunks(for audio: URL, targetSec: Double = 300) async -> [URL] {
-        return [audio]
-    }
-
     private func run(noteId: UUID, audio: URL) async {
         do {
             await update(noteId, stage: .chunking, progress: 0.05, eta: nil, msg: "Audio wird vorbereitet…")
-            let parts = await chunks(for: audio)
 
-            var allSegments: [TranscriptSegment] = []
-            var c = 0
-            for part in parts {
-                c += 1
-                let p = Double(c) / Double(parts.count)
-                let backendName = transcription.backend.displayName
-                await update(noteId, stage: .transcribing, progress: 0.1 + 0.6 * p, eta: estimateETA(parts.count - c, perChunk: 30), msg: "Transkription (\(backendName))…")
+            // 1. Transcription (WhisperKit or Apple Speech)
+            let backendName = transcription.backend.displayName
+            await update(noteId, stage: .transcribing, progress: 0.25, eta: 10, msg: "Transkription (\(backendName))…")
+            let segments = try await transcription.transcribe(audioURL: audio)
 
-                let segmentsPart = try await transcription.transcribe(audioURL: part)
-                allSegments.append(contentsOf: segmentsPart)
-            }
-
-            await update(noteId, stage: .diarizing, progress: 0.72, eta: 15, msg: "Sprecherzuordnung…")
+            // 2. Diarization & Speaker Turn Assignment
+            await update(noteId, stage: .diarizing, progress: 0.50, eta: 6, msg: "Sprecherzuordnung…")
             let diar = try await diarizer.diarize(audio)
-            let withSpeakers = mapSpeakers(allSegments, diar: diar)
+            let withSpeakers = mapSpeakers(segments, diar: diar)
 
             await storage.updateSegments(noteId: noteId, segments: withSpeakers)
 
-            await update(noteId, stage: .summarizing, progress: 0.80, eta: 10, msg: "Zusammenfassung wird erstellt…")
+            // 3. Summarization
+            await update(noteId, stage: .summarizing, progress: 0.70, eta: 4, msg: "Zusammenfassung wird erstellt…")
             let fullText = withSpeakers.map { $0.text }.joined(separator: " ")
             var base = await llm.summarize(transcript: fullText)
-
             base.citations = withSpeakers.prefix(12).map(\.id)
 
-            await update(noteId, stage: .roleSummaries, progress: 0.88, eta: 5, msg: "Rollenbasierte Auswertungen…")
+            // 4. Role Summaries
+            await update(noteId, stage: .roleSummaries, progress: 0.85, eta: 3, msg: "Rollenbasierte Auswertungen…")
             let roles = ["Sales", "Team", "Leadership"]
             var roleSummaries: [String: Summary] = [:]
             for r in roles {
                 roleSummaries[r] = try await highlight.roleSummary(role: r, transcript: fullText, segments: withSpeakers)
             }
 
-            await update(noteId, stage: .mindmap, progress: 0.92, eta: 3, msg: "Mindmap generieren…")
+            // 5. Mindmap Generation
+            await update(noteId, stage: .mindmap, progress: 0.92, eta: 2, msg: "Mindmap generieren…")
             let mind = try await highlight.makeMindmap(transcript: fullText)
 
             await storage.updateSummaries(noteId: noteId, summary: base, roleSummaries: roleSummaries, mindmap: mind)
 
+            // 6. Semantic Search Indexing
             await update(noteId, stage: .indexing, progress: 0.96, eta: 1, msg: "Index aktualisieren…")
             let notes = await storage.loadAll()
             search.buildIndex(notes: notes)
 
+            // 7. Completion
             await update(noteId, stage: .done, progress: 1.0, eta: 0, msg: "Fertig")
             notifyDone(noteId)
         } catch {
@@ -134,23 +130,36 @@ actor PipelineManager {
         let content = UNMutableNotificationContent()
         content.title = "Aufbereitung abgeschlossen"
         content.body = "Deine Aufnahme ist jetzt vollständig zusammengefasst."
+        content.sound = .default
         let req = UNNotificationRequest(identifier: "done-\(id)", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(req, withCompletionHandler: nil)
     }
 
-    private func estimateETA(_ chunksRemaining: Int, perChunk: Int) -> Int { chunksRemaining * perChunk }
-
+    /// Assigns speaker IDs to transcript segments based on maximum time overlap
     private func mapSpeakers(
         _ segments: [TranscriptSegment],
         diar: [(start: TimeInterval, end: TimeInterval, speakerId: String)]
     ) -> [TranscriptSegment] {
-        if diar.isEmpty {
-            return segments
-        }
+        guard !diar.isEmpty else { return segments }
+
         return segments.map { seg in
             var s = seg
-            if let d = diar.first(where: { $0.start <= seg.start && seg.end <= $0.end }) {
-                s.speakerId = d.speakerId
+            var maxOverlap: TimeInterval = 0
+            var matchedSpeaker: String? = nil
+
+            for turn in diar {
+                let overlapStart = max(seg.start, turn.start)
+                let overlapEnd = min(seg.end, turn.end)
+                let overlap = overlapEnd - overlapStart
+
+                if overlap > maxOverlap {
+                    maxOverlap = overlap
+                    matchedSpeaker = turn.speakerId
+                }
+            }
+
+            if let matchedSpeaker = matchedSpeaker, maxOverlap > 0.1 {
+                s.speakerId = matchedSpeaker
             }
             return s
         }

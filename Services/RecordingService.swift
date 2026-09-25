@@ -1,90 +1,205 @@
 //
-//  RecordungService.swift
+//  RecordingService.swift
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
+//  Updated for Resampled Audio Conversion (16kHz), Interruption Handling & Thread-Safe CoreAudio Engine.
 //
 
 import AVFoundation
+import Accelerate
 
 final class RecordingService: NSObject {
     private let engine = AVAudioEngine()
-    private let fileFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1)!
     private var file: AVAudioFile?
-    private var isPaused = false
+    private var converter: AVAudioConverter?
+    private var isPausedState = false
     private var startTS: Date?
-    private(set) var recordedDuration: TimeInterval = 0
+    private var accumulatedDuration: TimeInterval = 0
+    private var pauseTS: Date?
+    private let audioSessionService: AudioSessionService
 
-    // Optional consumer to forward live audio buffers (for STT backends)
+    private(set) var isRecording = false
+
+    /// Callback for live 16kHz mono audio buffers (consumed by WhisperKit and Apple Speech)
     var bufferConsumer: ((AVAudioPCMBuffer) -> Void)?
+    /// Callback for RMS volume visualization (0.0 ... 1.0)
     var amplitudeCallback: ((Float) -> Void)?
+    /// Callback when recording is interrupted by the system (e.g., incoming call)
+    var onInterrupted: ((Bool) -> Void)?
+
+    init(audioSessionService: AudioSessionService = AudioSessionService()) {
+        self.audioSessionService = audioSessionService
+        super.init()
+        setupInterruptionHandling()
+    }
+
+    var recordedDuration: TimeInterval {
+        guard let start = startTS else { return accumulatedDuration }
+        if isPausedState {
+            return accumulatedDuration
+        }
+        return accumulatedDuration + Date().timeIntervalSince(start)
+    }
 
     func start(to url: URL) throws {
-        // 1. Activate session FIRST to ensure hardware format is known
-        try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.allowBluetooth, .duckOthers])
-        try AVAudioSession.sharedInstance().setActive(true)
-        
+        // 1. Configure and activate audio session
+        try audioSessionService.configureForRecording()
+
         startTS = Date()
+        accumulatedDuration = 0
+        isRecording = true
+        isPausedState = false
+
         let input = engine.inputNode
-        var format = input.outputFormat(forBus: 0)
-        
-        // 2. Safety check: If the format is invalid (common in Simulator), use a standard fallback
-        if format.sampleRate <= 0 {
-            format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
+        let inputFormat = input.outputFormat(forBus: 0)
+
+        // Safety check for valid sample rate
+        let sampleRate = inputFormat.sampleRate > 0 ? inputFormat.sampleRate : 44100.0
+        let channels = inputFormat.channelCount > 0 ? inputFormat.channelCount : 1
+        let hardwareRecordingFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: channels) ?? inputFormat
+
+        // Target standard: 16kHz Mono Float/PCM for high quality STT & storage efficiency
+        guard let targetFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16000.0, channels: 1, interleaved: false) else {
+            throw NSError(domain: "RecordingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Konnte Ziel-Audioformat (16kHz) nicht erstellen."])
         }
-        
-        // 3. Create the file with the determined format
-        file = try AVAudioFile(forWriting: url, settings: format.settings)
-        
+
+        // Setup format converter
+        converter = AVAudioConverter(from: hardwareRecordingFormat, to: targetFormat)
+
+        // Target file: 16kHz 16-bit Int16 PCM CAF/WAV
+        let fileSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: 16000.0,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false
+        ]
+
+        // Clean up previous file at destination if present
+        if FileManager.default.fileExists(atPath: url.path) {
+            try? FileManager.default.removeItem(at: url)
+        }
+
+        file = try AVAudioFile(forWriting: url, settings: fileSettings, commonFormat: .pcmFormatFloat32, interleaved: false)
+
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
-            guard let self, !self.isPaused else { return }
-            
-            // Calculate RMS for amplitude visualization
-            var rms: Float = 0
-            let frameLength = Int(buffer.frameLength)
-            if let floatData = buffer.floatChannelData?[0] {
-                var sum: Float = 0
-                for i in 0..<frameLength {
-                    let sample = floatData[i]
-                    sum += sample * sample
-                }
-                rms = sqrt(sum / Float(max(1, frameLength)))
-            } else if let int16Data = buffer.int16ChannelData?[0] {
-                var sum: Float = 0
-                for i in 0..<frameLength {
-                    let sample = Float(int16Data[i]) / 32768.0
-                    sum += sample * sample
-                }
-                rms = sqrt(sum / Float(max(1, frameLength)))
-            }
+        input.installTap(onBus: 0, bufferSize: 2048, format: hardwareRecordingFormat) { [weak self] buffer, _ in
+            guard let self = self, !self.isPausedState else { return }
 
-            if rms > 0 {
-                DispatchQueue.main.async {
-                    self.amplitudeCallback?(rms)
+            // 1. Calculate RMS amplitude for UI visualization
+            self.calculateAndPublishAmplitude(from: buffer)
+
+            // 2. Convert to 16kHz mono buffer
+            guard let converter = self.converter else { return }
+            let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * (16000.0 / buffer.format.sampleRate) + 256)
+            guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity) else { return }
+
+            var error: NSError?
+            var hasProvidedBuffer = false
+            let inputBlock: AVAudioConverterInputBlock = { inNumPackets, outStatus in
+                if !hasProvidedBuffer {
+                    hasProvidedBuffer = true
+                    outStatus.pointee = .haveData
+                    return buffer
+                } else {
+                    outStatus.pointee = .noDataNow
+                    return nil
                 }
             }
 
-            do { 
-                try self.file?.write(from: buffer)
-                // Forward buffer to any live transcription backend
-                self.bufferConsumer?(buffer)
-            } catch { print("write error", error) }
+            converter.convert(to: convertedBuffer, error: &error, withInputFrom: inputBlock)
+
+            if error == nil && convertedBuffer.frameLength > 0 {
+                // 3. Write converted 16kHz buffer to disk
+                do {
+                    try self.file?.write(from: convertedBuffer)
+                } catch {
+                    print("RecordingService file write error: \(error)")
+                }
+
+                // 4. Forward resampled buffer to active STT engine
+                self.bufferConsumer?(convertedBuffer)
+            }
         }
-        
+
+        engine.prepare()
         try engine.start()
     }
 
-    func pause() { isPaused = true }
-    func resume() { isPaused = false }
+    func pause() {
+        guard isRecording, !isPausedState else { return }
+        isPausedState = true
+        if let start = startTS {
+            accumulatedDuration += Date().timeIntervalSince(start)
+            startTS = nil
+        }
+    }
+
+    func resume() {
+        guard isRecording, isPausedState else { return }
+        isPausedState = false
+        startTS = Date()
+    }
 
     func stop() -> TimeInterval {
+        guard isRecording else { return accumulatedDuration }
+
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
-        file = nil // Finalize & flush audio file headers to disk
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        if let start = startTS { recordedDuration = Date().timeIntervalSince(start) }
-        return recordedDuration
+        file = nil // Flushes headers & finalizes CAF/WAV container
+        converter = nil
+        isRecording = false
+        isPausedState = false
+
+        if let start = startTS {
+            accumulatedDuration += Date().timeIntervalSince(start)
+            startTS = nil
+        }
+
+        audioSessionService.deactivate()
+        return accumulatedDuration
+    }
+
+    private func calculateAndPublishAmplitude(from buffer: AVAudioPCMBuffer) {
+        let frameLength = Int(buffer.frameLength)
+        guard frameLength > 0 else { return }
+
+        var rms: Float = 0
+        if let floatData = buffer.floatChannelData?[0] {
+            vDSP_rmsqv(floatData, 1, &rms, vDSP_Length(frameLength))
+        }
+
+        if rms > 0 {
+            DispatchQueue.main.async { [weak self] in
+                self?.amplitudeCallback?(rms)
+            }
+        }
+    }
+
+    private func setupInterruptionHandling() {
+        audioSessionService.onInterruption = { [weak self] type in
+            guard let self = self, self.isRecording else { return }
+            switch type {
+            case .began:
+                self.pause()
+                self.onInterrupted?(true)
+            case .ended:
+                self.resume()
+                self.onInterrupted?(false)
+            @unknown default:
+                break
+            }
+        }
+
+        audioSessionService.onRouteChange = { [weak self] reason in
+            guard let self = self, self.isRecording else { return }
+            if reason == .oldDeviceUnavailable {
+                // E.g. AirPods were disconnected, pause safely
+                self.pause()
+                self.onInterrupted?(true)
+            }
+        }
     }
 }
-

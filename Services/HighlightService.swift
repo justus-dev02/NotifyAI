@@ -1,9 +1,9 @@
 //
-//  HightlightService.swift
+//  HighlightService.swift
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
-//  Updated for 100% On-Device NLP Role Summaries & Mindmaps.
+//  Updated for Robust On-Device NLP Role Summaries & Mindmaps.
 //
 
 import Foundation
@@ -19,9 +19,11 @@ final class HighlightService {
     /// Generates a role-specific summary tailored to the chosen role.
     func roleSummary(role: String, transcript: String, segments: [TranscriptSegment]) async throws -> Summary {
         let roleKeywords: [String: [String]] = [
-            "Sales": ["kunde", "vertrieb", "umsatz", "angebot", "vertrag", "preis", "abschluss", "lead", "budget", "client", "deal"],
-            "Team": ["aufgabe", "sprint", "todo", "meeting", "entwicklung", "testing", "abgabe", "review", "team", "task", "work"],
-            "Leadership": ["strategie", "ziel", "roadmap", "entscheidung", "budget", "priorität", "vision", "quartal", "growth", "strategy"]
+            "Sales": ["kunde", "vertrieb", "umsatz", "angebot", "vertrag", "preis", "abschluss", "lead", "budget", "client", "deal", "pipeline"],
+            "Team": ["aufgabe", "sprint", "todo", "meeting", "entwicklung", "testing", "abgabe", "review", "team", "task", "work", "deadline"],
+            "Leadership": ["strategie", "ziel", "roadmap", "entscheidung", "budget", "priorität", "vision", "quartal", "growth", "strategy", "investition"],
+            "Produkt": ["feature", "user", "ux", "design", "feedback", "backlog", "release", "anforderung", "scope"],
+            "Bildung": ["lernziel", "prüfung", "kapitel", "verstehen", "aufgabe", "definition", "thema", "literatur"]
         ]
 
         let keywords = roleKeywords[role] ?? [role.lowercased()]
@@ -40,14 +42,14 @@ final class HighlightService {
         return summary
     }
 
-    /// Generates a real Mindmap tree from key topics in the transcript.
+    /// Generates a structured Mindmap tree from key topics in the transcript.
     func makeMindmap(transcript: String) async throws -> Mindmap {
         let cleanText = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanText.isEmpty else {
             return Mindmap(root: "Keine Inhalte", children: [])
         }
 
-        // Extract main key themes using linguistic analysis
+        // 1. Extract sentences
         let tokenizer = NLTokenizer(unit: .sentence)
         tokenizer.string = cleanText
 
@@ -60,15 +62,17 @@ final class HighlightService {
             return true
         }
 
-        // Identify key noun themes
+        // 2. Identify key noun themes using NLTagger
         let tagger = NLTagger(tagSchemes: [.lexicalClass])
         tagger.string = cleanText
 
         var frequentNouns: [String: Int] = [:]
+        let stopWords: Set<String> = ["Uhr", "Tag", "Woche", "Jahr", "Thema", "Dinge", "Punkt", "Frage", "Antwort", "Beispiel"]
+
         tagger.enumerateTags(in: cleanText.startIndex..<cleanText.endIndex, unit: .word, scheme: .lexicalClass, options: [.omitWhitespace, .omitPunctuation]) { tag, range in
             if tag == .noun {
                 let noun = String(cleanText[range]).capitalized
-                if noun.count > 3 {
+                if noun.count > 3 && !stopWords.contains(noun) {
                     frequentNouns[noun, default: 0] += 1
                 }
             }
@@ -82,14 +86,16 @@ final class HighlightService {
         for theme in topThemes {
             let relatedSentences = sentences.filter { $0.lowercased().contains(theme.lowercased()) }
             let subNodes = relatedSentences.prefix(3).map { s in
-                MindmapNode(label: s.prefix(45) + (s.count > 45 ? "…" : ""), children: nil)
+                let label = s.count > 50 ? String(s.prefix(47)) + "…" : s
+                return MindmapNode(label: label, children: nil)
             }
             children.append(MindmapNode(label: theme, children: subNodes.isEmpty ? nil : Array(subNodes)))
         }
 
         if children.isEmpty {
             children = sentences.prefix(3).map { s in
-                MindmapNode(label: s.prefix(40) + "…", children: nil)
+                let label = s.count > 45 ? String(s.prefix(42)) + "…" : s
+                return MindmapNode(label: label, children: nil)
             }
         }
 

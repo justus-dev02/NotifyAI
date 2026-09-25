@@ -5,7 +5,9 @@
 //  Created by Justus on 29.09.25.
 //
 
-struct PipelineState: Codable {
+import Foundation
+
+struct PipelineState: Codable, Hashable {
     enum Stage: Int, Codable, CaseIterable {
         case none
         case chunking
@@ -17,6 +19,21 @@ struct PipelineState: Codable {
         case indexing
         case done
         case error
+
+        var displayName: String {
+            switch self {
+            case .none: return "Bereit"
+            case .chunking: return "Vorbereitung"
+            case .transcribing: return "Transkription"
+            case .diarizing: return "Sprechererkennung"
+            case .summarizing: return "Zusammenfassung"
+            case .roleSummaries: return "Rollenanalyse"
+            case .mindmap: return "Mindmap"
+            case .indexing: return "Indexierung"
+            case .done: return "Fertig"
+            case .error: return "Fehler"
+            }
+        }
     }
     var stage: Stage = .none
     var progress: Double = 0

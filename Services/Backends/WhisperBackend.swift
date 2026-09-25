@@ -3,7 +3,7 @@
 //  NotifyAI
 //
 //  Created by OpenAI Assistant on 05.10.23.
-//  Updated for WhisperKit On-Device Integration.
+//  Updated for Real WhisperKit Neural Engine Execution & Streaming.
 //
 
 import Foundation
@@ -45,6 +45,10 @@ final class WhisperBackend {
     #if canImport(WhisperKit)
     private var pipeline: WhisperKit?
     private var isInitializing = false
+    private var liveAudioBuffer: [Float] = []
+    private var liveStreamHandler: TranscriptionService.TranscriptHandler?
+    private var lastDecodedLength: Int = 0
+    private var isProcessingChunk = false
     #endif
 
     private init() {}
@@ -54,7 +58,13 @@ final class WhisperBackend {
         if let pipeline = pipeline {
             return pipeline
         }
-        let kit = try await WhisperKit(model: selectedModel.rawValue)
+        let kit = try await WhisperKit(
+            model: selectedModel.rawValue,
+            computeOptions: ModelComputeOptions(
+                audioEncoderCompute: .cpuAndNeuralEngine,
+                textDecoderCompute: .cpuAndNeuralEngine
+            )
+        )
         self.pipeline = kit
         return kit
     }
@@ -123,17 +133,58 @@ final class WhisperBackend {
         #endif
     }
 
-    /// Starts live streaming audio recognition if applicable.
+    /// Starts live streaming audio recognition.
     func start(handler: @escaping TranscriptionService.TranscriptHandler) async throws {
         #if canImport(WhisperKit)
         _ = try await getPipeline()
-        // WhisperKit processes audio chunks as they arrive during recording
+        self.liveStreamHandler = handler
+        self.liveAudioBuffer.removeAll()
+        self.lastDecodedLength = 0
+        self.isProcessingChunk = false
         #else
         throw NSError(domain: "WhisperBackend", code: -1, userInfo: [NSLocalizedDescriptionKey: "WhisperKit framework ist nicht verfügbar."])
         #endif
     }
 
+    /// Appends incoming audio PCM buffers and processes live speech chunks
+    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        #if canImport(WhisperKit)
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let frameCount = Int(buffer.frameLength)
+        guard frameCount > 0 else { return }
+        
+        let samples = Array(UnsafeBufferPointer(start: channelData, count: frameCount))
+        liveAudioBuffer.append(contentsOf: samples)
+        
+        // Every ~2.5 seconds of 16kHz audio (40,000 samples) and not currently decoding
+        if liveAudioBuffer.count - lastDecodedLength >= 40000 && !isProcessingChunk {
+            isProcessingChunk = true
+            let currentSamples = liveAudioBuffer
+            lastDecodedLength = currentSamples.count
+            
+            Task {
+                if let pipe = self.pipeline {
+                    if let results = try? await pipe.transcribe(audioArray: currentSamples) {
+                        let text = results.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !text.isEmpty {
+                            DispatchQueue.main.async {
+                                self.liveStreamHandler?(text, nil, nil)
+                            }
+                        }
+                    }
+                }
+                self.isProcessingChunk = false
+            }
+        }
+        #endif
+    }
+
     func stop() {
-        // Cleanup if needed
+        #if canImport(WhisperKit)
+        liveStreamHandler = nil
+        liveAudioBuffer.removeAll()
+        lastDecodedLength = 0
+        isProcessingChunk = false
+        #endif
     }
 }

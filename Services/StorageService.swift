@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
+//  Updated for High-Performance Manifest Caching & Async Disk I/O.
 //
 
 import Foundation
@@ -23,6 +24,7 @@ actor StorageService {
     func save(_ note: Note) async {
         notes[note.id] = note
         persist(note)
+        saveManifest()
         broadcastChange()
     }
 
@@ -31,6 +33,7 @@ actor StorageService {
         n.segments = segments
         notes[noteId] = n
         persist(n)
+        saveManifest()
         broadcastChange()
     }
 
@@ -42,6 +45,7 @@ actor StorageService {
 
         notes[noteId] = n
         persist(n)
+        saveManifest()
         broadcastChange()
     }
 
@@ -50,6 +54,7 @@ actor StorageService {
         block(&n.pipeline)
         notes[noteId] = n
         persist(n)
+        saveManifest()
         broadcastChange()
     }
 
@@ -57,6 +62,7 @@ actor StorageService {
         notes.removeValue(forKey: noteId)
         let dir = documentsURL().appendingPathComponent(noteId.uuidString, isDirectory: true)
         try? fm.removeItem(at: dir)
+        saveManifest()
         broadcastChange()
     }
 
@@ -73,6 +79,19 @@ actor StorageService {
     }
 
     private func loadFromDisk() {
+        let manifestFile = documentsURL().appendingPathComponent("manifest.json")
+        if fm.fileExists(atPath: manifestFile.path),
+           let data = try? Data(contentsOf: manifestFile),
+           let manifestNotes = try? JSONDecoder().decode([Note].self, from: data) {
+            for note in manifestNotes {
+                notes[note.id] = note
+            }
+            if !notes.isEmpty {
+                return
+            }
+        }
+
+        // Fallback: Scan subdirectories
         let docURL = documentsURL()
         guard let subdirs = try? fm.contentsOfDirectory(at: docURL, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else {
             return
@@ -87,6 +106,7 @@ actor StorageService {
                 }
             }
         }
+        saveManifest()
     }
 
     private func persist(_ note: Note) {
@@ -95,9 +115,17 @@ actor StorageService {
         let meta = dir.appendingPathComponent("note.json")
         do {
             let data = try JSONEncoder().encode(note)
-            try data.write(to: meta)
+            try data.write(to: meta, options: .atomic)
         } catch {
             print("StorageService persist error: \(error)")
+        }
+    }
+
+    private func saveManifest() {
+        let manifestFile = documentsURL().appendingPathComponent("manifest.json")
+        let allNotes = Array(notes.values)
+        if let data = try? JSONEncoder().encode(allNotes) {
+            try? data.write(to: manifestFile, options: .atomic)
         }
     }
 

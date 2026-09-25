@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
+//  Updated to consume shared audio engine buffers and prevent hardware tap conflicts.
 //
 
 import Foundation
@@ -12,10 +13,10 @@ import Speech
 final class AppleSpeechBackend: NSObject {
     static let shared = AppleSpeechBackend()
 
-    private let audioEngine = AVAudioEngine()
     private var recognizer: SFSpeechRecognizer?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
+    private var streamHandler: TranscriptionService.TranscriptHandler?
 
     /// Current locale identifier (e.g. "de-DE")
     var localeIdentifier: String = "de-DE" {
@@ -64,9 +65,9 @@ final class AppleSpeechBackend: NSObject {
         var errorDescription: String? {
             switch self {
             case .notAuthorized:
-                return "Spracherkennung nicht autorisiert. Bitte in den Einstellungen aktivieren."
+                return "Spracherkennung nicht autorisiert. Bitte in den iOS-Einstellungen aktivieren."
             case .onDeviceNotSupported:
-                return "On-Device-Erkennung für diese Sprache nicht verfügbar."
+                return "On-Device-Spracherkennung für diese Sprache nicht verfügbar."
             case .recognizerUnavailable:
                 return "Spracherkennung ist derzeit nicht verfügbar."
             }
@@ -126,45 +127,39 @@ final class AppleSpeechBackend: NSObject {
         }
     }
 
+    /// Starts live streaming recognition using shared audio buffer feed from RecordingService
     func start(handler: @escaping TranscriptionService.TranscriptHandler) throws {
         guard let recognizer, recognizer.isAvailable else { throw AppleSpeechError.recognizerUnavailable }
 
-        try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP])
-        try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+        stop()
+        self.streamHandler = handler
 
-        let inputNode = audioEngine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
+        let req = SFSpeechAudioBufferRecognitionRequest()
+        req.shouldReportPartialResults = true
+        req.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        self.request = req
 
-        request = SFSpeechAudioBufferRecognitionRequest()
-        request?.shouldReportPartialResults = true
-        request?.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
-
-        task = recognizer.recognitionTask(with: request!) { result, error in
+        task = recognizer.recognitionTask(with: req) { [weak self] result, error in
             if let result {
                 let text = result.bestTranscription.formattedString
-                handler(text, nil, nil)
+                self?.streamHandler?(text, nil, nil)
             }
             if error != nil {
-                self.stop()
+                self?.stop()
             }
         }
+    }
 
-        inputNode.removeTap(onBus: 0)
-        inputNode.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
-            self?.request?.append(buffer)
-        }
-
-        audioEngine.prepare()
-        try audioEngine.start()
+    /// Feeds a live audio buffer into the recognition request
+    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        request?.append(buffer)
     }
 
     func stop() {
         request?.endAudio()
         task?.cancel()
-        audioEngine.inputNode.removeTap(onBus: 0)
-        audioEngine.stop()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         task = nil
         request = nil
+        streamHandler = nil
     }
 }

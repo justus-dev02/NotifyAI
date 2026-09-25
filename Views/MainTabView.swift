@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by OpenAI Assistant on 05.10.23.
+//  Updated for Liquid Glass Design (Search integrated into Notes).
 //
 
 import SwiftUI
@@ -20,7 +21,7 @@ struct MainTabView: View {
                 .environmentObject(settingsViewModel)
                 .environmentObject(themeManager)
                 .tabItem {
-                    Label("Dashboard", systemImage: "square.grid.2x2.fill")
+                    Label("Dashboard", systemImage: "sparkles.rectangle.stack.fill")
                 }
 
             NotesListView()
@@ -31,14 +32,6 @@ struct MainTabView: View {
                     Label("Notizen", systemImage: "note.text")
                 }
 
-            SearchView()
-                .environmentObject(notesViewModel)
-                .environmentObject(settingsViewModel)
-                .environmentObject(themeManager)
-                .tabItem {
-                    Label("Suche", systemImage: "magnifyingglass")
-                }
-
             SettingsView()
                 .environmentObject(notesViewModel)
                 .environmentObject(settingsViewModel)
@@ -47,7 +40,7 @@ struct MainTabView: View {
                     Label("Einstellungen", systemImage: "gearshape.fill")
                 }
         }
-        .tint(Color.indigo)
+        .tint(AppTheme.accent)
         .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
     }
 }

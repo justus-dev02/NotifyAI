@@ -3,36 +3,42 @@
 //  NotifyAI
 //
 //  Created by AI Assistant on 23.10.25.
+//  Updated for Consolidated CoreAudio & Live STT Pipeline.
 //
 
 import SwiftUI
 import AVFoundation
-import Speech
 
 struct UnifiedRecordingView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var notesViewModel: NotesViewModel
     @EnvironmentObject var themeManager: ThemeManager
-    
-    @StateObject private var vm = RecordingViewModel()
-    
+
+    @StateObject private var vm: RecorderViewModel
+
     @State private var showConsent = false
     @State private var hasConsent = false
     @State private var noteTitle = ""
     @State private var context = ""
     @State private var participants = ""
     @State private var location = ""
-    
+
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
-    
+
     enum ViewState {
         case setup
         case recording
     }
-    
+
     @State private var currentState: ViewState = .setup
-    
+
+    init(note: Note = Note(title: "Neue Aufnahme"), prefilledContext: String = "") {
+        _vm = StateObject(wrappedValue: RecorderViewModel(note: note))
+        _noteTitle = State(initialValue: note.title == "Neue Notiz" || note.title == "Neue Aufnahme" ? "" : note.title)
+        _context = State(initialValue: prefilledContext)
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -42,14 +48,7 @@ struct UnifiedRecordingView: View {
                     activeRecordingView
                 }
             }
-            .background(
-                LinearGradient(
-                    colors: [Color.adaptiveBackground, Color.indigo.opacity(0.05)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            )
+            .liquidGlassBackground()
             .toolbar {
                 if currentState == .setup {
                     ToolbarItem(placement: .navigationBarLeading) {
@@ -57,7 +56,7 @@ struct UnifiedRecordingView: View {
                             .font(.headline)
                             .foregroundStyle(Color.adaptiveLabel)
                     }
-                    
+
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Abbrechen") {
                             dismiss()
@@ -82,11 +81,6 @@ struct UnifiedRecordingView: View {
                     startRecordingSession(with: consent)
                 }
             }
-            .onChange(of: vm.shouldDismiss) { shouldDismiss in
-                if shouldDismiss {
-                    dismiss()
-                }
-            }
             .alert("Fehler", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -94,19 +88,19 @@ struct UnifiedRecordingView: View {
             }
         }
     }
-    
+
     // MARK: - Setup View
     private var setupView: some View {
         ScrollView {
             VStack(spacing: 24) {
                 headerSection
-                
+
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Details zur Aufnahme")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(Color.adaptiveLabel)
-                    
+
                     VStack(spacing: 14) {
                         CustomTextField(title: "Thema / Titel", placeholder: "z.B. Team Update & Planning", text: $noteTitle)
                         CustomTextField(title: "Kontext", placeholder: "z.B. Strategie für Q3", text: $context)
@@ -115,7 +109,7 @@ struct UnifiedRecordingView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                
+
                 VStack(spacing: 12) {
                     Button(action: {
                         showConsent = true
@@ -139,7 +133,7 @@ struct UnifiedRecordingView: View {
                         .shadow(color: noteTitle.trimmingCharacters(in: .whitespaces).isEmpty ? Color.clear : Color.indigo.opacity(0.35), radius: 10, y: 5)
                     }
                     .disabled(noteTitle.trimmingCharacters(in: .whitespaces).isEmpty)
-                    
+
                     Text(noteTitle.trimmingCharacters(in: .whitespaces).isEmpty ? "Bitte trage mindestens einen Titel ein, um fortzufahren." : "Bereit! Klicke zum Bestätigen der Teilnehmer-Zustimmung.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -152,7 +146,7 @@ struct UnifiedRecordingView: View {
             .padding(.vertical, 16)
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 10) {
             ZStack {
@@ -163,45 +157,45 @@ struct UnifiedRecordingView: View {
                     .font(.system(size: 30, weight: .semibold))
                     .foregroundColor(Color.indigo)
             }
-            
+
             Text("Neue Audio-Aufnahme")
                 .font(.title2.bold())
                 .foregroundStyle(Color.adaptiveLabel)
-            
+
             Text("100% Lokale Transkription & KI-Auswertung")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
-    
+
     // MARK: - Active Recording View
     private var activeRecordingView: some View {
         VStack(spacing: 24) {
             Spacer()
-            
+
             // Timer and Title
             VStack(spacing: 8) {
-                Text(vm.timerString)
+                Text(vm.timerDisplay)
                     .font(.system(size: 60, weight: .light, design: .monospaced))
                     .foregroundStyle(Color.adaptiveLabel)
-                
-                Text(noteTitle)
+
+                Text(vm.note.title)
                     .font(.headline)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Waveform Visualizer
             WaveformView(amplitudes: vm.amplitudes)
                 .frame(height: 100)
                 .padding(.horizontal)
-            
-            // Live Transcript
+
+            // Live Transcript Box
             ScrollViewReader { proxy in
                 ScrollView {
-                    Text(vm.liveTranscript.isEmpty ? "Warte auf Spracheingabe… (Spreche jetzt)" : vm.liveTranscript)
+                    Text(vm.liveText.isEmpty ? "Warte auf Spracheingabe… (Spreche jetzt)" : vm.liveText)
                         .font(.body)
-                        .foregroundStyle(vm.liveTranscript.isEmpty ? .secondary : Color.adaptiveLabel)
+                        .foregroundStyle(vm.liveText.isEmpty ? .secondary : Color.adaptiveLabel)
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .id("bottom")
@@ -209,21 +203,21 @@ struct UnifiedRecordingView: View {
                 .frame(maxHeight: 220)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.horizontal, 20)
-                .onChange(of: vm.liveTranscript) { _ in
+                .onChange(of: vm.liveText) { _ in
                     withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
                 }
             }
-            
+
             Spacer()
-            
+
             // Controls
             HStack(spacing: 32) {
                 // Pause/Resume
                 Button(action: {
                     if vm.isPaused {
-                        vm.resumeRecording()
+                        vm.resume()
                     } else {
-                        vm.pauseRecording()
+                        vm.pause()
                     }
                 }) {
                     VStack(spacing: 6) {
@@ -235,11 +229,13 @@ struct UnifiedRecordingView: View {
                     .foregroundColor(Color.indigo)
                     .frame(width: 72)
                 }
-                
-                // Stop
+
+                // Stop & Process
                 Button(action: {
+                    vm.stop()
                     Task {
-                        await vm.stopRecording()
+                        await notesViewModel.load()
+                        dismiss()
                     }
                 }) {
                     VStack(spacing: 6) {
@@ -256,10 +252,10 @@ struct UnifiedRecordingView: View {
                             .foregroundColor(.red)
                     }
                 }
-                
-                // Live Highlight Button
+
+                // Live Bookmark Button
                 Button(action: {
-                    vm.addHighlight()
+                    vm.addBookmark(label: "Wichtiger Punkt")
                 }) {
                     VStack(spacing: 6) {
                         Image(systemName: "star.fill")
@@ -274,32 +270,28 @@ struct UnifiedRecordingView: View {
             .padding(.bottom, 32)
         }
     }
-    
+
     // MARK: - Actions
     private func startRecordingSession(with consent: ConsentLog) {
         let title = noteTitle.isEmpty ? "Aufnahme \(Date().formatted(date: .abbreviated, time: .shortened))" : noteTitle
-        
-        var note = Note(title: title)
-        note.location = location.isEmpty ? nil : location
-        note.consent = consent
-        
+
+        vm.note.title = title
+        vm.note.location = location.isEmpty ? nil : location
+        vm.note.context = context.isEmpty ? nil : context
+
         if !participants.isEmpty {
             let names = participants.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            note.participants = names.map { Participant(name: String($0), role: "") }
+            vm.note.participants = names.map { Participant(name: String($0), role: "") }
         }
-        
-        vm.setup(note: note, notesViewModel: notesViewModel)
-        
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            DispatchQueue.main.async {
-                guard granted else {
-                    self.errorMessage = "Mikrofon-Zugriff wurde verweigert. Bitte erlaube den Zugriff in den Einstellungen."
-                    self.showErrorAlert = true
-                    return
-                }
-                
+
+        Task {
+            let granted = await ServiceLocator.shared.audioSession.requestPermission()
+            if granted {
                 self.currentState = .recording
-                self.vm.startRecording()
+                await self.vm.start(consent: consent)
+            } else {
+                self.errorMessage = "Mikrofon-Zugriff wurde verweigert. Bitte erlaube den Zugriff in den iOS-Einstellungen."
+                self.showErrorAlert = true
             }
         }
     }
@@ -310,14 +302,14 @@ struct CustomTextField: View {
     let title: String
     let placeholder: String
     @Binding var text: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.secondary)
-            
+
             TextField(placeholder, text: $text)
                 .padding(14)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -331,7 +323,7 @@ struct CustomTextField: View {
 
 struct WaveformView: View {
     let amplitudes: [Float]
-    
+
     var body: some View {
         HStack(spacing: 4) {
             ForEach(0..<amplitudes.count, id: \.self) { index in
@@ -349,181 +341,8 @@ struct WaveformView: View {
     }
 }
 
-// MARK: - Recording ViewModel
-@MainActor
-class RecordingViewModel: ObservableObject {
-    @Published var amplitudes: [Float] = Array(repeating: 0.1, count: 35)
-    @Published var timerString = "00:00"
-    @Published var liveTranscript = ""
-    @Published var highlights: [String] = []
-    @Published var isPaused = false
-    @Published var shouldDismiss = false
-    
-    private var note: Note?
-    private var notesViewModel: NotesViewModel?
-    
-    private let recorder = RecordingService()
-    private var timer: Timer?
-    private var startTime: Date?
-    private var accumulatedTime: TimeInterval = 0
-    private var speechRecognizer: SFSpeechRecognizer?
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognitionTask: SFSpeechRecognitionTask?
-    
-    private var accumulatedTranscript: String = ""
-    private var currentPhrase: String = ""
-    
-    func setup(note: Note, notesViewModel: NotesViewModel) {
-        self.note = note
-        self.notesViewModel = notesViewModel
-    }
-    
-    func startRecording() {
-        guard let note = note else { return }
-        
-        let docsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let fileURL = docsDirectory.appendingPathComponent("note_\(note.id.uuidString).wav")
-        self.note?.audioURL = fileURL
-        
-        recorder.amplitudeCallback = { [weak self] amp in
-            self?.updateAmplitudes(amp)
-        }
-        
-        do {
-            try recorder.start(to: fileURL)
-            startTime = Date()
-            startTimer()
-            startLiveTranscription()
-        } catch {
-            print("Recording start failed: \(error)")
-        }
-    }
-    
-    func addHighlight() {
-        let highlightText = "★ Wichtiger Punkt um \(timerString)"
-        highlights.append(highlightText)
-        accumulatedTranscript += (accumulatedTranscript.isEmpty ? "" : "\n") + "[\(highlightText)]\n"
-        liveTranscript = accumulatedTranscript + (currentPhrase.isEmpty ? "" : " " + currentPhrase)
-    }
-    
-    func pauseRecording() {
-        recorder.pause()
-        isPaused = true
-        timer?.invalidate()
-        if let start = startTime {
-            accumulatedTime += Date().timeIntervalSince(start)
-        }
-    }
-    
-    func resumeRecording() {
-        recorder.resume()
-        isPaused = false
-        startTime = Date()
-        startTimer()
-    }
-    
-    func stopRecording() async {
-        let duration = recorder.stop()
-        timer?.invalidate()
-        recognitionRequest?.endAudio()
-        recognitionTask?.finish()
-        recognitionTask = nil
-        recognitionRequest = nil
-        
-        if var finalNote = note {
-            finalNote.duration = duration
-            
-            let finalTranscript = liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            if !finalTranscript.isEmpty {
-                let sentences = finalTranscript.components(separatedBy: ". ").filter { !$0.isEmpty }
-                var segments: [TranscriptSegment] = []
-                var currentTimeOffset: TimeInterval = 0
-                let timePerSegment = duration / Double(max(1, sentences.count))
-                
-                for sentence in sentences {
-                    let formattedText = sentence.hasSuffix(".") ? sentence : sentence + "."
-                    segments.append(TranscriptSegment(
-                        start: currentTimeOffset,
-                        end: min(duration, currentTimeOffset + timePerSegment),
-                        speakerId: nil,
-                        text: formattedText
-                    ))
-                    currentTimeOffset += timePerSegment
-                }
-                
-                finalNote.segments = segments.isEmpty ? [TranscriptSegment(start: 0, end: duration, speakerId: nil, text: finalTranscript)] : segments
-                
-                let generatedSummary = await ServiceLocator.shared.llm.summarize(transcript: finalTranscript)
-                finalNote.summary = generatedSummary
-                let mind = try? await ServiceLocator.shared.highlight.makeMindmap(transcript: finalTranscript)
-                finalNote.mindmap = mind
-                finalNote.pipeline.stage = .done
-                finalNote.pipeline.progress = 1.0
-                
-                await ServiceLocator.shared.storage.save(finalNote)
-                NotificationCenter.default.post(name: .notesChanged, object: nil)
-            } else if let audioURL = finalNote.audioURL {
-                await ServiceLocator.shared.pipeline.enqueue(noteId: finalNote.id, audio: audioURL)
-            }
-        }
-        
-        shouldDismiss = true
-    }
-    
-    private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self = self, let start = self.startTime else { return }
-            let total = self.accumulatedTime + Date().timeIntervalSince(start)
-            let mins = Int(total) / 60
-            let secs = Int(total) % 60
-            self.timerString = String(format: "%02d:%02d", mins, secs)
-        }
-    }
-    
-    private func updateAmplitudes(_ amp: Float) {
-        let scaled = min(1.0, max(0.08, amp * 15.0))
-        withAnimation(.easeOut(duration: 0.08)) {
-            amplitudes.removeFirst()
-            amplitudes.append(scaled)
-        }
-    }
-    
-    private func startLiveTranscription() {
-        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
-            DispatchQueue.main.async {
-                guard let self = self, authStatus == .authorized else { return }
-                
-                guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "de-DE")) ?? SFSpeechRecognizer() else { return }
-                self.speechRecognizer = recognizer
-                
-                let request = SFSpeechAudioBufferRecognitionRequest()
-                request.shouldReportPartialResults = true
-                self.recognitionRequest = request
-                
-                self.recorder.bufferConsumer = { buffer in
-                    request.append(buffer)
-                }
-                
-                self.recognitionTask = recognizer.recognitionTask(with: request) { result, error in
-                    if let error = error {
-                        print("Speech recognition update error: \(error)")
-                    }
-                    if let result = result {
-                        let text = result.bestTranscription.formattedString
-                        DispatchQueue.main.async {
-                            self.currentPhrase = text
-                            let combined = (self.accumulatedTranscript.isEmpty ? "" : self.accumulatedTranscript + " ") + text
-                            self.liveTranscript = combined
-                            
-                            if result.isFinal {
-                                self.accumulatedTranscript = combined
-                                self.currentPhrase = ""
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+#Preview {
+    UnifiedRecordingView()
+        .environmentObject(NotesViewModel())
+        .environmentObject(ThemeManager())
 }

@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
+//  Updated for Consolidated CoreAudio & Complete Pipeline Execution.
 //
 
 import Foundation
@@ -13,24 +14,23 @@ import SwiftUI
 final class RecorderViewModel: ObservableObject {
     @Published var isRecording = false
     @Published var isPaused = false
-    @Published var liveText = "" // <- Hinzugefügt: Für Live-Transkriptionstext
+    @Published var liveText = ""
     @Published var note: Note
     @Published var bookmarks: [RecorderBookmark] = []
     @Published private var elapsed: TimeInterval = 0
-    @Published var isRealTimeTranscriptionEnabled = true // <- Hinzugefügt: Steuert den Modus
+    @Published var isRealTimeTranscriptionEnabled = true
+    @Published var amplitudes: [Float] = Array(repeating: 0.08, count: 30)
 
     var timerDisplay: String {
         timeString(elapsed)
     }
 
     var levelDisplay: String {
-        isRecording ? "0 dB" : "--"
+        isRecording ? "Aktiv" : "--"
     }
 
     var diarizationStatus: String {
-        // For now, return a default status since we can't access settings
-        // In a real implementation, you'd need to access settings differently
-        return "Inaktiv"  // Default to inactive
+        "Aktiv"
     }
 
     private let sl = ServiceLocator.shared
@@ -43,8 +43,7 @@ final class RecorderViewModel: ObservableObject {
     
     init(note: Note) {
         self.note = note
-        audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
-        // Backend is selected via settings; default is set in TranscriptionService
+        self.audioURL = ServiceLocator.shared.storage.temporaryAudioURL(for: note.id)
     }
     
     func start(consent: ConsentLog?) async {
@@ -53,102 +52,84 @@ final class RecorderViewModel: ObservableObject {
             note.participants = consent.participants.map { Participant(name: $0, role: "") }
             note.location = consent.location
         }
+        
         do {
-            // Immer Audio aufnehmen
+            // Set up buffer consumer to route live buffers to the active STT engine
+            sl.recorder.bufferConsumer = { [weak self] buffer in
+                self?.sl.transcription.appendAudioBuffer(buffer)
+            }
+            
+            // Set up amplitude callback for waveform visualization
+            sl.recorder.amplitudeCallback = { [weak self] amp in
+                let scaled = min(1.0, max(0.08, amp * 12.0))
+                withAnimation(.easeOut(duration: 0.08)) {
+                    guard let self = self else { return }
+                    if !self.amplitudes.isEmpty {
+                        self.amplitudes.removeFirst()
+                        self.amplitudes.append(scaled)
+                    }
+                }
+            }
+            
+            // Start audio recording
             try sl.recorder.start(to: audioURL)
             isRecording = true
-            note.pipeline.stage = .transcribing // Zeigt an, dass Transkription geplant ist
+            isPaused = false
+            note.pipeline.stage = .transcribing
             startTimer()
 
-            // Nur bei Live-Modus die Streaming-Transkription starten
-            if isRealTimeTranscriptionEnabled && sl.transcription.backend == .appleSpeech {
-                liveText = "" // Text zurücksetzen
+            // Start live streaming transcription
+            if isRealTimeTranscriptionEnabled {
+                liveText = ""
                 try await sl.transcription.startStreaming { [weak self] text, _, _ in
-                    // Update liveText auf dem MainActor (bereits sichergestellt durch ViewModel)
                     self?.liveText = text
                 }
-            } else if isRealTimeTranscriptionEnabled && sl.transcription.backend == .whisperKit {
-                 liveText = "" // Text zurücksetzen
-                 // Ggf. WhisperKit Streaming starten (wenn implementiert)
-                 print("WhisperKit Streaming gestartet (Implementierung ausstehend)")
-                 try await sl.transcription.startStreaming { [weak self] text, _, _ in
-                    self?.liveText = text
-                 }
             }
-
         } catch {
             print("Fehler beim Starten der Aufnahme/Transkription: \(error)")
-            // Fehlerbehandlung hinzufügen (z.B. dem User anzeigen)
-            stop() // Aufnahme stoppen bei Fehler
+            stop()
         }
     }
 
     func pause() {
         sl.recorder.pause()
         isPaused = true
-        // Optional: Pausiere auch das Streaming, falls das Backend es unterstützt
-         if isRealTimeTranscriptionEnabled {
-             // AppleSpeechBackend hat keine Pause-Funktion, WhisperKit evtl.?
-             // sl.transcription.pause() // Wenn verfügbar
-         }
     }
 
     func resume() {
         sl.recorder.resume()
         isPaused = false
-        // Optional: Fortsetzen des Streamings
-        // if isRealTimeTranscriptionEnabled {
-        //     sl.transcription.resume() // Wenn verfügbar
-        // }
     }
 
     func stop() {
         let dur = sl.recorder.stop()
         isRecording = false
+        isPaused = false
         note.duration = dur
         note.audioURL = audioURL
 
-        // Transkription immer stoppen, egal ob Live oder nicht
         sl.transcription.stop()
         stopTimer()
 
-        // Nur Pipeline starten, wenn *nicht* Live-AppleSpeech genutzt wurde (da Text schon da ist)
-        // Oder wenn WhisperKit verwendet wird (weil es evtl. noch nachbearbeitet)
-        // Oder wenn es eine reine Audioaufnahme war.
-        if !isRealTimeTranscriptionEnabled || sl.transcription.backend == .whisperKit {
-             Task { await sl.pipeline.enqueue(noteId: note.id, audio: audioURL) }
-        } else if isRealTimeTranscriptionEnabled && sl.transcription.backend == .appleSpeech {
-            // Bei Live Apple Speech: Füge den finalen Text direkt als Segment hinzu
-            let finalSegment = TranscriptSegment(start: 0, end: dur, speakerId: nil, text: liveText)
-            note.segments = [finalSegment]
-            // Setze Pipeline auf 'fertig', da keine weitere Bearbeitung nötig
-            note.pipeline.stage = .done
-            note.pipeline.progress = 1.0
-            Task { await sl.storage.save(note) } // Speichere die Note mit Segment & Status
-            print("Live Apple Speech beendet. Finaler Text: \(liveText)")
+        // Always save note and run the pipeline to generate summaries, action items & mindmap
+        Task {
+            await sl.storage.save(note)
+            await sl.pipeline.enqueue(noteId: note.id, audio: audioURL)
         }
-        liveText = "" // Live-Text zurücksetzen
     }
 
-
-    // ... (restlicher Code bleibt gleich) ...
-     func addBookmark(label: String) {
+    func addBookmark(label: String) {
         let timecode = timeString(elapsed)
-        // Füge auch den aktuellen Live-Text zum Bookmark hinzu, wenn verfügbar
-        let contextText = liveText.isEmpty ? "" : String(liveText.suffix(50)) // Die letzten 50 Zeichen als Kontext
-        let bookmark = RecorderBookmark(label: label, icon: "bookmark", timecode: timecode, context: contextText)
+        let contextText = liveText.isEmpty ? "" : String(liveText.suffix(60))
+        let bookmark = RecorderBookmark(label: label, icon: "bookmark.fill", timecode: timecode, context: contextText)
         bookmarks.append(bookmark)
     }
 
     func addParticipant() {
-        // Create a new participant with a default name
         let newParticipant = Participant(
-            name: "Neuer Teilnehmer",
+            name: "Teilnehmer \(note.participants.count + 1)",
             role: ""
-            // Using default colorHex and avatarSymbol
         )
-
-        // Add to the note's participants
         note.participants.append(newParticipant)
     }
 
@@ -172,11 +153,10 @@ final class RecorderViewModel: ObservableObject {
     }
 }
 
-// Ergänze RecorderBookmark um Kontext
 struct RecorderBookmark: Identifiable {
     let id = UUID()
     var label: String
-    var icon: String = "bookmark"
+    var icon: String = "bookmark.fill"
     var timecode: String
-    var context: String? // Optionaler Text-Kontext zum Zeitpunkt des Bookmarks
+    var context: String?
 }

@@ -3,10 +3,12 @@
 //  NotifyAI
 //
 //  Created by Justus on 23.09.25.
+//  Updated for Persistent UserDefaults Storage & LocalAuthentication Biometrics.
 //
 
 import Foundation
 import SwiftUI
+import LocalAuthentication
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
@@ -15,49 +17,108 @@ final class SettingsViewModel: ObservableObject {
         AppleSpeechBackend.supportedLocales.map(\.identifier)
     }
 
-    @Published var locale: String = "de-DE" {
-        didSet { AppleSpeechBackend.shared.localeIdentifier = locale }
+    @AppStorage("settings_locale") var locale: String = "de-DE" {
+        didSet {
+            AppleSpeechBackend.shared.localeIdentifier = locale
+            objectWillChange.send()
+        }
     }
-    @Published var redactionEnabled: Bool = true
-    @Published var biometricLock: Bool = false
-    @Published var endToEndEncryption: Bool = false
-    @Published var modelId: String = "on-device-nlp" {
-        didSet { ServiceLocator.shared.llm.modelId = modelId }
-    }
-    @Published var transcriptionBackend: TranscriptionService.Backend = ServiceLocator.shared.transcription.backend {
-        didSet { ServiceLocator.shared.transcription.backend = transcriptionBackend }
-    }
-    @Published var whisperModel: WhisperBackend.WhisperModelVariant = WhisperBackend.shared.selectedModel {
-        didSet { WhisperBackend.shared.selectedModel = whisperModel }
-    }
-    @Published var fileASREnabled: Bool = false
-    @Published var diarizationEnabled: Bool = false
-    @Published var streamingEnabled: Bool = true
-    @Published var performanceMode: Bool = false
-    @Published var syncEnabled: Bool = true
-    @Published var sharedWorkspaceEnabled: Bool = false
 
-    @Published private(set) var integrations: [Integration] = Integration.Kind.allCases.map { Integration(kind: $0) }
-    @Published private(set) var connectedIntegrations: Set<Integration.Kind> = []
+    @AppStorage("settings_redaction_enabled") var redactionEnabled: Bool = true {
+        didSet { objectWillChange.send() }
+    }
+
+    @AppStorage("settings_biometric_lock") var biometricLock: Bool = false {
+        didSet { objectWillChange.send() }
+    }
+
+    @AppStorage("settings_diarization_enabled") var diarizationEnabled: Bool = true {
+        didSet { objectWillChange.send() }
+    }
+
+    @AppStorage("settings_streaming_enabled") var streamingEnabled: Bool = true {
+        didSet { objectWillChange.send() }
+    }
+
+    @AppStorage("settings_transcription_backend") var transcriptionBackendRaw: String = TranscriptionService.Backend.whisperKit.rawValue {
+        didSet {
+            if let backend = TranscriptionService.Backend(rawValue: transcriptionBackendRaw) {
+                ServiceLocator.shared.transcription.backend = backend
+            }
+            objectWillChange.send()
+        }
+    }
+
+    var transcriptionBackend: TranscriptionService.Backend {
+        get { TranscriptionService.Backend(rawValue: transcriptionBackendRaw) ?? .whisperKit }
+        set { transcriptionBackendRaw = newValue.rawValue }
+    }
+
+    @AppStorage("settings_whisper_model") var whisperModelRaw: String = WhisperBackend.WhisperModelVariant.base.rawValue {
+        didSet {
+            if let variant = WhisperBackend.WhisperModelVariant(rawValue: whisperModelRaw) {
+                WhisperBackend.shared.selectedModel = variant
+            }
+            objectWillChange.send()
+        }
+    }
+
+    var whisperModel: WhisperBackend.WhisperModelVariant {
+        get { WhisperBackend.WhisperModelVariant(rawValue: whisperModelRaw) ?? .base }
+        set { whisperModelRaw = newValue.rawValue }
+    }
+
+    @Published var isUnlocked: Bool = true
+    @Published var authErrorMessage: String?
+
+    init() {
+        // Apply persisted settings to backend singletons on launch
+        AppleSpeechBackend.shared.localeIdentifier = UserDefaults.standard.string(forKey: "settings_locale") ?? "de-DE"
+        if let backendRaw = UserDefaults.standard.string(forKey: "settings_transcription_backend"),
+           let backend = TranscriptionService.Backend(rawValue: backendRaw) {
+            ServiceLocator.shared.transcription.backend = backend
+        }
+        if let modelRaw = UserDefaults.standard.string(forKey: "settings_whisper_model"),
+           let variant = WhisperBackend.WhisperModelVariant(rawValue: modelRaw) {
+            WhisperBackend.shared.selectedModel = variant
+        }
+
+        if UserDefaults.standard.bool(forKey: "settings_biometric_lock") {
+            isUnlocked = false
+        }
+    }
+
+    /// Authenticates with Face ID or Touch ID
+    func authenticateUser() {
+        guard biometricLock else {
+            isUnlocked = true
+            return
+        }
+
+        let context = LAContext()
+        var error: NSError?
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            let reason = "Entsperre NotifyAI, um auf deine vertraulichen Notizen zuzugreifen."
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { [weak self] success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        self?.isUnlocked = true
+                        self?.authErrorMessage = nil
+                    } else {
+                        self?.authErrorMessage = authError?.localizedDescription ?? "Authentifizierung fehlgeschlagen."
+                    }
+                }
+            }
+        } else {
+            // Fallback to passcode or direct unlock if biometrics unavailable
+            isUnlocked = true
+        }
+    }
 
     /// Whether on-device recognition is available for the current locale
     var isOnDeviceRecognitionAvailable: Bool {
         AppleSpeechBackend.shared.isOnDeviceRecognitionAvailable
-    }
-
-    func setIntegration(_ kind: Integration.Kind, enabled: Bool) {
-        if enabled {
-            connectedIntegrations.insert(kind)
-        } else {
-            connectedIntegrations.remove(kind)
-        }
-        integrations = integrations.map { integration in
-            guard integration.kind == kind else { return integration }
-            var updated = integration
-            updated.isConnected = enabled
-            updated.details = enabled ? "Verbunden" : "Nicht verbunden"
-            return updated
-        }
     }
 
     /// Opens the system settings app so the user can download speech recognition models

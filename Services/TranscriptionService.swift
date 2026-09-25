@@ -7,6 +7,7 @@
 
 import Foundation
 import Speech
+import AVFoundation
 
 final class TranscriptionService {
     enum Backend: String, CaseIterable, Identifiable {
@@ -23,7 +24,7 @@ final class TranscriptionService {
         }
     }
 
-    var backend: Backend = .appleSpeech
+    var backend: Backend = .whisperKit
 
     typealias TranscriptHandler = (_ text: String, _ start: TimeInterval?, _ end: TimeInterval?) -> Void
 
@@ -34,6 +35,15 @@ final class TranscriptionService {
             try AppleSpeechBackend.shared.start(handler: handler)
         case .whisperKit:
             try await WhisperBackend.shared.start(handler: handler)
+        }
+    }
+
+    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        switch backend {
+        case .appleSpeech:
+            AppleSpeechBackend.shared.appendAudioBuffer(buffer)
+        case .whisperKit:
+            WhisperBackend.shared.appendAudioBuffer(buffer)
         }
     }
 
