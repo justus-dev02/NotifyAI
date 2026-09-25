@@ -2,13 +2,11 @@
 //  NotifyAIUITestsLaunchTests.swift
 //  NotifyAIUITests
 //
-//  Created by Justus on 08.09.25.
-//
 
 import XCTest
 
+/// Captures a screenshot of the launch state for every UI configuration (light/dark, sizes).
 final class NotifyAIUITestsLaunchTests: XCTestCase {
-
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }
@@ -20,10 +18,8 @@ final class NotifyAIUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
         app.launch()
-
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"

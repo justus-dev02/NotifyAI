@@ -5,3 +5,6 @@
 *.xcuserdatad/
 DerivedData/
 build/
+
+# macOS
+.DS_Store
