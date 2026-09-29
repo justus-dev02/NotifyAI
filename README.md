@@ -10,6 +10,11 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 - **Zwei Spracherkennungen:** Apple Speech (`SpeechAnalyzer`, ohne Download) oder Whisper (WhisperKit, Modell wird einmalig geladen).
 - **Zusammenfassung** mit Apple Intelligence (Foundation Models): Überblick, Kernpunkte, Aufgaben, Entscheidungen, offene Fragen, Themen.
   Ohne Apple Intelligence entsteht eine klar gekennzeichnete einfache Zusammenfassung.
+- **Belegte Zusammenfassungen:** Jeder Kernpunkt, jede Entscheidung und Aufgabe springt per Tipp zur Stelle im Transkript.
+  Aufnahmen ohne eigenen Titel heißen nach ihren Stichworten plus Datum („Budget, Website-Relaunch – 29. Sept. 2026“).
+- **Notizen fragen (⌘K):** Fragen in natürlicher Sprache über alle Notizen („Was hat Anna letzte Woche zum Budget gesagt?“).
+  Zeiträume, Personen und Arten werden als Filter erkannt; Antworten nennen ihre Quellen.
+- **Verwandte Notizen:** gleiche Personen, Orte, Organisationen, seltene gemeinsame Themen, ähnlicher Inhalt – mit Begründung.
 - **Wiedergabe** mit Timeline inkl. Markern, Mitlesen im Transkript, Sprung per Tipp.
 - **Import** von Audiodateien, PDFs und Fotos (Texterkennung mit Vision).
 - **Aufnahme im Hintergrund (iOS)** mit Live Activity auf dem Sperrbildschirm und in der Dynamic Island (Pause / Beenden).
@@ -36,7 +41,8 @@ NotifyAI/
 │   ├── Audio/          Aufnahme (AVAudioEngine → 16 kHz mono → AAC/CAF), Wiedergabe, Audio-Session
 │   │   └── SystemAudio/    Process Tap + Aggregate Device (macOS), App-/Prozess-Zuordnung
 │   ├── Transcription/  TranscriptionEngine-Protokoll, Apple Speech, Whisper, Modellverwaltung
-│   ├── Summarization/  Foundation-Models-Summarizer (Map-Reduce), extraktiver Fallback
+│   ├── Summarization/  Foundation-Models-Summarizer (Map-Reduce), extraktiver Fallback, Quellen-Verknüpfung
+│   ├── Knowledge/      Suchindex, hybride Suche (BM25 + Embeddings), verwandte Notizen, Frage-Verständnis, RAG
 │   ├── Diarization/    Experimentelle Sprechererkennung (Log-Mel, Average-Linkage-Clustering)
 │   ├── Processing/     Serielle, fortsetzbare Pipeline nach der Aufnahme
 │   ├── Persistence/    NoteStore, Speicherorte
@@ -77,6 +83,10 @@ Stopp ─► Note (Transkript, Marker) ─► ProcessingCoordinator
 | Mikrofon und Tap in *einem* Aggregate Device | Beide laufen auf der Uhr des Mikrofons (Tap mit Drift-Kompensation) – kein Auseinanderlaufen, auch bei stundenlangen Meetings. |
 | Tap bei Prozessänderungen neu aufbauen | Apps wie Zoom oder Chrome starten Audio-Prozesse erst im Call bzw. pro Tab; der Tap folgt ihnen automatisch. |
 | „Ich / Andere“ aus Pegeln statt aus Stimmen | Der Systemton ist eine saubere Referenz für die Gegenseite – zuverlässiger als die experimentelle Sprechererkennung, auch bei Lautsprecher-Echo. |
+| Apple Foundation Models statt heruntergeladener LLMs | Kein Download, läuft auf dem Neural Engine auch im Hintergrund, Guided Generation garantiert die Struktur. Eigene LLMs wären 2–5 GB groß, auf iPhones speicherkritisch und dürften im Hintergrund nicht auf der GPU rechnen. |
+| Volltext (BM25) als Hauptsignal, Embeddings nur halb gewichtet | Gemessen: Apples deutsche Satz-Embeddings trennen Themen kaum (Frage ↔ Antwort −0,02). Synonyme aus der Query-Expansion des Sprachmodells decken „gleiche Bedeutung, andere Worte“ ab. |
+| Kein eigenes ML-Modell für Beziehungen | Ohne Trainingsdaten nicht besser als die Kombination aus Named-Entity-Erkennung, seltenen gemeinsamen Stichworten (IDF) und relativer Inhaltsähnlichkeit. |
+| Datumsfilter per Kalender, nie per Sprachmodell | Das Modell nennt nur den Zeitraum („lastWeek“); kleine Modelle rechnen Daten unzuverlässig. |
 | Relative Audio-Dateinamen | Absolute Container-Pfade ändern sich bei Neuinstallation und Updates. |
 
 ## Tests

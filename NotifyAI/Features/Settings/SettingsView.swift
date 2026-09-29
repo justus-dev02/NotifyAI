@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Environment(AppLock.self) private var appLock
     @Environment(WhisperModelManager.self) private var whisperModels
     @Environment(RecordingController.self) private var recording
+    @Environment(KnowledgeIndexService.self) private var knowledge
     @Environment(\.appEnvironment) private var app
     @Environment(\.dismiss) private var dismiss
 
@@ -118,6 +119,17 @@ struct SettingsView: View {
                     }
                 }
                 LabeledContent("Whisper-Modelle", value: TimeFormatting.byteCount(whisperModels.totalInstalledBytes))
+                LabeledContent("Suchindex") {
+                    if knowledge.isIndexing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text("\(knowledge.index.notes.count) Notizen · \(knowledge.index.passageCount) Abschnitte")
+                    }
+                }
+                Button("Suchindex neu aufbauen") {
+                    knowledge.rebuild()
+                }
+                .disabled(knowledge.isIndexing)
                 Button("Alle Notizen löschen …", role: .destructive) {
                     isConfirmingDeleteAll = true
                 }

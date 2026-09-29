@@ -40,6 +40,12 @@ struct MainView: View {
             }
         }
         .animation(.snappy, value: recording.isActive)
+        .sheet(isPresented: $navigation.isChatPresented) {
+            NoteChatView()
+                #if os(macOS)
+                .frame(minWidth: 620, idealWidth: 720, minHeight: 560, idealHeight: 720)
+                #endif
+        }
         #if os(iOS)
         .fullScreenCover(isPresented: $navigation.isRecorderPresented) {
             RecordingView()

@@ -18,6 +18,9 @@ final class NoteStore {
     let locations: StorageLocations
     private let logger = Logger.persistence
 
+    /// Called after notes were deleted, e.g. to remove them from the search index.
+    var onNotesDeleted: (([UUID]) -> Void)?
+
     var context: ModelContext { container.mainContext }
 
     init(locations: StorageLocations, inMemory: Bool = false) throws {
@@ -80,12 +83,15 @@ final class NoteStore {
         if let url = audioURL(for: note) {
             removeFileIfPresent(at: url)
         }
+        let id = note.id
         context.delete(note)
         try save()
+        onNotesDeleted?([id])
     }
 
     func deleteAll() throws {
         let all = try context.fetch(FetchDescriptor<Note>())
+        let ids = all.map(\.id)
         for note in all {
             if let url = audioURL(for: note) {
                 removeFileIfPresent(at: url)
@@ -93,6 +99,7 @@ final class NoteStore {
             context.delete(note)
         }
         try save()
+        onNotesDeleted?(ids)
     }
 
     /// Copies an external audio file into the recordings directory.

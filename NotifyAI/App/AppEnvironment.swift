@@ -23,6 +23,8 @@ final class AppEnvironment {
     let appLock: AppLock
     let audioSession: AudioSessionController
     let importer: ImportService
+    let knowledge: KnowledgeIndexService
+    let chat: NoteChatModel
     private var hasStarted = false
 
     init(settings: AppSettings = AppSettings(), locations: StorageLocations, inMemory: Bool = false) throws {
@@ -38,13 +40,21 @@ final class AppEnvironment {
         whisperModels = WhisperModelManager(store: modelStore) {
             await whisperEngine.unloadModel()
         }
+        let embedder = SentenceEmbedder()
         processing = ProcessingCoordinator(
             store: store,
             settings: settings,
             transcription: transcription,
             summarization: SummarizationService(),
-            diarizer: SpeakerDiarizer()
+            diarizer: SpeakerDiarizer(),
+            embedder: embedder
         )
+        knowledge = KnowledgeIndexService(
+            store: store,
+            embedder: embedder,
+            fileURL: inMemory ? nil : locations.knowledgeIndexURL
+        )
+        chat = NoteChatModel(knowledge: knowledge, settings: settings)
         recording = RecordingController(
             store: store,
             settings: settings,
@@ -57,6 +67,17 @@ final class AppEnvironment {
 
         applyBackupPreference()
         connectLiveActivityIntents()
+        connectSearchIndex()
+    }
+
+    /// Keeps the search index in sync with finished and deleted notes.
+    private func connectSearchIndex() {
+        processing.onNoteReady = { [knowledge] _ in
+            knowledge.scheduleRefresh()
+        }
+        store.onNotesDeleted = { [knowledge] ids in
+            knowledge.remove(ids)
+        }
     }
 
     /// Launch argument used by the UI tests: isolated in-memory data, onboarding skipped.
@@ -112,6 +133,7 @@ final class AppEnvironment {
         guard !hasStarted else { return }
         hasStarted = true
         processing.resumePendingWork()
+        knowledge.scheduleRefresh()
         await whisperModels.refresh()
     }
 }
@@ -126,6 +148,8 @@ extension View {
             .environment(app.recording)
             .environment(app.whisperModels)
             .environment(app.appLock)
+            .environment(app.knowledge)
+            .environment(app.chat)
             .environment(\.appEnvironment, app)
             .modelContainer(app.store.container)
     }

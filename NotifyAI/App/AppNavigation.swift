@@ -43,4 +43,18 @@ final class AppNavigation {
     var searchText = ""
     var isRecorderPresented = false
     var isSettingsPresented = false
+    var isChatPresented = false
+    /// A transcript position to show, e.g. after tapping a source in the chat.
+    var transcriptFocus: TranscriptFocus?
+
+    /// Opens a note, optionally at a position in its transcript.
+    func open(noteID: UUID, at time: TimeInterval? = nil) {
+        selectedNoteID = noteID
+        transcriptFocus = time.map { TranscriptFocus(noteID: noteID, time: $0) }
+    }
+}
+
+struct TranscriptFocus: Equatable {
+    let noteID: UUID
+    let time: TimeInterval
 }

@@ -216,6 +216,16 @@ final class RecordingController {
             }
         }
 
+        // A title from the conversation right away; the summary refines it later.
+        var keywords: [String] = []
+        if !liveTranscript.isEmpty, draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let text = liveTranscript.map(\.text).joined(separator: " ")
+            let languageCode = settings.language.languageCode
+            keywords = await Task.detached(priority: .userInitiated) {
+                TextAnalysis.keywords(in: text, languageCode: languageCode, limit: 2)
+            }.value
+        }
+
         if let note = store.note(id: noteID) {
             note.duration = result.duration
             note.markers = markers
@@ -223,6 +233,9 @@ final class RecordingController {
             note.status = .queued
             if !liveTranscript.isEmpty, let data = try? Transcript.encode(liveTranscript) {
                 note.setTranscript(encoded: data, plainText: Transcript.plainText(of: liveTranscript), engine: engineKind)
+            }
+            if !note.isTitleUserDefined, !keywords.isEmpty {
+                note.title = AutomaticTitle.make(keywords: keywords, date: note.createdAt)
             }
             try? store.save()
         }

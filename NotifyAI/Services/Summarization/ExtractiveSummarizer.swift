@@ -41,7 +41,8 @@ struct ExtractiveSummarizer: Summarizer {
             actionItems: Array(actionItems.prefix(10)),
             openQuestions: Array(questions.prefix(5)),
             topics: topics(in: request.text, sentences: sentences),
-            source: .extractive
+            source: .extractive,
+            keywords: TextAnalysis.keywords(in: request.text, languageCode: request.language.languageCode, limit: 3)
         )
     }
 

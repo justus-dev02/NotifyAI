@@ -55,6 +55,9 @@ final class ProcessingCoordinator {
     @ObservationIgnored private let transcription: TranscriptionService
     @ObservationIgnored private let summarization: SummarizationService
     @ObservationIgnored private let diarizer: SpeakerDiarizer
+    @ObservationIgnored private let embedder: SentenceEmbedder
+    /// Called when a note is finished, e.g. to add it to the search index.
+    @ObservationIgnored var onNoteReady: ((UUID) -> Void)?
     @ObservationIgnored private var queue: [Job] = []
     @ObservationIgnored private var worker: Task<Void, Never>?
     @ObservationIgnored private var currentJob: Task<Void, Never>?
@@ -66,13 +69,15 @@ final class ProcessingCoordinator {
         settings: AppSettings,
         transcription: TranscriptionService,
         summarization: SummarizationService,
-        diarizer: SpeakerDiarizer
+        diarizer: SpeakerDiarizer,
+        embedder: SentenceEmbedder = SentenceEmbedder()
     ) {
         self.store = store
         self.settings = settings
         self.transcription = transcription
         self.summarization = summarization
         self.diarizer = diarizer
+        self.embedder = embedder
     }
 
     func enqueue(_ job: Job) {
@@ -226,21 +231,45 @@ final class ProcessingCoordinator {
                 kind: note.kind,
                 markedPassages: note.markers.map {
                     Transcript.text(in: $0.highlightRange(duration: note.duration), of: segments)
-                }
+                },
+                recordedAt: note.createdAt,
+                participants: note.participants
             )
-            let summary = try await summarization.summarize(request) { [weak self] fraction in
+            var summary = try await summarization.summarize(request) { [weak self] fraction in
                 Task { @MainActor in self?.reportProgress(fraction, for: noteID) }
             }
             try Task.checkCancellation()
+
+            // Link every item to the transcript passage that supports it.
+            let languageCode = note.language.languageCode
+            let isRecording = note.kind == .recording
+            let createdAt = note.createdAt
+            let linker = SummaryEvidenceLinker(embedder: embedder)
+            let transcriptText = segments.map(\.text).joined(separator: " ")
+            let (sourceTimes, titleKeywords) = await Task.detached(priority: .utility) { [summary] in
+                (
+                    linker.sourceTimes(for: summary, segments: segments, languageCode: languageCode),
+                    isRecording ? AutomaticTitle.keywords(summary: summary, transcriptText: transcriptText, languageCode: languageCode) : []
+                )
+            }.value
+            try Task.checkCancellation()
+            summary.sourceTimes = sourceTimes
+
             note.summary = summary
-            if !note.isTitleUserDefined, let title = summary.suggestedTitle {
-                note.title = title
+            if !note.isTitleUserDefined {
+                if isRecording {
+                    // Recordings: keywords from the conversation plus the recording date.
+                    note.title = AutomaticTitle.make(keywords: titleKeywords, date: createdAt)
+                } else if let title = summary.suggestedTitle {
+                    note.title = title
+                }
             }
         }
 
         note.status = .ready
         note.statusMessage = nil
         try store.save()
+        onNoteReady?(noteID)
     }
 
     /// Encodes the transcript off the main actor and stores it on the note.

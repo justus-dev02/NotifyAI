@@ -105,7 +105,8 @@ struct ProcessingCoordinatorTests {
         #expect(note.bodyText == "Hallo zusammen.")
         #expect(note.decodedTranscript().count == 1)
         #expect(note.summary?.overview == "Überblick")
-        #expect(note.title == "Projekt-Update")
+        // Recordings are titled with keywords and the recording date.
+        #expect(note.title == AutomaticTitle.make(keywords: ["Projekt-Update"], date: note.createdAt))
     }
 
     @Test("A user-defined title is never replaced")

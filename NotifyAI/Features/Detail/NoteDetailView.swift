@@ -59,9 +59,12 @@ struct NoteDetailView: View {
 
                     switch tab {
                     case .summary:
-                        SummaryView(note: note, segments: model?.segments ?? []) { markerTime in
+                        SummaryView(note: note, segments: model?.segments ?? []) { time in
                             tab = .transcript
-                            model?.play(from: max(0, markerTime - Marker.highlightPadding))
+                            model?.play(from: max(0, time - Marker.highlightPadding))
+                        }
+                        if note.status == .ready {
+                            RelatedNotesSection(noteID: note.id)
                         }
                     case .transcript:
                         if let model {
@@ -91,6 +94,10 @@ struct NoteDetailView: View {
                 model = NoteDetailModel(audioSession: app.audioSession)
             }
             await model?.update(from: note, audioURL: app?.store.audioURL(for: note))
+            applyTranscriptFocus()
+        }
+        .onChange(of: navigation.transcriptFocus) {
+            applyTranscriptFocus()
         }
         .onDisappear {
             model?.stop()
@@ -169,6 +176,15 @@ struct NoteDetailView: View {
         note.title = title
         note.isTitleUserDefined = true
         save()
+        app?.knowledge.scheduleRefresh()
+    }
+
+    /// Shows the transcript position requested from elsewhere (e.g. a source in the chat).
+    private func applyTranscriptFocus() {
+        guard let focus = navigation.transcriptFocus, focus.noteID == note.id, let model else { return }
+        navigation.transcriptFocus = nil
+        tab = .transcript
+        model.play(from: max(0, focus.time - 1))
     }
 
     private func delete() {

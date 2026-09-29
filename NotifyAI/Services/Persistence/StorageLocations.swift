@@ -13,6 +13,8 @@ struct StorageLocations: Sendable {
     var recordingsDirectory: URL { root.appending(path: "Recordings", directoryHint: .isDirectory) }
     var whisperModelsDirectory: URL { root.appending(path: "Models/Whisper", directoryHint: .isDirectory) }
     var databaseURL: URL { root.appending(path: "NotifyAI.store", directoryHint: .notDirectory) }
+    /// The search index for "Notizen fragen" and related notes. Can be rebuilt at any time.
+    var knowledgeIndexURL: URL { root.appending(path: "KnowledgeIndex.plist", directoryHint: .notDirectory) }
 
     /// The production layout inside Application Support.
     static func applicationSupport() throws -> StorageLocations {

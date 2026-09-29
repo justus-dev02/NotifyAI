@@ -103,7 +103,8 @@ struct FoundationModelSummarizer: Summarizer {
     ) async throws -> Content {
         // A fresh session per request: the transcript must not accumulate in the context.
         let session = LanguageModelSession(instructions: instructions)
-        let options = GenerationOptions(temperature: 0.3, maximumResponseTokens: 1_000)
+        // Low temperature: summaries should reproduce the content, not vary it.
+        let options = GenerationOptions(temperature: 0.2, maximumResponseTokens: 1_000)
         let response = try await session.respond(to: prompt, generating: type, options: options)
         return response.content
     }
@@ -143,11 +144,24 @@ struct FoundationModelSummarizer: Summarizer {
             "You receive several sets of notes about \(source). Merge them into one set: combine duplicates and keep every distinct fact, decision and task."
         }
 
+        let date = request.recordedAt.formatted(Date.FormatStyle(date: .complete, time: .shortened).locale(Locale(identifier: "en_US")))
+        var context = "The content was recorded on \(date)."
+        if !request.participants.isEmpty {
+            context += " Participants: \(request.participants.joined(separator: ", "))."
+        }
+        if request.kind.hasAudio {
+            context += " Lines starting with \"Ich:\" are spoken by the user who recorded; other labels are the other participants."
+        }
+
         return """
         \(taskDescription)
         \(request.focus.modelGuidance)
+        \(context)
         Only use information that is stated in the text. Never invent names, numbers, dates or facts. \
         Transcripts can contain recognition errors; interpret them sensibly and do not quote them verbatim.
+        Be concrete: keep names, numbers, amounts, dates, deadlines and product or project names. \
+        Avoid generic statements such as "various topics were discussed". \
+        When a deadline is relative ("Friday", "next week"), keep it and add the calendar date based on the recording date.
         Write every field in \(languageName). Be concise and specific.
         """
     }
@@ -251,6 +265,9 @@ struct GeneratedSummary {
     @Guide(description: "The main topics in the order they came up", .maximumCount(5))
     var topics: [GeneratedTopic]
 
+    @Guide(description: "One to three keywords that identify this content, e.g. the main subject, project, product or customer. Each one to three words, no dates, no generic words like meeting or discussion", .maximumCount(3))
+    var keywords: [String]
+
     func noteSummary() -> NoteSummary {
         NoteSummary(
             suggestedTitle: title.cleaned.nilIfEmpty,
@@ -268,7 +285,8 @@ struct GeneratedSummary {
                 guard !title.isEmpty else { return nil }
                 return SummaryTopic(title: title, points: topic.points.cleaned)
             },
-            source: .appleIntelligence
+            source: .appleIntelligence,
+            keywords: keywords.cleaned
         )
     }
 }

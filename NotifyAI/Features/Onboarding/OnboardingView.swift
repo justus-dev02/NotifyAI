@@ -60,6 +60,7 @@ struct OnboardingView: View {
                 feature("lock.shield", "Bleibt auf deinem Gerät", "Aufnahmen, Transkripte und Zusammenfassungen werden lokal verarbeitet und gespeichert.")
                 feature("star", "Wichtiges markieren", "Tippe während der Aufnahme auf „Wichtig“. Die Stelle wird später im Transkript hervorgehoben.")
                 feature("sparkles", "Zusammenfassung auf dem Gerät", "Mit Apple Intelligence entstehen Überblick, Aufgaben und Entscheidungen ohne Cloud.")
+                feature("bubble.left.and.text.bubble.right", "Frag deine Notizen", "Stell Fragen über alle Aufnahmen, zum Beispiel zu Personen, Themen oder Zeiträumen. Jede Antwort nennt ihre Quellen.")
                 #if os(macOS)
                 feature("person.2.wave.2", "Online-Meetings mitschneiden", "Nimm Zoom, Teams, Discord & Co. direkt am Mac auf. Deine Stimme und die der anderen werden getrennt beschriftet.")
                 #endif

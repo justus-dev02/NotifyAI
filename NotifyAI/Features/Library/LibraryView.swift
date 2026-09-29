@@ -85,6 +85,14 @@ struct LibraryView: View {
         #endif
 
         ToolbarItem {
+            Button("Notizen fragen", systemImage: "bubble.left.and.text.bubble.right") {
+                navigation.isChatPresented = true
+            }
+            .keyboardShortcut("k", modifiers: .command)
+            .help("Fragen zu allen Notizen stellen (⌘K)")
+        }
+
+        ToolbarItem {
             Menu("Filter", systemImage: "line.3.horizontal.decrease") {
                 Picker("Filter", selection: $navigation.filter) {
                     ForEach(LibraryFilter.allCases) { filter in

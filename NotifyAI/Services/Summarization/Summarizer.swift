@@ -15,6 +15,10 @@ struct SummaryRequest: Sendable {
     var kind: NoteKind
     /// Transcript passages the user marked as important.
     var markedPassages: [String]
+    /// When the note was recorded or imported; resolves "bis Freitag" and similar.
+    var recordedAt: Date = .now
+    /// Names the user entered before recording.
+    var participants: [String] = []
 }
 
 protocol Summarizer: Sendable {

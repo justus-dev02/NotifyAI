@@ -87,7 +87,7 @@ struct MockTranscriptionEngine: TranscriptionEngine {
 }
 
 struct MockSummarizer: Summarizer {
-    var result: NoteSummary = NoteSummary(suggestedTitle: "Projekt-Update", overview: "Überblick", source: .appleIntelligence)
+    var result: NoteSummary = NoteSummary(suggestedTitle: "Projekt-Update", overview: "Überblick", source: .appleIntelligence, keywords: ["Projekt-Update"])
     var error: (any Error)?
 
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
