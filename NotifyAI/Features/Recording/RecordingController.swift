@@ -39,12 +39,21 @@ final class RecordingController {
     }
 
     static let levelHistoryLength = 48
+    /// After this much recorded time without any system audio, the UI suggests checking the permission.
+    static let systemAudioHintDelay: TimeInterval = 10
 
     var draft = Draft()
     private(set) var phase: Phase = .idle
     private(set) var elapsed: TimeInterval = 0
     /// Recent microphone levels (0…1), oldest first.
     private(set) var levels = [Float](repeating: 0, count: levelHistoryLength)
+    /// Recent system audio levels while it is recorded together with the microphone.
+    private(set) var systemLevels = [Float](repeating: 0, count: levelHistoryLength)
+    /// Source of the running recording.
+    private(set) var audioSource: RecordingAudioSource = .microphone
+    /// The app whose audio is recorded, for display.
+    private(set) var systemAudioTarget: SystemAudioTarget = .allApps
+    private(set) var hasReceivedSystemAudio = false
     private(set) var liveSegments: [TranscriptSegment] = []
     private(set) var volatileText = ""
     private(set) var liveTranscription: LiveTranscriptionState = .off
@@ -56,6 +65,11 @@ final class RecordingController {
     private(set) var engineKind: TranscriptionEngineKind = .appleSpeech
 
     var isActive: Bool { phase != .idle }
+
+    /// No system audio arrived yet: either nothing is playing, or macOS denied the permission.
+    var isMissingSystemAudio: Bool {
+        audioSource.usesSystemAudio && isActive && !hasReceivedSystemAudio && elapsed >= Self.systemAudioHintDelay
+    }
     var canStart: Bool { phase == .idle && draft.consentConfirmed }
 
     @ObservationIgnored private let store: NoteStore
@@ -101,19 +115,24 @@ final class RecordingController {
         interruptionMessage = nil
         phase = .starting
 
-        guard await MicrophonePermission.request() else {
-            phase = .idle
-            errorMessage = "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen."
-            return
+        let configuration = settings.captureConfiguration
+        if configuration.source.usesMicrophone {
+            guard await MicrophonePermission.request() else {
+                phase = .idle
+                errorMessage = "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen."
+                return
+            }
         }
 
-        let note = makeNote()
+        let note = makeNote(configuration: configuration)
         do {
             try store.insert(note)
             try audioSession.activateForRecording()
             let url = store.locations.audioURL(fileName: NoteStore.recordingFileName(for: note.id))
-            let streams = try recorder.start(writingTo: url)
+            let streams = try await recorder.start(writingTo: url, configuration: configuration)
             noteID = note.id
+            audioSource = configuration.source
+            systemAudioTarget = configuration.systemAudioTarget
             engineKind = settings.engine
             resetLiveState()
             phase = .recording
@@ -178,7 +197,7 @@ final class RecordingController {
     func stop() async -> UUID? {
         guard phase == .recording || phase == .paused, let noteID else { return nil }
         phase = .finishing
-        let duration = recorder.stop()
+        let result = await recorder.stop()
         audioSession.deactivate()
         liveActivity.end()
 
@@ -198,8 +217,9 @@ final class RecordingController {
         }
 
         if let note = store.note(id: noteID) {
-            note.duration = duration
+            note.duration = result.duration
             note.markers = markers
+            note.sourceActivity = result.sourceActivity
             note.status = .queued
             if !liveTranscript.isEmpty, let data = try? Transcript.encode(liveTranscript) {
                 note.setTranscript(encoded: data, plainText: Transcript.plainText(of: liveTranscript), engine: engineKind)
@@ -216,7 +236,7 @@ final class RecordingController {
     /// Stops and deletes the recording.
     func discard() async {
         guard isActive, let noteID else { return }
-        recorder.stop()
+        await recorder.stop()
         audioSession.deactivate()
         liveActivity.end()
         captureTasks.forEach { $0.cancel() }
@@ -235,14 +255,14 @@ final class RecordingController {
 
     // MARK: - Private
 
-    private func makeNote() -> Note {
+    private func makeNote(configuration: CaptureConfiguration) -> Note {
         let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let participants = draft.participants
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         let id = UUID()
-        return Note(
+        let note = Note(
             id: id,
             title: title.isEmpty ? Note.automaticTitle(for: .recording) : title,
             isTitleUserDefined: !title.isEmpty,
@@ -254,6 +274,11 @@ final class RecordingController {
             consentConfirmedAt: .now,
             audioFileName: NoteStore.recordingFileName(for: id)
         )
+        note.audioSource = configuration.source
+        if configuration.source.usesSystemAudio, case .app(_, let name) = configuration.systemAudioTarget {
+            note.sourceAppName = name
+        }
+        return note
     }
 
     private func consume(_ streams: AudioCaptureStreams) {
@@ -273,10 +298,20 @@ final class RecordingController {
 
     private func record(_ level: AudioLevel) {
         elapsed = level.recordedTime
-        // Perceptual scaling: speech RMS is typically 0.01–0.3.
-        let scaled = min(1, max(0, (20 * log10(max(level.rms, 1e-4)) + 50) / 50))
         levels.removeFirst()
-        levels.append(Float(scaled))
+        levels.append(Self.meterValue(level.rms))
+        if let systemRMS = level.systemRMS {
+            systemLevels.removeFirst()
+            systemLevels.append(Self.meterValue(systemRMS))
+        }
+        if level.hasReceivedSystemAudio, !hasReceivedSystemAudio {
+            hasReceivedSystemAudio = true
+        }
+    }
+
+    /// Perceptual scaling: speech RMS is typically 0.01–0.3.
+    private static func meterValue(_ rms: Float) -> Float {
+        min(1, max(0, (20 * log10(max(rms, 1e-4)) + 50) / 50))
     }
 
     /// Audio that arrives while the live session is still loading is buffered and sent
@@ -353,6 +388,8 @@ final class RecordingController {
     private func resetLiveState() {
         elapsed = 0
         levels = [Float](repeating: 0, count: Self.levelHistoryLength)
+        systemLevels = [Float](repeating: 0, count: Self.levelHistoryLength)
+        hasReceivedSystemAudio = false
         liveSegments = []
         volatileText = ""
         markers = []
@@ -369,6 +406,8 @@ final class RecordingController {
         eventTask = nil
         liveTranscription = .off
         interruptionMessage = nil
+        audioSource = .microphone
+        systemAudioTarget = .allApps
         draft = Draft()
         phase = .idle
     }

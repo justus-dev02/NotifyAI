@@ -65,8 +65,100 @@ enum NoteStatus: String, Codable, Sendable {
     }
 }
 
-typealias Note = NotifyAISchemaV1.Note
+typealias Note = NotifyAISchemaV2.Note
 
+/// Adds the audio source of a recording (microphone and/or system audio on the Mac).
+enum NotifyAISchemaV2: VersionedSchema {
+    static let versionIdentifier = Schema.Version(2, 0, 0)
+    static var models: [any PersistentModel.Type] { [Note.self] }
+
+    /// A recording, imported audio file or imported document.
+    ///
+    /// Enum-typed values are stored as raw strings so they can be used in `#Predicate`.
+    /// Large or structured values (transcript, markers, summary) are stored as encoded
+    /// JSON and decoded on demand: the library list never has to load them.
+    @Model
+    final class Note {
+        #Index<Note>([\.createdAt])
+
+        @Attribute(.unique) var id: UUID
+        var title: String
+        /// `false` while the title is generated automatically, so the summary may replace it.
+        var isTitleUserDefined: Bool
+        var createdAt: Date
+        var kindRawValue: String
+        var statusRawValue: String
+        /// Human-readable reason when `status == .failed`.
+        var statusMessage: String?
+        var duration: TimeInterval
+        var isFavorite: Bool
+        var focusRawValue: String
+        var languageID: String
+        /// Which engine produced the transcript.
+        var transcriptionEngineRawValue: String?
+        var participants: [String]
+        /// When the user confirmed that everybody present agreed to being recorded.
+        var consentConfirmedAt: Date?
+        /// File name inside the recordings directory. Stored relative on purpose: absolute
+        /// container paths change between app installs and updates.
+        var audioFileName: String?
+        /// Transcript text or extracted document text. Used for search and summarization.
+        var bodyText: String
+        @Attribute(.externalStorage) var transcriptData: Data?
+        var markersData: Data?
+        var summaryData: Data?
+        /// Copy of the summary overview so that search can match it.
+        var summaryOverview: String
+        /// `RecordingAudioSource` raw value. `nil` for notes created before system audio
+        /// recording existed, which were all recorded with the microphone.
+        var audioSourceRawValue: String?
+        /// Name of the app whose audio was recorded, `nil` for all apps or microphone only.
+        var sourceAppName: String?
+        /// Encoded `SourceActivity` of a microphone + system audio recording.
+        @Attribute(.externalStorage) var sourceActivityData: Data?
+
+        init(
+            id: UUID = UUID(),
+            title: String,
+            isTitleUserDefined: Bool,
+            createdAt: Date = .now,
+            kind: NoteKind,
+            status: NoteStatus,
+            focus: RecordingFocus = .general,
+            language: TranscriptionLanguage = .german,
+            participants: [String] = [],
+            consentConfirmedAt: Date? = nil,
+            audioFileName: String? = nil,
+            bodyText: String = ""
+        ) {
+            self.id = id
+            self.title = title
+            self.isTitleUserDefined = isTitleUserDefined
+            self.createdAt = createdAt
+            self.kindRawValue = kind.rawValue
+            self.statusRawValue = status.rawValue
+            self.statusMessage = nil
+            self.duration = 0
+            self.isFavorite = false
+            self.focusRawValue = focus.rawValue
+            self.languageID = language.id
+            self.transcriptionEngineRawValue = nil
+            self.participants = participants
+            self.consentConfirmedAt = consentConfirmedAt
+            self.audioFileName = audioFileName
+            self.bodyText = bodyText
+            self.transcriptData = nil
+            self.markersData = nil
+            self.summaryData = nil
+            self.summaryOverview = ""
+            self.audioSourceRawValue = nil
+            self.sourceAppName = nil
+            self.sourceActivityData = nil
+        }
+    }
+}
+
+/// The first released schema. Frozen: never change it, add a new version instead.
 enum NotifyAISchemaV1: VersionedSchema {
     static let versionIdentifier = Schema.Version(1, 0, 0)
     static var models: [any PersistentModel.Type] { [Note.self] }
@@ -148,8 +240,13 @@ enum NotifyAISchemaV1: VersionedSchema {
 }
 
 enum NotifyAIMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [NotifyAISchemaV1.self] }
-    static var stages: [MigrationStage] { [] }
+    static var schemas: [any VersionedSchema.Type] { [NotifyAISchemaV1.self, NotifyAISchemaV2.self] }
+    static var stages: [MigrationStage] { [v1ToV2] }
+
+    /// V2 only adds optional attributes, which SwiftData migrates without custom code.
+    static var v1ToV2: MigrationStage {
+        .lightweight(fromVersion: NotifyAISchemaV1.self, toVersion: NotifyAISchemaV2.self)
+    }
 }
 
 // MARK: - Typed accessors
@@ -181,6 +278,31 @@ extension Note {
     }
 
     var hasTranscript: Bool { transcriptData != nil }
+
+    var audioSource: RecordingAudioSource {
+        get { audioSourceRawValue.flatMap(RecordingAudioSource.init(rawValue:)) ?? .microphone }
+        set { audioSourceRawValue = newValue.rawValue }
+    }
+
+    var sourceActivity: SourceActivity? {
+        get {
+            guard let sourceActivityData else { return nil }
+            return try? JSONDecoder().decode(SourceActivity.self, from: sourceActivityData)
+        }
+        set {
+            sourceActivityData = newValue.flatMap { try? JSONEncoder().encode($0) }
+        }
+    }
+
+    /// "Mikrofon + Zoom", "Systemton · Alle Apps" …; `nil` for microphone recordings.
+    var audioSourceDescription: String? {
+        let app = sourceAppName ?? SystemAudioTarget.allApps.displayName
+        return switch audioSource {
+        case .microphone: nil
+        case .microphoneAndSystemAudio: sourceAppName.map { "Mikrofon + \($0)" } ?? RecordingAudioSource.microphoneAndSystemAudio.title
+        case .systemAudio: "Systemton · \(app)"
+        }
+    }
 
     var markers: [Marker] {
         get {

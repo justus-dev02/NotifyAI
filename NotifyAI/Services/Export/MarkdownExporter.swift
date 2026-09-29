@@ -24,6 +24,8 @@ struct MarkdownExporter {
         var markers: [Marker]
         var segments: [TranscriptSegment]
         var bodyText: String
+        /// "Mikrofon + Zoom" etc.; `nil` for microphone recordings and imports.
+        var audioSource: String? = nil
     }
 
     func markdown(for note: NoteSnapshot, options: Options = Options()) -> String {
@@ -32,6 +34,9 @@ struct MarkdownExporter {
         var metadata = [note.createdAt.formatted(date: .long, time: .shortened)]
         if note.duration > 0 {
             metadata.append(TimeFormatting.duration(note.duration))
+        }
+        if let audioSource = note.audioSource {
+            metadata.append(audioSource)
         }
         if !note.participants.isEmpty {
             metadata.append("Teilnehmende: \(note.participants.joined(separator: ", "))")

@@ -10,7 +10,7 @@ import OSLog
 import UIKit
 #endif
 
-/// Runs the post-recording pipeline: transcription → speaker detection → summary.
+/// Runs the post-recording pipeline: transcription → speakers → summary.
 ///
 /// Jobs run one at a time because transcription and summarization compete for the
 /// Neural Engine. Every step saves its result, so a job interrupted by the system
@@ -193,9 +193,19 @@ final class ProcessingCoordinator {
             throw ProcessingError.noSpeechDetected
         }
 
-        // 2. Speaker detection (experimental, opt-in)
-        if note.kind.hasAudio, settings.speakerDetection, forceTranscription || note.summary == nil,
-           let audioURL = store.audioURL(for: note) {
+        // 2. Speakers. A microphone + system audio recording knows who spoke from which
+        //    source ("Ich" / "Andere"), which is far more reliable than the experimental
+        //    voice-based detection, so it takes precedence.
+        let needsSpeakers = note.kind.hasAudio && (forceTranscription || note.summary == nil)
+        if needsSpeakers, settings.speakersFromAudioSource, let activity = note.sourceActivity {
+            update(note, to: .identifyingSpeakers, progress: nil)
+            let segments = SourceSpeakerAttribution.assign(
+                activity,
+                to: note.decodedTranscript(),
+                othersLabel: SourceSpeakerAttribution.othersLabel(participants: note.participants)
+            )
+            try await saveTranscript(segments, engine: note.transcriptionEngine, to: note)
+        } else if needsSpeakers, settings.speakerDetection, let audioURL = store.audioURL(for: note) {
             update(note, to: .identifyingSpeakers, progress: nil)
             let turns = try await diarizer.turns(forAudioAt: audioURL)
             try Task.checkCancellation()

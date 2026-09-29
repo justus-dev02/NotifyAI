@@ -96,6 +96,8 @@ struct MenuBarPanel: View {
                     .foregroundStyle(.orange)
             }
 
+            SystemAudioStatus(isCompact: true)
+
             LiveTranscriptPanel(lineLimit: 8)
                 .frame(height: 140)
 
@@ -163,6 +165,14 @@ private struct QuickStartForm: View {
                 }
             }
 
+            AudioSourceRows()
+
+            if settings.audioSource == .microphoneAndSystemAudio, CoreAudioObject.defaultOutputIsLoudspeaker() {
+                Label("Tipp: Mit Kopfhörern aufnehmen.", systemImage: "headphones")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+
             Toggle("Alle Anwesenden sind einverstanden", isOn: $recording.draft.consentConfirmed)
                 .toggleStyle(.checkbox)
 
@@ -190,7 +200,7 @@ private struct QuickStartForm: View {
             .disabled(!canStart)
             .keyboardShortcut(.defaultAction)
 
-            Text("\(settings.engine.displayName) · \(settings.language.displayName)")
+            Text("\(settings.engine.displayName) · \(settings.language.displayName) · \(sourceSummary)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
@@ -199,6 +209,14 @@ private struct QuickStartForm: View {
 
     private var canStart: Bool {
         recording.canStart && (settings.engine != .whisper || whisperModels.isInstalled(settings.whisperModel))
+    }
+
+    private var sourceSummary: String {
+        switch settings.audioSource {
+        case .microphone: RecordingAudioSource.microphone.title
+        case .microphoneAndSystemAudio: "Mikrofon + \(settings.systemAudioTarget.displayName)"
+        case .systemAudio: settings.systemAudioTarget.displayName
+        }
     }
 }
 

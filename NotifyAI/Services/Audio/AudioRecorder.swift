@@ -3,17 +3,34 @@
 //  NotifyAI
 //
 
-import Accelerate
 import AVFoundation
 import OSLog
-import Synchronization
 
-/// A microphone level reading for the UI.
+/// A level reading for the UI.
 struct AudioLevel: Sendable {
-    /// Root mean square of the last buffer, 0…1.
+    /// Root mean square of the last block, 0…1: the microphone, or the system audio when
+    /// only system audio is recorded.
     let rms: Float
+    /// System audio level while it is recorded together with the microphone.
+    let systemRMS: Float?
     /// Recorded time so far (pauses excluded).
     let recordedTime: TimeInterval
+    /// Whether any non-silent system audio arrived so far.
+    let hasReceivedSystemAudio: Bool
+}
+
+/// What to record.
+struct CaptureConfiguration: Sendable {
+    var source: RecordingAudioSource = .microphone
+    var systemAudioTarget: SystemAudioTarget = .allApps
+}
+
+/// The outcome of a finished recording.
+struct RecordingResult: Sendable {
+    /// Recorded seconds, pauses excluded.
+    let duration: TimeInterval
+    /// Levels of microphone and system audio; only for microphone + system audio recordings.
+    let sourceActivity: SourceActivity?
 }
 
 /// The two streams a running recording produces.
@@ -30,6 +47,7 @@ enum AudioRecorderError: LocalizedError {
     case converterUnavailable
     case engineStartFailed(any Error)
     case fileCreationFailed(any Error)
+    case systemAudioUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -43,23 +61,32 @@ enum AudioRecorderError: LocalizedError {
             "Die Aufnahme konnte nicht gestartet werden: \(error.localizedDescription)"
         case .fileCreationFailed(let error):
             "Die Audiodatei konnte nicht angelegt werden: \(error.localizedDescription)"
+        case .systemAudioUnavailable:
+            "Systemton kann auf diesem Gerät nicht aufgenommen werden."
         }
     }
 }
 
-/// Captures microphone audio, converts it to 16 kHz mono, writes it to disk and
-/// streams it to live transcription.
+/// Captures audio, converts it to 16 kHz mono, writes it to disk and streams it to live
+/// transcription.
 ///
-/// Threading: the public API is main-actor isolated. The tap block runs on an audio
-/// thread and only touches shared state through `CaptureContext`, which is protected
-/// by a mutex. Time is measured in written samples, so it excludes pauses and matches
-/// the audio file exactly.
+/// Two capture paths feed the same `AudioCaptureContext`:
+/// - Microphone only: `AVAudioEngine` (iOS and macOS).
+/// - Microphone + system audio, or system audio only: a Core Audio process tap in a private
+///   aggregate device (`SystemAudioCapture`, macOS only).
+///
+/// Threading: the public API is main-actor isolated. Audio callbacks only touch shared
+/// state through `AudioCaptureContext`, which is protected by a mutex. Time is measured in
+/// written samples, so it excludes pauses and matches the audio file exactly.
 @MainActor
 final class AudioRecorder {
     private let engine = AVAudioEngine()
-    private let capture = CaptureContext()
+    private let capture = AudioCaptureContext()
     private let logger = Logger.audio
     private var configurationObserver: (any NSObjectProtocol)?
+    #if os(macOS)
+    private var systemAudio: SystemAudioCapture?
+    #endif
 
     private(set) var isRunning = false
 
@@ -68,7 +95,16 @@ final class AudioRecorder {
 
     var isPaused: Bool { capture.isPaused }
 
-    func start(writingTo url: URL) throws -> AudioCaptureStreams {
+    /// Whether the running recording uses `AVAudioEngine` (microphone only).
+    private var usesEngine: Bool {
+        #if os(macOS)
+        systemAudio == nil
+        #else
+        true
+        #endif
+    }
+
+    func start(writingTo url: URL, configuration: CaptureConfiguration = CaptureConfiguration()) async throws -> AudioCaptureStreams {
         guard !isRunning else { throw AudioRecorderError.alreadyRecording }
 
         let file: AVAudioFile
@@ -85,23 +121,66 @@ final class AudioRecorder {
 
         let (chunks, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .unbounded)
         let (levels, levelContinuation) = AsyncStream.makeStream(of: AudioLevel.self, bufferingPolicy: .bufferingNewest(1))
-        capture.begin(file: file, chunks: chunkContinuation, levels: levelContinuation)
+        capture.begin(
+            file: file,
+            chunks: chunkContinuation,
+            levels: levelContinuation,
+            recordsSourceActivity: configuration.source == .microphoneAndSystemAudio
+        )
 
-        do {
-            try installInputTap()
-            engine.prepare()
-            try engine.start()
-        } catch {
-            engine.inputNode.removeTap(onBus: 0)
+        switch configuration.source {
+        case .microphone:
+            do {
+                try installInputTap()
+                engine.prepare()
+                try engine.start()
+            } catch {
+                engine.inputNode.removeTap(onBus: 0)
+                capture.finish()
+                throw (error as? AudioRecorderError) ?? AudioRecorderError.engineStartFailed(error)
+            }
+            observeConfigurationChanges()
+
+        case .microphoneAndSystemAudio, .systemAudio:
+            #if os(macOS)
+            let session: SystemAudioCapture
+            do {
+                session = SystemAudioCapture(
+                    includesMicrophone: configuration.source.usesMicrophone,
+                    target: try Self.resolve(configuration.systemAudioTarget),
+                    capture: capture
+                )
+                try await session.start()
+            } catch {
+                capture.finish()
+                throw error
+            }
+            systemAudio = session
+            #else
             capture.finish()
-            throw (error as? AudioRecorderError) ?? AudioRecorderError.engineStartFailed(error)
+            throw AudioRecorderError.systemAudioUnavailable
+            #endif
         }
 
         isRunning = true
-        observeConfigurationChanges()
-        logger.info("Recording started")
+        logger.info("Recording started (\(configuration.source.rawValue, privacy: .public))")
         return AudioCaptureStreams(chunks: chunks, levels: levels)
     }
+
+    #if os(macOS)
+    /// Looks up where the chosen app is installed; its helper processes live inside the bundle.
+    private static func resolve(_ target: SystemAudioTarget) throws -> SystemAudioCapture.Target {
+        switch target {
+        case .allApps:
+            return .allApps
+        case .app(let bundleID, let name):
+            guard let app = AudioAppCatalog.runningApplication(bundleID: bundleID) else {
+                throw SystemAudioError.appNotRunning(name)
+            }
+            return .app(bundleID: bundleID, bundlePath: app.bundleURL?.path)
+        }
+    }
+    #endif
 
     /// Stops writing audio. The engine keeps running so the level meter stays live.
     func pause() {
@@ -111,7 +190,7 @@ final class AudioRecorder {
     /// Resumes writing. Restarts the engine if the system stopped it (e.g. after a phone call).
     func resume() throws {
         capture.setPaused(false)
-        if isRunning, !engine.isRunning {
+        if isRunning, usesEngine, !engine.isRunning {
             do {
                 try engine.start()
             } catch {
@@ -122,20 +201,28 @@ final class AudioRecorder {
     }
 
     /// Stops the recording, finalizes the file and finishes both streams.
-    /// - Returns: The recorded duration in seconds.
     @discardableResult
-    func stop() -> TimeInterval {
-        guard isRunning else { return capture.recordedTime }
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
+    func stop() async -> RecordingResult {
+        guard isRunning else { return RecordingResult(duration: capture.recordedTime, sourceActivity: nil) }
+        let usedEngine = usesEngine
+        #if os(macOS)
+        if let systemAudio {
+            await systemAudio.stop()
+            self.systemAudio = nil
+        }
+        #endif
+        if usedEngine {
+            engine.inputNode.removeTap(onBus: 0)
+            engine.stop()
+        }
         if let configurationObserver {
             NotificationCenter.default.removeObserver(configurationObserver)
         }
         configurationObserver = nil
         isRunning = false
-        let duration = capture.finish()
-        logger.info("Recording stopped after \(duration, format: .fixed(precision: 1)) s")
-        return duration
+        let result = capture.finish()
+        logger.info("Recording stopped after \(result.duration, format: .fixed(precision: 1)) s")
+        return result
     }
 
     // MARK: - Private
@@ -152,7 +239,7 @@ final class AudioRecorder {
         }
         // Mix all input channels instead of silently using only the first one.
         converter.downmix = true
-        capture.setConverter(converter, outputFormat: outputFormat)
+        capture.setEngineConverter(converter)
 
         input.removeTap(onBus: 0)
         input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: Self.makeTapBlock(for: capture))
@@ -160,7 +247,7 @@ final class AudioRecorder {
 
     /// Built in a nonisolated context: a closure created inside a main-actor method would
     /// inherit main-actor isolation and trap when Core Audio calls it on its own thread.
-    private nonisolated static func makeTapBlock(for capture: CaptureContext) -> AVAudioNodeTapBlock {
+    private nonisolated static func makeTapBlock(for capture: AudioCaptureContext) -> AVAudioNodeTapBlock {
         { buffer, _ in capture.process(buffer) }
     }
 
@@ -190,121 +277,5 @@ final class AudioRecorder {
             logger.error("Restarting after a configuration change failed: \(error.localizedDescription, privacy: .public)")
             capture.setPaused(true)
         }
-    }
-}
-
-// MARK: - Capture context
-
-/// State shared between the main actor and the audio thread.
-private final class CaptureContext: Sendable {
-    private struct State {
-        var file: AVAudioFile?
-        var converter: AVAudioConverter?
-        var outputFormat: AVAudioFormat?
-        var isPaused = false
-        var framesWritten: Int64 = 0
-        var hasLoggedWriteError = false
-        var chunks: AsyncStream<AudioChunk>.Continuation?
-        var levels: AsyncStream<AudioLevel>.Continuation?
-    }
-
-    private let state = Mutex(State())
-
-    var recordedTime: TimeInterval {
-        state.withLock { Double($0.framesWritten) / AudioFormat.sampleRate }
-    }
-
-    var isPaused: Bool {
-        state.withLock { $0.isPaused }
-    }
-
-    func begin(
-        file: AVAudioFile,
-        chunks: AsyncStream<AudioChunk>.Continuation,
-        levels: AsyncStream<AudioLevel>.Continuation
-    ) {
-        state.withLock { state in
-            state = State()
-            state.file = file
-            state.chunks = chunks
-            state.levels = levels
-        }
-    }
-
-    func setConverter(_ converter: AVAudioConverter, outputFormat: AVAudioFormat) {
-        state.withLock { state in
-            state.converter = converter
-            state.outputFormat = outputFormat
-        }
-    }
-
-    func setPaused(_ paused: Bool) {
-        state.withLock { $0.isPaused = paused }
-    }
-
-    /// Closes the file (which finalizes it) and finishes the streams.
-    @discardableResult
-    func finish() -> TimeInterval {
-        state.withLock { state in
-            state.file = nil
-            state.converter = nil
-            state.chunks?.finish()
-            state.levels?.finish()
-            state.chunks = nil
-            state.levels = nil
-            return Double(state.framesWritten) / AudioFormat.sampleRate
-        }
-    }
-
-    /// Called on the audio thread for every captured buffer.
-    func process(_ input: AVAudioPCMBuffer) {
-        state.withLock { state in
-            guard let converter = state.converter, let outputFormat = state.outputFormat else { return }
-
-            let ratio = outputFormat.sampleRate / input.format.sampleRate
-            let capacity = AVAudioFrameCount((Double(input.frameLength) * ratio).rounded(.up)) + 64
-            guard let output = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: capacity) else { return }
-
-            // The converter keeps its resampling state between calls, so it must see every
-            // buffer (also while paused) to avoid clicks when writing resumes.
-            var didProvideInput = false
-            var conversionError: NSError?
-            let status = converter.convert(to: output, error: &conversionError) { _, inputStatus in
-                if didProvideInput {
-                    inputStatus.pointee = .noDataNow
-                    return nil
-                }
-                didProvideInput = true
-                inputStatus.pointee = .haveData
-                return input
-            }
-            guard status != .error, output.frameLength > 0 else { return }
-
-            let samples = output.monoSamples
-            let rms = Self.rms(of: samples)
-
-            if !state.isPaused {
-                do {
-                    try state.file?.write(from: output)
-                } catch {
-                    // Log once; a full disk would otherwise flood the log ten times per second.
-                    if !state.hasLoggedWriteError {
-                        state.hasLoggedWriteError = true
-                        Logger.audio.error("Writing audio failed: \(error.localizedDescription, privacy: .public)")
-                    }
-                }
-
-                state.chunks?.yield(AudioChunk(samples: samples, startFrame: state.framesWritten))
-                state.framesWritten += Int64(samples.count)
-            }
-
-            let recordedTime = Double(state.framesWritten) / AudioFormat.sampleRate
-            state.levels?.yield(AudioLevel(rms: state.isPaused ? 0 : rms, recordedTime: recordedTime))
-        }
-    }
-
-    private static func rms(of samples: [Float]) -> Float {
-        guard !samples.isEmpty else { return 0 }
-        return vDSP.rootMeanSquare(samples)
     }
 }

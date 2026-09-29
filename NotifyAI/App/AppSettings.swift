@@ -19,6 +19,9 @@ final class AppSettings {
         static let whisperModel = "transcription.whisperModel"
         static let liveTranscription = "transcription.live"
         static let speakerDetection = "processing.speakerDetection"
+        static let speakersFromAudioSource = "processing.speakersFromAudioSource"
+        static let audioSource = "recording.audioSource"
+        static let systemAudioTarget = "recording.systemAudioTarget"
         static let appLock = "privacy.appLock"
         static let includeInBackup = "privacy.includeInBackup"
         static let onboardingCompleted = "app.onboardingCompleted"
@@ -48,6 +51,21 @@ final class AppSettings {
         didSet { defaults.set(speakerDetection, forKey: Key.speakerDetection) }
     }
 
+    /// Labels "Mikrofon + Systemton" recordings as "Ich" (microphone) and "Andere" (system audio).
+    var speakersFromAudioSource: Bool {
+        didSet { defaults.set(speakersFromAudioSource, forKey: Key.speakersFromAudioSource) }
+    }
+
+    /// What new recordings capture. Always `.microphone` where system audio is unavailable (iOS).
+    var audioSource: RecordingAudioSource {
+        didSet { defaults.set(audioSource.rawValue, forKey: Key.audioSource) }
+    }
+
+    /// Whose audio "Systemton" recordings capture.
+    var systemAudioTarget: SystemAudioTarget {
+        didSet { defaults.set(try? JSONEncoder().encode(systemAudioTarget), forKey: Key.systemAudioTarget) }
+    }
+
     var appLockEnabled: Bool {
         didSet { defaults.set(appLockEnabled, forKey: Key.appLock) }
     }
@@ -69,9 +87,19 @@ final class AppSettings {
         whisperModel = defaults.string(forKey: Key.whisperModel).flatMap(WhisperModel.withID) ?? .recommended
         liveTranscription = defaults.object(forKey: Key.liveTranscription) as? Bool ?? true
         speakerDetection = defaults.bool(forKey: Key.speakerDetection)
+        speakersFromAudioSource = defaults.object(forKey: Key.speakersFromAudioSource) as? Bool ?? true
+        audioSource = defaults.string(forKey: Key.audioSource)
+            .flatMap(RecordingAudioSource.init(rawValue:))
+            .flatMap { RecordingAudioSource.available.contains($0) ? $0 : nil } ?? .microphone
+        systemAudioTarget = defaults.data(forKey: Key.systemAudioTarget)
+            .flatMap { try? JSONDecoder().decode(SystemAudioTarget.self, from: $0) } ?? .allApps
         appLockEnabled = defaults.bool(forKey: Key.appLock)
         includeInBackup = defaults.bool(forKey: Key.includeInBackup)
         hasCompletedOnboarding = defaults.bool(forKey: Key.onboardingCompleted)
+    }
+
+    var captureConfiguration: CaptureConfiguration {
+        CaptureConfiguration(source: audioSource, systemAudioTarget: systemAudioTarget)
     }
 
     var transcriptionOptions: TranscriptionOptions {

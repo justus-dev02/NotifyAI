@@ -208,6 +208,9 @@ private struct NoteHeader: View {
                 }
                 Tag(text: note.focus.title, systemImage: note.focus.symbolName)
                 Tag(text: note.language.displayName, systemImage: "globe")
+                if let source = note.audioSourceDescription {
+                    Tag(text: source, systemImage: note.audioSource.symbolName)
+                }
                 if let engine = note.transcriptionEngine {
                     Tag(text: engine.displayName, systemImage: "waveform")
                 }

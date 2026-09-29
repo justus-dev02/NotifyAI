@@ -35,7 +35,8 @@ struct ShareMenu: View {
             summary: note.summary,
             markers: note.markers,
             segments: segments,
-            bodyText: note.bodyText
+            bodyText: note.bodyText,
+            audioSource: note.audioSourceDescription
         )
         let options = MarkdownExporter.Options(includesTranscript: includesTranscript, redactsPersonalData: redacted)
         return MarkdownDocument(snapshot: snapshot, options: options)

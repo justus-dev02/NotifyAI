@@ -67,6 +67,17 @@ private struct RecordingSetupView: View {
                 Text("Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet.")
             }
 
+            #if os(macOS)
+            Section {
+                AudioSourceRows()
+                SystemAudioHints(source: settings.audioSource)
+            } header: {
+                Text("Audioquelle")
+            } footer: {
+                Text(settings.audioSource.detail)
+            }
+            #endif
+
             Section("Transkription") {
                 Picker("Sprache", selection: $settings.language) {
                     ForEach(TranscriptionLanguage.all) { language in
@@ -177,6 +188,11 @@ private struct LiveRecordingView: View {
             LevelMeter(levels: recording.levels, isActive: recording.phase == .recording)
                 .frame(height: 56)
                 .padding(.horizontal, Theme.Spacing.large)
+
+            #if os(macOS)
+            SystemAudioStatus()
+                .padding(.horizontal, Theme.Spacing.large)
+            #endif
 
             if let message = recording.interruptionMessage {
                 Label(message, systemImage: "phone.arrow.down.left")

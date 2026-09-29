@@ -73,14 +73,14 @@
 			path = NotifyAIUITests;
 			sourceTree = "<group>";
 		};
-		27AA00012F00000000000005 /* Shared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Shared;
-			sourceTree = "<group>";
-		};
 		27AA00012F00000000000004 /* NotifyAIWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NotifyAIWidgets;
+			sourceTree = "<group>";
+		};
+		27AA00012F00000000000005 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -511,6 +511,9 @@
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=macosx*]" = "NotifyAI-macOS-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = NotifyAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "NotifyAI nimmt Gespräche über das Mikrofon auf. Die Aufnahmen bleiben auf diesem Gerät.";
@@ -519,8 +522,6 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
-				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -564,6 +565,9 @@
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=macosx*]" = "NotifyAI-macOS-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = NotifyAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "NotifyAI nimmt Gespräche über das Mikrofon auf. Die Aufnahmen bleiben auf diesem Gerät.";
@@ -572,8 +576,6 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
-				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

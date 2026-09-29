@@ -59,8 +59,29 @@ struct SettingsView: View {
                 }
             }
 
+            #if os(macOS)
+            Section {
+                AudioSourceRows()
+                SystemAudioHints(source: settings.audioSource)
+            } header: {
+                Text("Aufnahmequelle")
+            } footer: {
+                Text("\(settings.audioSource.detail) Die Auswahl gilt für neue Aufnahmen und kann vor jeder Aufnahme geändert werden.")
+            }
+            #endif
+
             Section {
                 languageModelStatus
+                #if os(macOS)
+                Toggle(isOn: $settings.speakersFromAudioSource) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sprecher nach Audioquelle trennen")
+                        Text("Bei „Mikrofon + Systemton“ wird deine Stimme als „Ich“ und der Ton der App als „Andere“ beschriftet. Ist genau eine teilnehmende Person eingetragen, erscheint ihr Name.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                #endif
                 Toggle(isOn: $settings.speakerDetection) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sprecher erkennen (experimentell)")

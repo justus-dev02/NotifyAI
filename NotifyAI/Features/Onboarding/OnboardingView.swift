@@ -60,6 +60,9 @@ struct OnboardingView: View {
                 feature("lock.shield", "Bleibt auf deinem Gerät", "Aufnahmen, Transkripte und Zusammenfassungen werden lokal verarbeitet und gespeichert.")
                 feature("star", "Wichtiges markieren", "Tippe während der Aufnahme auf „Wichtig“. Die Stelle wird später im Transkript hervorgehoben.")
                 feature("sparkles", "Zusammenfassung auf dem Gerät", "Mit Apple Intelligence entstehen Überblick, Aufgaben und Entscheidungen ohne Cloud.")
+                #if os(macOS)
+                feature("person.2.wave.2", "Online-Meetings mitschneiden", "Nimm Zoom, Teams, Discord & Co. direkt am Mac auf. Deine Stimme und die der anderen werden getrennt beschriftet.")
+                #endif
             }
             .padding(.top, Theme.Spacing.medium)
         }
@@ -88,6 +91,12 @@ struct OnboardingView: View {
                     speech = await SpeechRecognitionPermission.request()
                 }
             }
+
+            #if os(macOS)
+            Label("Für Online-Meetings fragt macOS beim ersten Mitschnitt zusätzlich, ob NotifyAI Systemaudio aufnehmen darf.", systemImage: "speaker.wave.2")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            #endif
         }
     }
 
