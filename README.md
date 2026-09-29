@@ -12,6 +12,7 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
   Ohne Apple Intelligence entsteht eine klar gekennzeichnete einfache Zusammenfassung.
 - **Wiedergabe** mit Timeline inkl. Markern, Mitlesen im Transkript, Sprung per Tipp.
 - **Import** von Audiodateien, PDFs und Fotos (Texterkennung mit Vision).
+- **Aufnahme im Hintergrund (iOS)** mit Live Activity auf dem Sperrbildschirm und in der Dynamic Island (Pause / Beenden).
 - **macOS-Menüleiste:** Aufnahmen starten, pausieren, markieren und beenden, ohne das Hauptfenster zu öffnen.
 - **Export** als Markdown, optional anonymisiert (E-Mail, Telefonnummern, IBAN).
 - Optionale App-Sperre (Face ID / Touch ID / Code), Ausschluss aus Geräte-Backups.
@@ -38,6 +39,8 @@ NotifyAI/
 │   └── Import/Export/Security
 ├── Features/       SwiftUI-Screens: Library, Detail, Recording, MenuBar (macOS), Settings, Onboarding
 └── DesignSystem/   Tokens und wiederverwendbare Komponenten
+Shared/             Live-Activity-Attribute und -Intents (App + Widget-Extension)
+NotifyAIWidgets/    Widget-Extension (nur iOS): Live Activity der Aufnahme
 ```
 
 Abhängigkeiten werden einmal in `AppEnvironment` erzeugt und über das SwiftUI-Environment verteilt.

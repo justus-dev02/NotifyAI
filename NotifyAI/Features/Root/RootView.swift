@@ -9,6 +9,8 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(AppLock.self) private var appLock
+    @Environment(AppNavigation.self) private var navigation
+    @Environment(RecordingController.self) private var recording
     @Environment(\.appEnvironment) private var app
     @Environment(\.scenePhase) private var scenePhase
 
@@ -41,6 +43,12 @@ struct RootView: View {
                 Task { await appLock.unlock() }
             default:
                 break
+            }
+        }
+        .onOpenURL { url in
+            // Tapping the recording's Live Activity opens `notifyai://recording`.
+            if url.host() == "recording", recording.isActive {
+                navigation.isRecorderPresented = true
             }
         }
     }

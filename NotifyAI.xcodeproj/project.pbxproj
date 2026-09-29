@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2727B5553034A5DC00EDD2C1 /* WhisperKit */; };
+		27AA00012F00000000000002 /* NotifyAIWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27AA00012F00000000000001 /* NotifyAIWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,13 +26,35 @@
 			remoteGlobalIDString = 275D60582E6F188200EB7BA5;
 			remoteInfo = NotifyAI;
 		};
+		27AA00012F0000000000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 275D60512E6F188200EB7BA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27AA00012F00000000000006;
+			remoteInfo = NotifyAIWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		27AA00012F00000000000003 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				27AA00012F00000000000002 /* NotifyAIWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		272AB6942E8B195F0083CE7B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		275D60592E6F188200EB7BA5 /* NotifyAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotifyAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		275D606B2E6F188300EB7BA5 /* NotifyAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotifyAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		275D60752E6F188300EB7BA5 /* NotifyAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotifyAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		27AA00012F00000000000001 /* NotifyAIWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotifyAIWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -48,6 +71,16 @@
 		275D60782E6F188300EB7BA5 /* NotifyAIUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NotifyAIUITests;
+			sourceTree = "<group>";
+		};
+		27AA00012F00000000000005 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		27AA00012F00000000000004 /* NotifyAIWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NotifyAIWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +108,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27AA00012F00000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -83,6 +123,8 @@
 			children = (
 				272AB6942E8B195F0083CE7B /* .gitignore */,
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
+				27AA00012F00000000000005 /* Shared */,
+				27AA00012F00000000000004 /* NotifyAIWidgets */,
 				275D606E2E6F188300EB7BA5 /* NotifyAITests */,
 				275D60782E6F188300EB7BA5 /* NotifyAIUITests */,
 				275D605A2E6F188200EB7BA5 /* Products */,
@@ -95,6 +137,7 @@
 				275D60592E6F188200EB7BA5 /* NotifyAI.app */,
 				275D606B2E6F188300EB7BA5 /* NotifyAITests.xctest */,
 				275D60752E6F188300EB7BA5 /* NotifyAIUITests.xctest */,
+				27AA00012F00000000000001 /* NotifyAIWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,13 +152,16 @@
 				275D60552E6F188200EB7BA5 /* Sources */,
 				275D60562E6F188200EB7BA5 /* Frameworks */,
 				275D60572E6F188200EB7BA5 /* Resources */,
+				27AA00012F00000000000003 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				27AA00012F0000000000000B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				275D605B2E6F188200EB7BA5 /* NotifyAI */,
+				27AA00012F00000000000005 /* Shared */,
 			);
 			name = NotifyAI;
 			packageProductDependencies = (
@@ -171,6 +217,29 @@
 			productReference = 275D60752E6F188300EB7BA5 /* NotifyAIUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		27AA00012F00000000000006 /* NotifyAIWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27AA00012F0000000000000C /* Build configuration list for PBXNativeTarget "NotifyAIWidgets" */;
+			buildPhases = (
+				27AA00012F00000000000007 /* Sources */,
+				27AA00012F00000000000008 /* Frameworks */,
+				27AA00012F00000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				27AA00012F00000000000004 /* NotifyAIWidgets */,
+				27AA00012F00000000000005 /* Shared */,
+			);
+			name = NotifyAIWidgets;
+			packageProductDependencies = (
+			);
+			productName = NotifyAIWidgets;
+			productReference = 27AA00012F00000000000001 /* NotifyAIWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -191,6 +260,9 @@
 					275D60742E6F188300EB7BA5 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 275D60582E6F188200EB7BA5;
+					};
+					27AA00012F00000000000006 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -214,6 +286,7 @@
 				275D60582E6F188200EB7BA5 /* NotifyAI */,
 				275D606A2E6F188300EB7BA5 /* NotifyAITests */,
 				275D60742E6F188300EB7BA5 /* NotifyAIUITests */,
+				27AA00012F00000000000006 /* NotifyAIWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -234,6 +307,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		275D60732E6F188300EB7BA5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27AA00012F00000000000009 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -264,6 +344,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27AA00012F00000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -276,6 +363,12 @@
 			isa = PBXTargetDependency;
 			target = 275D60582E6F188200EB7BA5 /* NotifyAI */;
 			targetProxy = 275D60762E6F188300EB7BA5 /* PBXContainerItemProxy */;
+		};
+		27AA00012F0000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = 27AA00012F00000000000006 /* NotifyAIWidgets */;
+			targetProxy = 27AA00012F0000000000000A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -426,8 +519,8 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIBackgroundModes[sdk=iphoneos*]" = audio;
-				"INFOPLIST_KEY_UIBackgroundModes[sdk=iphonesimulator*]" = audio;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -479,8 +572,8 @@
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIBackgroundModes[sdk=iphoneos*]" = audio;
-				"INFOPLIST_KEY_UIBackgroundModes[sdk=iphonesimulator*]" = audio;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "NotifyAI-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "NotifyAI-Info.plist";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -595,6 +688,62 @@
 			};
 			name = Release;
 		};
+		27AA00012F0000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 36B9A7K3RP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NotifyAIWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = NotifyAI;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.justus.NotifyAI.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		27AA00012F0000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 36B9A7K3RP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NotifyAIWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = NotifyAI;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.justus.NotifyAI.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -630,6 +779,15 @@
 			buildConfigurations = (
 				275D60862E6F188300EB7BA5 /* Debug */,
 				275D60872E6F188300EB7BA5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27AA00012F0000000000000C /* Build configuration list for PBXNativeTarget "NotifyAIWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27AA00012F0000000000000D /* Debug */,
+				27AA00012F0000000000000E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

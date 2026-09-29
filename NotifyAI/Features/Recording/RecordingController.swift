@@ -64,6 +64,7 @@ final class RecordingController {
     @ObservationIgnored private let processing: ProcessingCoordinator
     @ObservationIgnored private let audioSession: AudioSessionController
     @ObservationIgnored private let recorder = AudioRecorder()
+    @ObservationIgnored private let liveActivity = RecordingLiveActivity()
     @ObservationIgnored private var noteID: UUID?
     @ObservationIgnored private var liveSession: (any LiveTranscriptionSession)?
     /// Consume the recorder's level and chunk streams; they end when the recorder stops.
@@ -116,6 +117,7 @@ final class RecordingController {
             engineKind = settings.engine
             resetLiveState()
             phase = .recording
+            liveActivity.start(title: note.title)
             processing.isPaused = true
             consume(streams)
             if settings.liveTranscription {
@@ -146,8 +148,9 @@ final class RecordingController {
                 errorMessage = error.localizedDescription
             }
         default:
-            break
+            return
         }
+        liveActivity.update(isPaused: phase == .paused, elapsed: recorder.recordedTime)
     }
 
     /// Flags the current moment as important. The transcript later highlights
@@ -177,6 +180,7 @@ final class RecordingController {
         phase = .finishing
         let duration = recorder.stop()
         audioSession.deactivate()
+        liveActivity.end()
 
         // The recorder finished its streams; wait until all audio reached the live session.
         for task in captureTasks { await task.value }
@@ -214,6 +218,7 @@ final class RecordingController {
         guard isActive, let noteID else { return }
         recorder.stop()
         audioSession.deactivate()
+        liveActivity.end()
         captureTasks.forEach { $0.cancel() }
         liveSetupTask?.cancel()
         await liveSession?.cancel()
@@ -337,6 +342,7 @@ final class RecordingController {
             recorder.pause()
             phase = .paused
             interruptionMessage = "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf."
+            liveActivity.update(isPaused: true, elapsed: recorder.recordedTime)
         case .ended(let shouldResume):
             if shouldResume, phase == .paused {
                 togglePause()

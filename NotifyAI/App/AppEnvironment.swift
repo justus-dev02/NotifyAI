@@ -56,6 +56,7 @@ final class AppEnvironment {
         appLock = AppLock { [settings] in settings.appLockEnabled }
 
         applyBackupPreference()
+        connectLiveActivityIntents()
     }
 
     /// Launch argument used by the UI tests: isolated in-memory data, onboarding skipped.
@@ -90,6 +91,20 @@ final class AppEnvironment {
         } catch {
             Logger.persistence.error("Updating the backup setting failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Lets the buttons of the recording's Live Activity control the recording.
+    private func connectLiveActivityIntents() {
+        #if os(iOS)
+        RecordingIntentHandler.handler = { [recording] action in
+            switch action {
+            case .togglePause:
+                recording.togglePause()
+            case .stop:
+                await recording.stop()
+            }
+        }
+        #endif
     }
 
     /// Called when the first window appears. Later calls (more windows) do nothing.
