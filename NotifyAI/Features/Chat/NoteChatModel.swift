@@ -98,7 +98,7 @@ final class NoteChatModel {
     }
 
     var modelAvailability: LanguageModelAvailability {
-        availability(settings.language)
+        availability(settings.transcription.language)
     }
 
     func send(_ question: String) {
@@ -152,7 +152,7 @@ final class NoteChatModel {
             text: plan.searchText,
             expansions: plan.expansions,
             filters: plan.filters,
-            languageCode: settings.language.languageCode
+            languageCode: settings.transcription.language.languageCode
         )
         let embedder = knowledge.embedder
         let result = await Task.detached(priority: .userInitiated) {
@@ -200,7 +200,7 @@ final class NoteChatModel {
                     AssistantSource(number: $0.number, noteTitle: $0.noteTitle, noteDate: $0.noteDate, start: $0.start, text: $0.excerpt)
                 },
                 history: history,
-                language: settings.language,
+                language: settings.transcription.language,
                 now: date
             )
             message.text = answer.text

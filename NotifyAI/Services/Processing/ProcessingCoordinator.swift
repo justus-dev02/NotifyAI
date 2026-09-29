@@ -6,20 +6,17 @@
 import Foundation
 import Observation
 import OSLog
-#if os(iOS)
-import UIKit
-#endif
 
-/// Runs the post-recording pipeline: transcription → speakers → summary.
+/// Runs processing jobs one at a time and publishes their progress.
 ///
-/// Jobs run one at a time because transcription and summarization compete for the
-/// Neural Engine. Every step saves its result, so a job interrupted by the system
-/// continues where it stopped after the next launch (see `resumePendingWork()`).
-/// Progress lives only in memory; it is not written to disk on every update.
+/// Jobs run serially because transcription and summarization compete for the Neural
+/// Engine. What a job does is defined by `NoteProcessingPipeline`; this type owns the
+/// queue, the progress shown in the UI, interruptions and background time. Progress lives
+/// only in memory; it is not written to disk on every update.
 @MainActor
 @Observable
 final class ProcessingCoordinator {
-    /// Live progress of the note that is currently processed.
+    /// Live progress of a queued or running note.
     struct Activity: Equatable {
         var stage: NoteStatus
         /// 0…1, or `nil` if the stage cannot report progress.
@@ -39,9 +36,19 @@ final class ProcessingCoordinator {
             case .process(let id), .retranscribe(let id), .resummarize(let id): id
             }
         }
+
+        var options: ProcessingOptions {
+            switch self {
+            case .process: ProcessingOptions()
+            case .retranscribe: ProcessingOptions(forceTranscription: true, forceSummary: true)
+            case .resummarize: ProcessingOptions(forceSummary: true)
+            }
+        }
     }
 
     private(set) var activities: [UUID: Activity] = [:]
+    /// Jobs finished since the queue was last empty.
+    private(set) var completedInBatch = 0
 
     /// Set while a recording is running; queued jobs wait so live transcription keeps up.
     var isPaused = false {
@@ -50,18 +57,33 @@ final class ProcessingCoordinator {
         }
     }
 
-    @ObservationIgnored private let store: NoteStore
-    @ObservationIgnored private let settings: AppSettings
-    @ObservationIgnored private let transcription: TranscriptionService
-    @ObservationIgnored private let summarization: SummarizationService
-    @ObservationIgnored private let diarizer: SpeakerDiarizer
-    @ObservationIgnored private let embedder: SentenceEmbedder
+    /// Whether jobs are queued or running.
+    var hasPendingWork: Bool { !activities.isEmpty }
+
+    /// Overall progress of the pending work (0…1): finished jobs plus the running job's progress.
+    var overallProgress: Double {
+        let total = max(activities.count + completedInBatch, 1)
+        let running = current.flatMap { activities[$0.job.noteID]?.progress } ?? 0
+        return min(1, (Double(completedInBatch) + running) / Double(total))
+    }
+
+    /// Stage of the running job, for status texts.
+    var currentStage: NoteStatus? {
+        current.flatMap { activities[$0.job.noteID]?.stage }
+    }
+
     /// Called when a note is finished, e.g. to add it to the search index.
     @ObservationIgnored var onNoteReady: ((UUID) -> Void)?
+    /// Called when a job starts, with the note's audio duration (0 for documents). Used to
+    /// ask iOS for continued background processing of long recordings.
+    @ObservationIgnored var onJobStarted: ((UUID, TimeInterval) -> Void)?
+    @ObservationIgnored let digestStore: ChapterDigestStore
+
+    @ObservationIgnored private let store: NoteStore
+    @ObservationIgnored private let pipeline: NoteProcessingPipeline
     @ObservationIgnored private var queue: [Job] = []
     @ObservationIgnored private var worker: Task<Void, Never>?
-    @ObservationIgnored private var currentJob: Task<Void, Never>?
-    @ObservationIgnored private var currentNoteID: UUID?
+    @ObservationIgnored private var current: (job: Job, task: Task<Void, Never>)?
     @ObservationIgnored private let logger = Logger.processing
 
     init(
@@ -70,15 +92,19 @@ final class ProcessingCoordinator {
         transcription: TranscriptionService,
         summarization: SummarizationService,
         diarizer: SpeakerDiarizer,
-        embedder: SentenceEmbedder = SentenceEmbedder()
+        embedder: SentenceEmbedder = SentenceEmbedder(),
+        digestStore: ChapterDigestStore = ChapterDigestStore(directory: nil)
     ) {
         self.store = store
-        self.settings = settings
-        self.transcription = transcription
-        self.summarization = summarization
-        self.diarizer = diarizer
-        self.embedder = embedder
+        self.digestStore = digestStore
+        pipeline = NoteProcessingPipeline(
+            transcription: TranscriptionStep(transcription: transcription, settings: settings.transcription),
+            speakers: SpeakerStep(settings: settings.analysis, diarizer: diarizer),
+            summary: SummaryStep(summarization: summarization, digestStore: digestStore, embedder: embedder)
+        )
     }
+
+    // MARK: - Queue
 
     func enqueue(_ job: Job) {
         guard !queue.contains(job) else { return }
@@ -94,8 +120,7 @@ final class ProcessingCoordinator {
 
     /// Re-queues notes whose processing was interrupted (app terminated, crash).
     func resumePendingWork() {
-        let interrupted = store.notes(withStatus: [.queued, .transcribing, .identifyingSpeakers, .summarizing])
-        for note in interrupted {
+        for note in store.notes(withStatus: [.queued, .transcribing, .identifyingSpeakers, .summarizing]) {
             enqueue(.process(note.id))
         }
         // A note still marked as recording belongs to a session that ended unexpectedly.
@@ -107,19 +132,36 @@ final class ProcessingCoordinator {
         }
     }
 
+    /// Continues queued work, e.g. when a background task starts.
+    func resumeQueuedWork() {
+        startWorkerIfNeeded()
+    }
+
     /// Cancels queued and running work for a note, e.g. before deleting it.
     func cancel(noteID: UUID) {
         queue.removeAll { $0.noteID == noteID }
-        if currentNoteID == noteID {
-            currentJob?.cancel()
+        if current?.job.noteID == noteID {
+            current?.task.cancel()
         }
         activities[noteID] = nil
+    }
+
+    /// Stops the running job, e.g. when the system ends background time. The job is queued
+    /// again and continues later from its last saved step (transcript, chapter digests).
+    func interruptCurrentJob() {
+        guard let current else { return }
+        current.task.cancel()
+        if !queue.contains(current.job) {
+            queue.insert(current.job, at: 0)
+        }
+        activities[current.job.noteID] = Activity(stage: .queued, progress: nil)
+        logger.info("Interrupted the running job; it continues later")
     }
 
     /// Cancels all queued and running work, e.g. before deleting every note.
     func cancelAll() {
         queue.removeAll()
-        currentJob?.cancel()
+        current?.task.cancel()
         activities.removeAll()
     }
 
@@ -136,31 +178,38 @@ final class ProcessingCoordinator {
     private func drainQueue() async {
         while !isPaused, !queue.isEmpty {
             let job = queue.removeFirst()
-            currentNoteID = job.noteID
+            if let note = store.note(id: job.noteID) {
+                onJobStarted?(job.noteID, note.kind.hasAudio ? note.duration : 0)
+            }
             let task = Task { await self.run(job) }
-            currentJob = task
-            await withBackgroundExecution(named: "Verarbeitung") {
+            current = (job, task)
+            await BackgroundExecution.run(named: "Verarbeitung", onExpiration: { [weak self] in
+                // Continues from its last saved step when the app is active again.
+                self?.interruptCurrentJob()
+            }) {
                 await task.value
             }
-            currentJob = nil
-            currentNoteID = nil
+            let wasInterrupted = task.isCancelled && queue.first == job
+            current = nil
+            if wasInterrupted {
+                // Interrupted by the system: stop here, the job waits at the front of the queue.
+                break
+            }
             activities[job.noteID] = nil
+            completedInBatch += 1
+        }
+        if queue.isEmpty {
+            completedInBatch = 0
         }
     }
 
     private func run(_ job: Job) async {
         guard let note = store.note(id: job.noteID) else { return }
         do {
-            switch job {
-            case .process:
-                try await process(note, forceTranscription: false, forceSummary: false)
-            case .retranscribe:
-                try await process(note, forceTranscription: true, forceSummary: true)
-            case .resummarize:
-                try await process(note, forceTranscription: false, forceSummary: true)
-            }
+            try await pipeline.run(note, options: job.options, context: makeContext(for: job.noteID))
+            onNoteReady?(job.noteID)
         } catch is CancellationError {
-            // Leave the status as it is; the job resumes on the next launch.
+            // Leave the status as it is; the job resumes later.
             logger.info("Processing was cancelled")
         } catch {
             // A cancelled job may belong to a note that was deleted in the meantime;
@@ -172,123 +221,28 @@ final class ProcessingCoordinator {
         }
     }
 
-    private func process(_ note: Note, forceTranscription: Bool, forceSummary: Bool) async throws {
-        let noteID = note.id
+    // MARK: - Progress
 
-        // 1. Transcription
-        if note.kind.hasAudio, forceTranscription || !note.hasTranscript {
-            guard let audioURL = store.audioURL(for: note) else {
-                throw ProcessingError.missingAudio
-            }
-            update(note, to: .transcribing, progress: 0)
-            let engineKind = settings.engine
-            let options = TranscriptionOptions(language: note.language, whisperModel: settings.whisperModel)
-            let segments = try await transcription.engine(for: engineKind).transcribeFile(
-                at: audioURL,
-                options: options
-            ) { [weak self] fraction in
+    private func makeContext(for noteID: UUID) -> ProcessingContext {
+        ProcessingContext(
+            store: store,
+            noteID: noteID,
+            setStage: { [weak self] stage, progress in
+                self?.setStage(stage, progress: progress, for: noteID)
+            },
+            progress: { [weak self] fraction in
                 Task { @MainActor in self?.reportProgress(fraction, for: noteID) }
             }
-            try Task.checkCancellation()
-            try await saveTranscript(segments, engine: engineKind, to: note)
-            note.summary = nil
-        }
-
-        guard note.kind.hasAudio ? note.hasTranscript : !note.bodyText.isEmpty else {
-            throw ProcessingError.noSpeechDetected
-        }
-
-        // 2. Speakers. A microphone + system audio recording knows who spoke from which
-        //    source ("Ich" / "Andere"), which is far more reliable than the experimental
-        //    voice-based detection, so it takes precedence.
-        let needsSpeakers = note.kind.hasAudio && (forceTranscription || note.summary == nil)
-        if needsSpeakers, settings.speakersFromAudioSource, let activity = note.sourceActivity {
-            update(note, to: .identifyingSpeakers, progress: nil)
-            let segments = SourceSpeakerAttribution.assign(
-                activity,
-                to: note.decodedTranscript(),
-                othersLabel: SourceSpeakerAttribution.othersLabel(participants: note.participants)
-            )
-            try await saveTranscript(segments, engine: note.transcriptionEngine, to: note)
-        } else if needsSpeakers, settings.speakerDetection, let audioURL = store.audioURL(for: note) {
-            update(note, to: .identifyingSpeakers, progress: nil)
-            let turns = try await diarizer.turns(forAudioAt: audioURL)
-            try Task.checkCancellation()
-            if !turns.isEmpty {
-                let segments = SpeakerDiarizer.assignSpeakers(turns, to: note.decodedTranscript())
-                try await saveTranscript(segments, engine: note.transcriptionEngine, to: note)
-            }
-        }
-
-        // 3. Summary
-        if forceSummary || note.summary == nil {
-            update(note, to: .summarizing, progress: nil)
-            let segments = note.decodedTranscript()
-            let request = SummaryRequest(
-                text: note.bodyText,
-                language: note.language,
-                focus: note.focus,
-                kind: note.kind,
-                markedPassages: note.markers.map {
-                    Transcript.text(in: $0.highlightRange(duration: note.duration), of: segments)
-                },
-                recordedAt: note.createdAt,
-                participants: note.participants
-            )
-            var summary = try await summarization.summarize(request) { [weak self] fraction in
-                Task { @MainActor in self?.reportProgress(fraction, for: noteID) }
-            }
-            try Task.checkCancellation()
-
-            // Link every item to the transcript passage that supports it.
-            let languageCode = note.language.languageCode
-            let isRecording = note.kind == .recording
-            let createdAt = note.createdAt
-            let linker = SummaryEvidenceLinker(embedder: embedder)
-            let transcriptText = segments.map(\.text).joined(separator: " ")
-            let (sourceTimes, titleKeywords) = await Task.detached(priority: .utility) { [summary] in
-                (
-                    linker.sourceTimes(for: summary, segments: segments, languageCode: languageCode),
-                    isRecording ? AutomaticTitle.keywords(summary: summary, transcriptText: transcriptText, languageCode: languageCode) : []
-                )
-            }.value
-            try Task.checkCancellation()
-            summary.sourceTimes = sourceTimes
-
-            note.summary = summary
-            if !note.isTitleUserDefined {
-                if isRecording {
-                    // Recordings: keywords from the conversation plus the recording date.
-                    note.title = AutomaticTitle.make(keywords: titleKeywords, date: createdAt)
-                } else if let title = summary.suggestedTitle {
-                    note.title = title
-                }
-            }
-        }
-
-        note.status = .ready
-        note.statusMessage = nil
-        try store.save()
-        onNoteReady?(noteID)
+        )
     }
 
-    /// Encodes the transcript off the main actor and stores it on the note.
-    private func saveTranscript(_ segments: [TranscriptSegment], engine: TranscriptionEngineKind?, to note: Note) async throws {
-        let normalized = Transcript.normalized(segments)
-        guard !normalized.isEmpty else { throw ProcessingError.noSpeechDetected }
-        let (data, text) = try await Task.detached(priority: .userInitiated) {
-            (try Transcript.encode(normalized), Transcript.plainText(of: normalized))
-        }.value
-        try Task.checkCancellation()
-        note.setTranscript(encoded: data, plainText: text, engine: engine)
-        try store.save()
-    }
-
-    private func update(_ note: Note, to stage: NoteStatus, progress: Double?) {
-        note.status = stage
-        note.statusMessage = nil
-        try? store.save()
-        activities[note.id] = Activity(stage: stage, progress: progress)
+    private func setStage(_ stage: NoteStatus, progress: Double?, for noteID: UUID) {
+        if let note = store.note(id: noteID) {
+            note.status = stage
+            note.statusMessage = nil
+            try? store.save()
+        }
+        activities[noteID] = Activity(stage: stage, progress: progress)
     }
 
     private func reportProgress(_ fraction: Double, for noteID: UUID) {
@@ -298,35 +252,5 @@ final class ProcessingCoordinator {
         if let current = activity.progress, abs(current - clamped) < 0.01 { return }
         activity.progress = clamped
         activities[noteID] = activity
-    }
-
-    /// Asks the system for extra time so processing can finish after the user leaves the app
-    /// (iOS), and prevents App Nap from throttling it (macOS).
-    private func withBackgroundExecution(named name: String, _ work: () async -> Void) async {
-        #if os(iOS)
-        let task = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
-            MainActor.assumeIsolated {
-                self?.currentJob?.cancel()
-            }
-        }
-        await work()
-        UIApplication.shared.endBackgroundTask(task)
-        #else
-        let activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .idleSystemSleepDisabled], reason: name)
-        await work()
-        ProcessInfo.processInfo.endActivity(activity)
-        #endif
-    }
-}
-
-enum ProcessingError: LocalizedError {
-    case missingAudio
-    case noSpeechDetected
-
-    var errorDescription: String? {
-        switch self {
-        case .missingAudio: "Die Audiodatei dieser Notiz fehlt."
-        case .noSpeechDetected: "In der Aufnahme wurde keine Sprache erkannt."
-        }
     }
 }

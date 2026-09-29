@@ -8,6 +8,9 @@ import SwiftUI
 @main
 struct NotifyAIApp: App {
     @State private var app = AppEnvironment.makeDefault()
+    #if os(macOS)
+    @NSApplicationDelegateAdaptor(NotifyAIAppDelegate.self) private var appDelegate
+    #endif
 
     var body: some Scene {
         mainWindow
@@ -19,7 +22,7 @@ struct NotifyAIApp: App {
                 .frame(width: 560, height: 640)
         }
 
-        MenuBarExtra {
+        MenuBarExtra(isInserted: menuBarItemBinding) {
             MenuBarPanel()
                 .appEnvironment(app)
         } label: {
@@ -28,6 +31,21 @@ struct NotifyAIApp: App {
         .menuBarExtraStyle(.window)
         #endif
     }
+
+    #if os(macOS)
+    /// The menu bar item follows the "App anzeigen in" setting. If the user removes it by
+    /// ⌘-dragging it out of the menu bar, the app switches to the Dock so it stays reachable.
+    private var menuBarItemBinding: Binding<Bool> {
+        let settings = app.settings
+        return Binding {
+            settings.general.appPresence.showsMenuBarItem
+        } set: { isInserted in
+            guard !isInserted, settings.general.appPresence.showsMenuBarItem else { return }
+            settings.general.appPresence = .dock
+            AppPresenceController.apply(.dock)
+        }
+    }
+    #endif
 
     #if os(macOS)
     /// A single-instance window: `openWindow(id:)` brings the existing window to the front

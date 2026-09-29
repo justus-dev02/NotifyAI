@@ -21,6 +21,12 @@ struct SummaryView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.large) {
                 overview(summary)
 
+                if !summary.chapters.isEmpty {
+                    ContentSection(title: "Kapitel", systemImage: "list.number", tint: .indigo) {
+                        ChapterList(chapters: summary.chapters, onOpen: onOpenTime)
+                    }
+                }
+
                 if !summary.keyPoints.isEmpty {
                     ContentSection(title: "Kernpunkte", systemImage: "list.bullet") {
                         SourcedBulletList(items: summary.keyPoints, tint: .accentColor, sourceTimes: summary.sourceTimes, onOpen: onOpenTime)
@@ -202,6 +208,52 @@ private struct ActionItemRow: View {
 
             if let sourceTime {
                 SourceTimeButton(time: sourceTime) { onOpen(sourceTime) }
+            }
+        }
+    }
+}
+
+/// Chapters of a long recording: time range, title and a short summary. Tapping plays the chapter.
+private struct ChapterList: View {
+    let chapters: [SummaryChapter]
+    let onOpen: (TimeInterval) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
+            ForEach(Array(chapters.enumerated()), id: \.element.id) { index, chapter in
+                Button {
+                    // The source jump subtracts the highlight padding; chapters start exactly.
+                    onOpen(chapter.start + Marker.highlightPadding)
+                } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
+                        Text("\(index + 1)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 22, height: 22)
+                            .background(.indigo, in: Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(chapter.title)
+                                    .font(.subheadline.weight(.semibold))
+                                    .multilineTextAlignment(.leading)
+                                Spacer(minLength: Theme.Spacing.small)
+                                Text("\(TimeFormatting.timestamp(chapter.start))–\(TimeFormatting.timestamp(chapter.end))")
+                                    .font(.caption.monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                            }
+                            if !chapter.overview.isEmpty {
+                                Text(chapter.overview)
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Spielt das Kapitel ab")
             }
         }
     }

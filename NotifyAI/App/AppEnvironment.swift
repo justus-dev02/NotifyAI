@@ -25,6 +25,9 @@ final class AppEnvironment {
     let importer: ImportService
     let knowledge: KnowledgeIndexService
     let chat: NoteChatModel
+    #if os(iOS)
+    let backgroundScheduler: BackgroundProcessingScheduler
+    #endif
     private var hasStarted = false
 
     init(settings: AppSettings = AppSettings(), locations: StorageLocations, inMemory: Bool = false) throws {
@@ -41,33 +44,65 @@ final class AppEnvironment {
             await whisperEngine.unloadModel()
         }
         let embedder = SentenceEmbedder()
+        let summarization = SummarizationService()
+        let digestStore = ChapterDigestStore(directory: inMemory ? nil : locations.processingDirectory)
         processing = ProcessingCoordinator(
             store: store,
             settings: settings,
             transcription: transcription,
-            summarization: SummarizationService(),
+            summarization: summarization,
             diarizer: SpeakerDiarizer(),
-            embedder: embedder
+            embedder: embedder,
+            digestStore: digestStore
         )
         knowledge = KnowledgeIndexService(
             store: store,
             embedder: embedder,
-            fileURL: inMemory ? nil : locations.knowledgeIndexURL
+            persistence: inMemory ? nil : KnowledgeIndexStore(
+                directory: locations.knowledgeIndexDirectory,
+                legacyFile: locations.legacyKnowledgeIndexURL
+            )
         )
         chat = NoteChatModel(knowledge: knowledge, settings: settings)
+        #if os(iOS)
+        backgroundScheduler = BackgroundProcessingScheduler(processing: processing)
+        #endif
         recording = RecordingController(
             store: store,
             settings: settings,
             transcription: transcription,
             processing: processing,
-            audioSession: audioSession
+            audioSession: audioSession,
+            liveChapters: LiveChapterSummarizer(summarization: summarization, store: digestStore)
         )
         importer = ImportService(store: store, settings: settings, processing: processing)
-        appLock = AppLock { [settings] in settings.appLockEnabled }
+        appLock = AppLock { [settings] in settings.privacy.appLockEnabled }
 
         applyBackupPreference()
         connectLiveActivityIntents()
         connectSearchIndex()
+        connectBackgroundProcessing(isTesting: inMemory)
+    }
+
+    /// Long recordings keep processing when the user leaves the app (iOS / iPadOS).
+    private func connectBackgroundProcessing(isTesting: Bool) {
+        #if os(iOS)
+        // Tests run without registered task identifiers.
+        guard !isTesting else { return }
+        // The environment is created while the app launches, which is when iOS requires
+        // background task handlers to be registered.
+        backgroundScheduler.registerOvernightTask()
+        processing.onJobStarted = { [backgroundScheduler] noteID, duration in
+            backgroundScheduler.jobStarted(noteID: noteID, duration: duration)
+        }
+        #endif
+    }
+
+    /// Called when the app moves to the background.
+    func didEnterBackground() {
+        #if os(iOS)
+        backgroundScheduler.scheduleOvernightProcessingIfNeeded()
+        #endif
     }
 
     /// Keeps the search index in sync with finished and deleted notes.
@@ -75,8 +110,14 @@ final class AppEnvironment {
         processing.onNoteReady = { [knowledge] _ in
             knowledge.scheduleRefresh()
         }
-        store.onNotesDeleted = { [knowledge] ids in
+        store.onNotesDeleted = { [knowledge, processing] ids in
             knowledge.remove(ids)
+            let digestStore = processing.digestStore
+            Task {
+                for id in ids {
+                    await digestStore.remove(noteID: id)
+                }
+            }
         }
     }
 
@@ -95,7 +136,7 @@ final class AppEnvironment {
                 let defaults = UserDefaults(suiteName: suiteName) ?? .standard
                 defaults.removePersistentDomain(forName: suiteName)
                 let settings = AppSettings(defaults: defaults)
-                settings.hasCompletedOnboarding = isRunningUITests
+                settings.general.hasCompletedOnboarding = isRunningUITests
                 return try AppEnvironment(settings: settings, locations: try StorageLocations.temporary(), inMemory: true)
             }
             return try AppEnvironment(locations: try StorageLocations.applicationSupport())
@@ -108,7 +149,7 @@ final class AppEnvironment {
 
     func applyBackupPreference() {
         do {
-            try store.locations.setIncludedInBackup(settings.includeInBackup)
+            try store.locations.setIncludedInBackup(settings.privacy.includeInBackup)
         } catch {
             Logger.persistence.error("Updating the backup setting failed: \(error.localizedDescription, privacy: .public)")
         }

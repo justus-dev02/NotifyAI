@@ -72,6 +72,24 @@ struct LogMelSpectrogram {
         return frames
     }
 
+    /// Only the energy of every frame, in dB: the same values as `frames(of:)` computes, at a
+    /// fraction of the cost (no FFT). Used for voice-activity detection of long files.
+    static func energiesDB(of samples: [Float]) -> [Float] {
+        guard samples.count >= frameLength else { return [] }
+        var energies: [Float] = []
+        energies.reserveCapacity((samples.count - frameLength) / hopLength + 1)
+        var start = 0
+        samples.withUnsafeBufferPointer { buffer in
+            while start + frameLength <= buffer.count {
+                let frame = UnsafeBufferPointer(rebasing: buffer[start..<(start + frameLength)])
+                let energy = vDSP.sumOfSquares(frame) / Float(frameLength)
+                energies.append(10 * log10(energy + 1e-10))
+                start += hopLength
+            }
+        }
+        return energies
+    }
+
     /// Power spectrum of a real signal using the packed split-complex FFT layout.
     private func computePowerSpectrum(of signal: [Float], real: inout [Float], imaginary: inout [Float], power: inout [Float]) {
         let halfLength = Self.fftLength / 2

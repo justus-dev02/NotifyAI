@@ -357,7 +357,7 @@ struct NoteChatTests {
         let segments = Fixture.segments(["Das Budget für die Kampagne liegt bei 12.000 Euro.", "Ben übernimmt die Agentur."])
         note.setTranscript(encoded: try Transcript.encode(segments), plainText: Transcript.plainText(of: segments), engine: .appleSpeech)
         try store.insert(note)
-        let knowledge = KnowledgeIndexService(store: store, embedder: SentenceEmbedder(), fileURL: nil)
+        let knowledge = KnowledgeIndexService(store: store, embedder: SentenceEmbedder(), persistence: nil)
         return NoteChatModel(
             knowledge: knowledge,
             settings: makeIsolatedSettings(),

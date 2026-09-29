@@ -298,18 +298,18 @@ struct SystemAudioPersistenceTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let settings = AppSettings(defaults: defaults)
-        #expect(settings.audioSource == .microphone)
-        #expect(settings.systemAudioTarget == .allApps)
-        #expect(settings.speakersFromAudioSource)
+        #expect(settings.recording.audioSource == .microphone)
+        #expect(settings.recording.systemAudioTarget == .allApps)
+        #expect(settings.analysis.speakersFromAudioSource)
 
-        settings.audioSource = .microphoneAndSystemAudio
-        settings.systemAudioTarget = .app(bundleID: "us.zoom.xos", name: "zoom.us")
-        settings.speakersFromAudioSource = false
+        settings.recording.audioSource = .microphoneAndSystemAudio
+        settings.recording.systemAudioTarget = .app(bundleID: "us.zoom.xos", name: "zoom.us")
+        settings.analysis.speakersFromAudioSource = false
 
         let reloaded = AppSettings(defaults: defaults)
-        #expect(reloaded.audioSource == .microphoneAndSystemAudio)
-        #expect(reloaded.systemAudioTarget == .app(bundleID: "us.zoom.xos", name: "zoom.us"))
-        #expect(!reloaded.speakersFromAudioSource)
+        #expect(reloaded.recording.audioSource == .microphoneAndSystemAudio)
+        #expect(reloaded.recording.systemAudioTarget == .app(bundleID: "us.zoom.xos", name: "zoom.us"))
+        #expect(!reloaded.analysis.speakersFromAudioSource)
     }
 
     @Test("Notes of the first schema open with the microphone as source")

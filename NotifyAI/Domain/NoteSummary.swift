@@ -30,6 +30,8 @@ struct NoteSummary: Codable, Hashable, Sendable {
     var keywords: [String]
     /// Transcript position (seconds) that supports a key point, decision, task or question, by item text.
     var sourceTimes: [String: TimeInterval]
+    /// Chapters of a long recording, empty for short ones.
+    var chapters: [SummaryChapter]
 
     init(
         suggestedTitle: String? = nil,
@@ -43,8 +45,10 @@ struct NoteSummary: Codable, Hashable, Sendable {
         fallbackReason: String? = nil,
         createdAt: Date = .now,
         keywords: [String] = [],
-        sourceTimes: [String: TimeInterval] = [:]
+        sourceTimes: [String: TimeInterval] = [:],
+        chapters: [SummaryChapter] = []
     ) {
+        self.chapters = chapters
         self.keywords = keywords
         self.sourceTimes = sourceTimes
         self.suggestedTitle = suggestedTitle
@@ -61,10 +65,10 @@ struct NoteSummary: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case suggestedTitle, overview, keyPoints, decisions, actionItems, openQuestions, topics
-        case source, fallbackReason, createdAt, keywords, sourceTimes
+        case source, fallbackReason, createdAt, keywords, sourceTimes, chapters
     }
 
-    /// Summaries saved before `keywords` and `sourceTimes` existed decode with empty values.
+    /// Summaries saved before `keywords`, `sourceTimes` and `chapters` existed decode with empty values.
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         suggestedTitle = try container.decodeIfPresent(String.self, forKey: .suggestedTitle)
@@ -79,6 +83,7 @@ struct NoteSummary: Codable, Hashable, Sendable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         keywords = try container.decodeIfPresent([String].self, forKey: .keywords) ?? []
         sourceTimes = try container.decodeIfPresent([String: TimeInterval].self, forKey: .sourceTimes) ?? [:]
+        chapters = try container.decodeIfPresent([SummaryChapter].self, forKey: .chapters) ?? []
     }
 }
 

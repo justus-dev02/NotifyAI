@@ -57,7 +57,7 @@ struct IndexedNote: Codable, Hashable, Sendable, Identifiable {
 /// off the main actor while the index service updates its copy.
 struct KnowledgeIndex: Codable, Sendable {
     /// Bump when the indexing changes, so existing indexes are rebuilt.
-    static let formatVersion = 2
+    static let formatVersion = 3
 
     var formatVersion = KnowledgeIndex.formatVersion
     var notes: [UUID: IndexedNote] = [:]
@@ -92,7 +92,7 @@ struct IndexableNote: Sendable {
     @MainActor
     init(note: Note) {
         id = note.id
-        contentHash = Self.contentHash(of: note)
+        contentHash = Self.fingerprint(of: note)
         title = note.title
         createdAt = note.createdAt
         kind = note.kind
@@ -132,14 +132,21 @@ struct IndexableNote: Sendable {
         contentHash = UUID().uuidString
     }
 
-    /// A stable fingerprint of everything the index uses. Cheap: no transcript decoding.
+    /// A fingerprint of everything the index uses, computed on every refresh for every note.
+    ///
+    /// It must be cheap: instead of hashing the whole transcript it combines the sizes of
+    /// the text, transcript and summary with the beginning of the text and the small fields.
+    /// The text of a note only changes through (re)transcription, speaker assignment or a new
+    /// summary, which always change these sizes. An edit that kept every size and the first
+    /// 256 characters identical would be missed; "Suchindex neu aufbauen" covers that case.
     @MainActor
-    static func contentHash(of note: Note) -> String {
+    static func fingerprint(of note: Note) -> String {
         var hasher = SHA256()
         let parts = [
             String(KnowledgeIndex.formatVersion),
             note.title,
-            note.bodyText,
+            String(note.bodyText.utf8.count),
+            String(note.bodyText.prefix(256)),
             note.summaryOverview,
             note.participants.joined(separator: "\u{1F}"),
             note.focusRawValue,

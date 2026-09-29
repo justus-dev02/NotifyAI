@@ -81,7 +81,7 @@ private struct RecordingStatusBar: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(recording.phase == .paused ? "Aufnahme pausiert" : "Aufnahme läuft")
                         .font(.subheadline.weight(.semibold))
-                    Text(TimeFormatting.timestamp(recording.elapsed))
+                    Text(TimeFormatting.timestamp(recording.meter.elapsed))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }

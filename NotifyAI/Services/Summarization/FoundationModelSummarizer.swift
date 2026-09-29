@@ -62,10 +62,88 @@ struct FoundationModelSummarizer: Summarizer {
         return generated.noteSummary()
     }
 
+    // MARK: - Chapters
+
+    func digest(_ chapter: ChapterRequest) async throws -> ChapterDigest {
+        let chunker = TextChunker(budget: inputTokenBudget, measure: Self.tokenMeasure())
+        let chunks = await chunker.chunks(of: chapter.text)
+        guard !chunks.isEmpty else { throw SummarizationError.emptyInput }
+
+        // A chapter usually fits into one or two requests; longer ones are condensed first.
+        let source: String
+        if chunks.count == 1 {
+            source = "Transcript of chapter \(chapter.number) of \(chapter.count):\n\n\(chunks[0])"
+        } else {
+            var notes: [String] = []
+            for (index, chunk) in chunks.enumerated() {
+                try Task.checkCancellation()
+                let partial = try await respond(
+                    generating: PartialNotes.self,
+                    instructions: Self.instructions(for: chapter.context, task: .extractNotes),
+                    prompt: "Excerpt \(index + 1) of \(chunks.count):\n\n\(chunk)"
+                )
+                notes.append(partial.promptText)
+            }
+            let merged = await reduce(notes, request: chapter.context, chunker: chunker)
+            source = "Notes covering chapter \(chapter.number) of \(chapter.count):\n\n\(merged)"
+        }
+
+        var prompt = source
+        let marked = chapter.markedPassages.prefix(5).filter { !$0.isEmpty }
+        if !marked.isEmpty {
+            prompt += "\n\nThe user marked these passages as important; make sure they are reflected:\n"
+            prompt += marked.map { "- \($0)" }.joined(separator: "\n")
+        }
+        let generated = try await respond(
+            generating: GeneratedChapterDigest.self,
+            instructions: Self.instructions(for: chapter.context, task: .chapter),
+            prompt: prompt
+        )
+        return generated.chapterDigest()
+    }
+
+    func combine(_ chapters: [TimedDigest], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        let chunker = TextChunker(budget: inputTokenBudget, measure: Self.tokenMeasure())
+        let texts = chapters.enumerated().map { index, chapter in
+            Self.promptText(of: chapter, number: index + 1)
+        }
+        let joined = texts.joined(separator: "\n\n")
+        // Very long recordings: chapter notes are merged until they fit into one request.
+        let notes = await chunker.chunks(of: joined).count <= 1 ? joined : await reduce(texts, request: request, chunker: chunker)
+        progress(0.5)
+        let generated = try await respond(
+            generating: GeneratedSummary.self,
+            instructions: Self.instructions(for: request, task: .summary),
+            prompt: "Chapter notes of a long recording, in chronological order:\n\n\(notes)"
+        )
+        progress(1)
+        return generated.noteSummary()
+    }
+
+    private static func promptText(of chapter: TimedDigest, number: Int) -> String {
+        let digest = chapter.digest
+        var lines = ["Chapter \(number) (\(TimeFormatting.timestamp(chapter.start))–\(TimeFormatting.timestamp(chapter.end))): \(digest.title)"]
+        if !digest.overview.isEmpty { lines.append("Summary: \(digest.overview)") }
+        lines += digest.keyPoints.map { "Point: \($0)" }
+        lines += digest.decisions.map { "Decision: \($0)" }
+        lines += digest.actionItems.map { item in
+            var line = "Task: \(item.task)"
+            if let owner = item.owner { line += " (owner: \(owner))" }
+            if let due = item.due { line += " (due: \(due))" }
+            return line
+        }
+        lines += digest.openQuestions.map { "Open: \($0)" }
+        return lines.joined(separator: "\n")
+    }
+
     // MARK: - Map-reduce
 
     private func reduce(_ notes: [PartialNotes], request: SummaryRequest, chunker: TextChunker) async -> String {
-        var texts = notes.map(\.promptText)
+        await reduce(notes.map(\.promptText), request: request, chunker: chunker)
+    }
+
+    private func reduce(_ notes: [String], request: SummaryRequest, chunker: TextChunker) async -> String {
+        var texts = notes
         // Each round merges groups of notes; the loop ends once everything fits.
         for _ in 0..<4 {
             let joined = texts.joined(separator: "\n\n")
@@ -126,7 +204,7 @@ struct FoundationModelSummarizer: Summarizer {
     // MARK: - Prompts
 
     private enum PromptTask {
-        case summary, extractNotes, mergeNotes
+        case summary, extractNotes, mergeNotes, chapter
     }
 
     private static func instructions(for request: SummaryRequest, task: PromptTask) -> String {
@@ -142,6 +220,8 @@ struct FoundationModelSummarizer: Summarizer {
             "You receive one excerpt of \(source). Extract structured notes from this excerpt only."
         case .mergeNotes:
             "You receive several sets of notes about \(source). Merge them into one set: combine duplicates and keep every distinct fact, decision and task."
+        case .chapter:
+            "You receive one chapter of \(source). Condense this chapter only; other chapters are condensed separately."
         }
 
         let date = request.recordedAt.formatted(Date.FormatStyle(date: .complete, time: .shortened).locale(Locale(identifier: "en_US")))
@@ -240,6 +320,43 @@ struct GeneratedTopic {
 
     @Guide(description: "What was said about the topic", .maximumCount(4))
     var points: [String]
+}
+
+@Generable(description: "The condensed content of one chapter of a long recording")
+struct GeneratedChapterDigest {
+    @Guide(description: "A specific chapter title of at most six words naming its main subject")
+    var title: String
+
+    @Guide(description: "One or two sentences on what this chapter is about and its outcome")
+    var overview: String
+
+    @Guide(description: "The most important points of this chapter", .maximumCount(5))
+    var keyPoints: [String]
+
+    @Guide(description: "Decisions that were explicitly made in this chapter", .maximumCount(4))
+    var decisions: [String]
+
+    @Guide(description: "Concrete tasks someone committed to in this chapter", .maximumCount(6))
+    var actionItems: [GeneratedActionItem]
+
+    @Guide(description: "Questions or problems left open in this chapter", .maximumCount(3))
+    var openQuestions: [String]
+
+    func chapterDigest() -> ChapterDigest {
+        ChapterDigest(
+            title: title.cleaned,
+            overview: overview.cleaned,
+            keyPoints: keyPoints.cleaned,
+            decisions: decisions.cleaned,
+            actionItems: actionItems.compactMap { item in
+                let task = item.task.cleaned
+                guard !task.isEmpty else { return nil }
+                return ActionItem(task: task, owner: item.owner.cleaned.nilIfEmpty, due: item.due.cleaned.nilIfEmpty)
+            },
+            openQuestions: openQuestions.cleaned,
+            source: .appleIntelligence
+        )
+    }
 }
 
 @Generable(description: "Summary of a conversation or document")

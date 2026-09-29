@@ -107,13 +107,13 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
                 LabeledContent("Spracherkennung") {
-                    Text(settings.engine.displayName)
+                    Text(settings.transcription.engine.displayName)
                 }
                 LabeledContent("Sprache") {
-                    Text(settings.language.displayName)
+                    Text(settings.transcription.language.displayName)
                 }
                 LabeledContent("Zusammenfassung") {
-                    switch LanguageModelAvailability.current(for: settings.language) {
+                    switch LanguageModelAvailability.current(for: settings.transcription.language) {
                     case .available:
                         Label("Apple Intelligence", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
@@ -126,7 +126,7 @@ struct OnboardingView: View {
             .padding(Theme.Spacing.large)
             .background(.background.secondary, in: RoundedRectangle(cornerRadius: Theme.Radius.large, style: .continuous))
 
-            if case .unavailable(let reason) = LanguageModelAvailability.current(for: settings.language) {
+            if case .unavailable(let reason) = LanguageModelAvailability.current(for: settings.transcription.language) {
                 Text("\(reason) Bis dahin erstellt NotifyAI eine einfache Zusammenfassung aus den wichtigsten Sätzen.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -155,7 +155,7 @@ struct OnboardingView: View {
                 if let next = Step(rawValue: step.rawValue + 1) {
                     step = next
                 } else {
-                    settings.hasCompletedOnboarding = true
+                    settings.general.hasCompletedOnboarding = true
                 }
             }
             .buttonStyle(.glassProminent)

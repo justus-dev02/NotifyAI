@@ -15,15 +15,15 @@ struct AudioSourceRows: View {
     @Environment(AppSettings.self) private var settings
 
     var body: some View {
-        @Bindable var settings = settings
+        @Bindable var recording = settings.recording
 
-        Picker("Quelle", selection: $settings.audioSource) {
+        Picker("Quelle", selection: $recording.audioSource) {
             ForEach(RecordingAudioSource.available) { source in
                 Label(source.title, systemImage: source.symbolName).tag(source)
             }
         }
 
-        if settings.audioSource.usesSystemAudio {
+        if recording.audioSource.usesSystemAudio {
             SystemAudioAppPicker()
         }
     }
@@ -36,9 +36,9 @@ struct SystemAudioAppPicker: View {
     @State private var apps: [AudioApp] = []
 
     var body: some View {
-        @Bindable var settings = settings
+        @Bindable var recording = settings.recording
 
-        Picker("App", selection: $settings.systemAudioTarget) {
+        Picker("App", selection: $recording.systemAudioTarget) {
             Label(SystemAudioTarget.allApps.displayName, systemImage: "square.stack.3d.up")
                 .tag(SystemAudioTarget.allApps)
             if !apps.isEmpty {
@@ -69,11 +69,11 @@ struct SystemAudioAppPicker: View {
 
     /// The remembered app when it is not running; kept as an option so the picker has a matching tag.
     private var closedTarget: SystemAudioTarget? {
-        guard case .app(let bundleID, _) = settings.systemAudioTarget,
+        guard case .app(let bundleID, _) = settings.recording.systemAudioTarget,
               !apps.isEmpty,
               !apps.contains(where: { $0.bundleID == bundleID })
         else { return nil }
-        return settings.systemAudioTarget
+        return settings.recording.systemAudioTarget
     }
 }
 
@@ -147,7 +147,7 @@ struct SystemAudioStatus: View {
                         .lineLimit(1)
                         .frame(width: isCompact ? 90 : 140, alignment: .leading)
                     LevelMeter(
-                        levels: Array(recording.systemLevels.suffix(isCompact ? 20 : 32)),
+                        levels: Array(recording.meter.systemLevels.suffix(isCompact ? 20 : 32)),
                         isActive: recording.phase == .recording
                     )
                     .frame(height: isCompact ? 14 : 22)

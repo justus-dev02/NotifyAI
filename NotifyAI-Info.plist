@@ -5,6 +5,12 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.justus.NotifyAI.processing.overnight</string>
+		<string>com.justus.NotifyAI.processing.continued.*</string>
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>

@@ -16,7 +16,7 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if settings.hasCompletedOnboarding {
+            if settings.general.hasCompletedOnboarding {
                 MainView()
             } else {
                 OnboardingView()
@@ -39,6 +39,7 @@ struct RootView: View {
             switch phase {
             case .background:
                 appLock.lockIfEnabled()
+                app?.didEnterBackground()
             case .active where appLock.isLocked:
                 Task { await appLock.unlock() }
             default:

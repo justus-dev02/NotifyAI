@@ -1,0 +1,60 @@
+//
+//  MacSettingsSections.swift
+//  NotifyAI
+//
+
+#if os(macOS)
+import SwiftUI
+
+/// Dock and menu bar presence.
+struct AppearanceSettingsSection: View {
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        @Bindable var general = settings.general
+
+        Section {
+            Picker("App anzeigen", selection: $general.appPresence) {
+                ForEach(AppPresence.allCases) { presence in
+                    Text(presence.title).tag(presence)
+                }
+            }
+            .pickerStyle(.radioGroup)
+            .onChange(of: general.appPresence) { _, presence in
+                AppPresenceController.apply(presence)
+            }
+        } header: {
+            Text("Darstellung")
+        } footer: {
+            Text(footer(for: general.appPresence))
+        }
+    }
+
+    private func footer(for presence: AppPresence) -> String {
+        switch presence {
+        case .dock:
+            "NotifyAI erscheint wie andere Apps im Dock und im App-Umschalter (⌘⇥). Aufnahmen startest du im Hauptfenster."
+        case .dockAndMenuBar:
+            "Im Dock für das Hauptfenster, in der Menüleiste für schnelle Aufnahmen – auch wenn das Fenster geschlossen ist."
+        case .menuBar:
+            "NotifyAI läuft unauffällig in der Menüleiste, ohne Dock-Symbol und ohne App-Menü. Das Hauptfenster öffnest du über „NotifyAI öffnen“ in der Menüleiste, beenden kannst du die App dort über ⏻."
+        }
+    }
+}
+
+/// The default source of new recordings.
+struct RecordingSourceSettingsSection: View {
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        Section {
+            AudioSourceRows()
+            SystemAudioHints(source: settings.recording.audioSource)
+        } header: {
+            Text("Aufnahmequelle")
+        } footer: {
+            Text("\(settings.recording.audioSource.detail) Die Auswahl gilt für neue Aufnahmen und kann vor jeder Aufnahme geändert werden.")
+        }
+    }
+}
+#endif

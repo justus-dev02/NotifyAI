@@ -24,12 +24,12 @@ final class ImportService {
     @discardableResult
     func importFile(at url: URL) async throws -> UUID {
         let title = url.deletingPathExtension().lastPathComponent
-        let content = try await DocumentImporter.content(of: url, languages: [settings.language])
+        let content = try await DocumentImporter.content(of: url, languages: [settings.transcription.language])
 
         let note: Note
         switch content {
         case .audio(let duration):
-            note = Note(title: title, isTitleUserDefined: false, kind: .audioImport, status: .queued, language: settings.language)
+            note = Note(title: title, isTitleUserDefined: false, kind: .audioImport, status: .queued, language: settings.transcription.language)
             note.duration = duration
             // Copy while the security-scoped resource is accessible.
             let hasAccess = url.startAccessingSecurityScopedResource()
@@ -38,7 +38,7 @@ final class ImportService {
             }
             note.audioFileName = try store.importAudioFile(from: url, noteID: note.id)
         case .text(let text, let kind):
-            note = Note(title: title, isTitleUserDefined: false, kind: kind, status: .queued, language: settings.language, bodyText: text)
+            note = Note(title: title, isTitleUserDefined: false, kind: kind, status: .queued, language: settings.transcription.language, bodyText: text)
         }
 
         try store.insert(note)
@@ -50,13 +50,13 @@ final class ImportService {
     /// Imports an image picked from the photo library.
     @discardableResult
     func importImage(data: Data) async throws -> UUID {
-        let text = try await DocumentImporter.recognizedText(inImageData: data, languages: [settings.language])
+        let text = try await DocumentImporter.recognizedText(inImageData: data, languages: [settings.transcription.language])
         let note = Note(
             title: Note.automaticTitle(for: .image),
             isTitleUserDefined: false,
             kind: .image,
             status: .queued,
-            language: settings.language,
+            language: settings.transcription.language,
             bodyText: text
         )
         try store.insert(note)

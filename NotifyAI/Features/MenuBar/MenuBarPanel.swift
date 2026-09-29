@@ -16,7 +16,7 @@ struct MenuBarLabel: View {
         if recording.isActive {
             HStack(spacing: 4) {
                 Image(systemName: recording.phase == .paused ? "pause.circle.fill" : "record.circle.fill")
-                Text(TimeFormatting.timestamp(recording.elapsed))
+                Text(TimeFormatting.timestamp(recording.meter.elapsed))
                     .monospacedDigit()
             }
         } else {
@@ -82,11 +82,11 @@ struct MenuBarPanel: View {
     private var activeRecording: some View {
         VStack(spacing: Theme.Spacing.medium) {
             HStack(alignment: .center) {
-                Text(TimeFormatting.timestamp(recording.elapsed))
+                Text(TimeFormatting.timestamp(recording.meter.elapsed))
                     .font(.system(size: 30, weight: .light, design: .rounded).monospacedDigit())
                     .contentTransition(.numericText())
                 Spacer()
-                LevelMeter(levels: Array(recording.levels.suffix(20)), isActive: recording.phase == .recording)
+                LevelMeter(levels: Array(recording.meter.levels.suffix(20)), isActive: recording.phase == .recording)
                     .frame(width: 120, height: 28)
             }
 
@@ -167,7 +167,7 @@ private struct QuickStartForm: View {
 
             AudioSourceRows()
 
-            if settings.audioSource == .microphoneAndSystemAudio, CoreAudioObject.defaultOutputIsLoudspeaker() {
+            if settings.recording.audioSource == .microphoneAndSystemAudio, CoreAudioObject.defaultOutputIsLoudspeaker() {
                 Label("Tipp: Mit Kopfhörern aufnehmen.", systemImage: "headphones")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -176,7 +176,7 @@ private struct QuickStartForm: View {
             Toggle("Alle Anwesenden sind einverstanden", isOn: $recording.draft.consentConfirmed)
                 .toggleStyle(.checkbox)
 
-            if settings.engine == .whisper, !whisperModels.isInstalled(settings.whisperModel) {
+            if settings.transcription.engine == .whisper, !whisperModels.isInstalled(settings.transcription.whisperModel) {
                 Label("Whisper-Modell fehlt – bitte in den Einstellungen laden.", systemImage: "exclamationmark.triangle")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -200,7 +200,7 @@ private struct QuickStartForm: View {
             .disabled(!canStart)
             .keyboardShortcut(.defaultAction)
 
-            Text("\(settings.engine.displayName) · \(settings.language.displayName) · \(sourceSummary)")
+            Text("\(settings.transcription.engine.displayName) · \(settings.transcription.language.displayName) · \(sourceSummary)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
@@ -208,14 +208,14 @@ private struct QuickStartForm: View {
     }
 
     private var canStart: Bool {
-        recording.canStart && (settings.engine != .whisper || whisperModels.isInstalled(settings.whisperModel))
+        recording.canStart && (settings.transcription.engine != .whisper || whisperModels.isInstalled(settings.transcription.whisperModel))
     }
 
     private var sourceSummary: String {
-        switch settings.audioSource {
+        switch settings.recording.audioSource {
         case .microphone: RecordingAudioSource.microphone.title
-        case .microphoneAndSystemAudio: "Mikrofon + \(settings.systemAudioTarget.displayName)"
-        case .systemAudio: settings.systemAudioTarget.displayName
+        case .microphoneAndSystemAudio: "Mikrofon + \(settings.recording.systemAudioTarget.displayName)"
+        case .systemAudio: settings.recording.systemAudioTarget.displayName
         }
     }
 }

@@ -12,6 +12,11 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
   Ohne Apple Intelligence entsteht eine klar gekennzeichnete einfache Zusammenfassung.
 - **Belegte Zusammenfassungen:** Jeder Kernpunkt, jede Entscheidung und Aufgabe springt per Tipp zur Stelle im Transkript.
   Aufnahmen ohne eigenen Titel heißen nach ihren Stichworten plus Datum („Budget, Website-Relaunch – 29. Sept. 2026“).
+- **Lange Aufnahmen (2–4 h):** Kapitel von etwa 10 Minuten, geschnitten an Themenwechseln, jeweils einzeln
+  zusammengefasst und zwischengespeichert (fortsetzbar nach Abbruch), mit Kapitel-Navigation. Fertige Kapitel werden
+  optional schon während der Aufnahme verdichtet. Auf iPhone/iPad läuft die Verarbeitung per `BGContinuedProcessingTask`
+  im Hintergrund weiter, Unerledigtes nachts beim Laden (`BGProcessingTask`). Bei Hitze pausiert die Arbeit.
+- **macOS:** wahlweise nur im Dock, im Dock und in der Menüleiste oder nur in der Menüleiste.
 - **Notizen fragen (⌘K):** Fragen in natürlicher Sprache über alle Notizen („Was hat Anna letzte Woche zum Budget gesagt?“).
   Zeiträume, Personen und Arten werden als Filter erkannt; Antworten nennen ihre Quellen.
 - **Verwandte Notizen:** gleiche Personen, Orte, Organisationen, seltene gemeinsame Themen, ähnlicher Inhalt – mit Begründung.
@@ -87,6 +92,8 @@ Stopp ─► Note (Transkript, Marker) ─► ProcessingCoordinator
 | Volltext (BM25) als Hauptsignal, Embeddings nur halb gewichtet | Gemessen: Apples deutsche Satz-Embeddings trennen Themen kaum (Frage ↔ Antwort −0,02). Synonyme aus der Query-Expansion des Sprachmodells decken „gleiche Bedeutung, andere Worte“ ab. |
 | Kein eigenes ML-Modell für Beziehungen | Ohne Trainingsdaten nicht besser als die Kombination aus Named-Entity-Erkennung, seltenen gemeinsamen Stichworten (IDF) und relativer Inhaltsähnlichkeit. |
 | Datumsfilter per Kalender, nie per Sprachmodell | Das Modell nennt nur den Zeitraum („lastWeek“); kleine Modelle rechnen Daten unzuverlässig. |
+| Kapitelgrenzen deterministisch | Ein Kapitel wird erst geschlossen, wenn das Transkript über seine späteste Grenze plus Kohäsionsfenster hinausreicht. Während der Aufnahme geschnittene Kapitel sind daher identisch mit den finalen, ihre Zusammenfassungen werden 1:1 wiederverwendet. |
+| Sprechererkennung in zwei Durchläufen | Erst nur Frame-Energien (VAD-Schwelle), dann Spektren blockweise: rund 15 MB statt 920 MB Speicher für 4 Stunden. |
 | Relative Audio-Dateinamen | Absolute Container-Pfade ändern sich bei Neuinstallation und Updates. |
 
 ## Tests

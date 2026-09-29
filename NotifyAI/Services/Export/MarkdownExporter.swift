@@ -45,6 +45,14 @@ struct MarkdownExporter {
 
         if let summary = note.summary {
             lines += ["", "## Überblick", "", summary.overview]
+            if !summary.chapters.isEmpty {
+                lines += ["", "## Kapitel", ""]
+                lines += summary.chapters.enumerated().map { index, chapter in
+                    let range = "\(TimeFormatting.timestamp(chapter.start))–\(TimeFormatting.timestamp(chapter.end))"
+                    let overview = chapter.overview.isEmpty ? "" : ": \(chapter.overview)"
+                    return "\(index + 1). **\(chapter.title)** (\(range))\(overview)"
+                }
+            }
             appendList("Kernpunkte", summary.keyPoints, to: &lines)
             appendList("Entscheidungen", summary.decisions, to: &lines)
             if !summary.actionItems.isEmpty {

@@ -13,8 +13,12 @@ struct StorageLocations: Sendable {
     var recordingsDirectory: URL { root.appending(path: "Recordings", directoryHint: .isDirectory) }
     var whisperModelsDirectory: URL { root.appending(path: "Models/Whisper", directoryHint: .isDirectory) }
     var databaseURL: URL { root.appending(path: "NotifyAI.store", directoryHint: .notDirectory) }
-    /// The search index for "Notizen fragen" and related notes. Can be rebuilt at any time.
-    var knowledgeIndexURL: URL { root.appending(path: "KnowledgeIndex.plist", directoryHint: .notDirectory) }
+    /// The search index for "Notizen fragen" and related notes, one file per note. Can be rebuilt at any time.
+    var knowledgeIndexDirectory: URL { root.appending(path: "KnowledgeIndex", directoryHint: .isDirectory) }
+    /// The single-file index of earlier versions; removed when the new index loads.
+    var legacyKnowledgeIndexURL: URL { root.appending(path: "KnowledgeIndex.plist", directoryHint: .notDirectory) }
+    /// Intermediate results of long summaries (chapter digests), removed when a summary is done.
+    var processingDirectory: URL { root.appending(path: "Processing", directoryHint: .isDirectory) }
 
     /// The production layout inside Application Support.
     static func applicationSupport() throws -> StorageLocations {
@@ -40,7 +44,7 @@ struct StorageLocations: Sendable {
 
     func createDirectories() throws {
         let fileManager = FileManager.default
-        for directory in [root, recordingsDirectory, whisperModelsDirectory] {
+        for directory in [root, recordingsDirectory, whisperModelsDirectory, processingDirectory] {
             try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         }
         #if os(iOS)
