@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// Full-screen (iOS) or sheet (macOS) recording flow: setup, then the live session.
@@ -26,7 +28,7 @@ struct RecordingView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     // Closing does not stop a running recording; it continues in the background.
-                    Button(recording.isActive ? "Minimieren" : "Abbrechen", systemImage: recording.isActive ? "chevron.down" : "xmark") {
+                    Button(recording.isActive ? String(localized: "Minimieren") : String(localized: "Abbrechen"), systemImage: recording.isActive ? "chevron.down" : "xmark") {
                         dismiss()
                     }
                 }
@@ -40,6 +42,16 @@ struct RecordingView: View {
         } message: {
             Text(recording.errorMessage ?? "")
         }
+        .onChange(of: recording.automaticallyStoppedNoteID, initial: true) { _, noteID in
+            // The recording stopped on its own (full disk): show its note and the reason.
+            guard let noteID else { return }
+            recording.acknowledgeAutomaticStop()
+            navigation.selectedNoteID = noteID
+            dismiss()
+        }
+        #if os(iOS)
+        .userNoticeAlert()
+        #endif
     }
 }
 
@@ -63,8 +75,9 @@ private struct RecordingSetupView: View {
                     }
                 }
                 TextField("Teilnehmende (durch Komma getrennt)", text: $recording.draft.participants)
-            } footer: {
                 Text("Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             #if os(macOS)
@@ -72,13 +85,13 @@ private struct RecordingSetupView: View {
                 AudioSourceRows()
                 SystemAudioHints(source: settings.recording.audioSource)
             } header: {
-                Text("Audioquelle")
+                SectionHeader("Audioquelle")
             } footer: {
                 Text(settings.recording.audioSource.detail)
             }
             #endif
 
-            Section("Transkription") {
+            Section {
                 Picker("Sprache", selection: $transcription.language) {
                     ForEach(TranscriptionLanguage.all) { language in
                         Text(language.displayName).tag(language)
@@ -93,14 +106,17 @@ private struct RecordingSetupView: View {
                 if transcription.engine == .whisper {
                     WhisperModelStatusRow(model: transcription.whisperModel)
                 }
+            } header: {
+                SectionHeader("Transkription")
             }
 
             Section {
+                // The explanation is part of the toggle's label: it belongs to the decision,
+                // grows with Dynamic Type and is read together with it by VoiceOver.
                 Toggle(isOn: $recording.draft.consentConfirmed) {
                     Text("Alle Anwesenden sind mit der Aufnahme einverstanden.")
+                    Text("Gespräche dürfen nur mit Zustimmung aller Beteiligten aufgenommen werden. Die Aufnahme bleibt auf diesem Gerät.")
                 }
-            } footer: {
-                Text("Gespräche dürfen nur mit Zustimmung aller Beteiligten aufgenommen werden. Die Aufnahme bleibt auf diesem Gerät.")
             }
         }
         .formStyle(.grouped)

@@ -1,0 +1,4540 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "„%@“" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”"
+          }
+        }
+      }
+    },
+    "„%@“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is not open. Open the app or choose “All Apps” as the source."
+          }
+        }
+      }
+    },
+    "„%@“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is not open. Open the app before starting or choose “All Apps”."
+          }
+        }
+      }
+    },
+    "„%@“ löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete “%@”?"
+          }
+        }
+      }
+    },
+    "## Aufgaben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Tasks"
+          }
+        }
+      }
+    },
+    "## Kapitel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Chapters"
+          }
+        }
+      }
+    },
+    "## Markierte Stellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Marked Moments"
+          }
+        }
+      }
+    },
+    "## Text" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Text"
+          }
+        }
+      }
+    },
+    "## Themen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Topics"
+          }
+        }
+      }
+    },
+    "## Transkript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Transcript"
+          }
+        }
+      }
+    },
+    "## Überblick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## Overview"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ · spielt Ton ab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · playing audio"
+          }
+        }
+      }
+    },
+    "%@ (nicht geöffnet)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (not open)"
+          }
+        }
+      }
+    },
+    "%@ Bis dahin erstellt NotifyAI eine einfache Zusammenfassung aus den wichtigsten Sätzen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Until then, NotifyAI creates a simple summary from the most important sentences."
+          }
+        }
+      }
+    },
+    "%@ Die Auswahl gilt für neue Aufnahmen und kann vor jeder Aufnahme geändert werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ The choice applies to new recordings and can be changed before each recording."
+          }
+        }
+      }
+    },
+    "%@ Ich zeige dann die passenden Stellen statt einer formulierten Antwort." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ I’ll show the matching passages instead of a written answer."
+          }
+        }
+      }
+    },
+    "%@ Ohne Apple Intelligence zeige ich die passenden Stellen statt einer formulierten Antwort." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Without Apple Intelligence, I show the matching passages instead of a written answer."
+          }
+        }
+      }
+    },
+    "%@ wird geladen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading %@"
+          }
+        }
+      }
+    },
+    "%@ wird von Apple Speech auf diesem Gerät nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is not supported by Apple Speech on this device."
+          }
+        }
+      }
+    },
+    "%@ wird von der gewählten Spracherkennung nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is not supported by the selected speech recognition."
+          }
+        }
+      }
+    },
+    "%@ wird vorbereitet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing %@"
+          }
+        }
+      }
+    },
+    "%@–%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@–%2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@–%2$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld markiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld marked"
+          }
+        }
+      }
+    },
+    "%lld Notizen · %lld Abschnitte" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Notizen · %2$lld Abschnitte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld notes · %2$lld passages"
+          }
+        }
+      }
+    },
+    "%lld Notizen durchsuchbar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes searchable"
+          }
+        }
+      }
+    },
+    "%lld Sprachpakete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld language packs"
+          }
+        }
+      }
+    },
+    "1 Sprachpaket" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 language pack"
+          }
+        }
+      }
+    },
+    "1:1-Gespräch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1:1 Conversation"
+          }
+        }
+      }
+    },
+    "15 Sekunden vor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward 15 Seconds"
+          }
+        }
+      }
+    },
+    "15 Sekunden zurück" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back 15 Seconds"
+          }
+        }
+      }
+    },
+    "Ab %@ abspielen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play from %@"
+          }
+        }
+      }
+    },
+    "Abbrechen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Abspielen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play"
+          }
+        }
+      }
+    },
+    "Aggregate-Gerät anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create aggregate device"
+          }
+        }
+      }
+    },
+    "Ähnlicher Inhalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Similar Content"
+          }
+        }
+      }
+    },
+    "Aktuelle Stelle als wichtig markieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark the current moment as important"
+          }
+        }
+      }
+    },
+    "Alle Anwesenden sind einverstanden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone present agrees"
+          }
+        }
+      }
+    },
+    "Alle Anwesenden sind mit der Aufnahme einverstanden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone present agrees to being recorded."
+          }
+        }
+      }
+    },
+    "Alle Apps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Apps"
+          }
+        }
+      }
+    },
+    "Alle Aufnahmen, Transkripte und Zusammenfassungen werden endgültig gelöscht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All recordings, transcripts and summaries will be permanently deleted."
+          }
+        }
+      }
+    },
+    "Alle Daten liegen ausschließlich im geschützten Speicher dieser App. Ohne Backup-Freigabe sind sie auch nicht Teil von iCloud- oder Computer-Backups." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All data is kept exclusively in this app’s protected storage. Without backup sharing, it is also not part of iCloud or computer backups."
+          }
+        }
+      }
+    },
+    "Alle heruntergeladenen Whisper-Modelle werden entfernt (%@). Sprachpakete von Apple Speech werden freigegeben; das System entfernt sie, sobald keine andere App sie braucht. Deine Notizen bleiben erhalten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All downloaded Whisper models will be removed (%@). Apple Speech language packs will be released; the system removes them once no other app needs them. Your notes are kept."
+          }
+        }
+      }
+    },
+    "Alle löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All"
+          }
+        }
+      }
+    },
+    "Alle Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Notes"
+          }
+        }
+      }
+    },
+    "Alle Notizen löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All Notes…"
+          }
+        }
+      }
+    },
+    "Alle Notizen löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All Notes?"
+          }
+        }
+      }
+    },
+    "Alle Personen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All People"
+          }
+        }
+      }
+    },
+    "Allgemein" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        }
+      }
+    },
+    "Als erledigt markieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as Done"
+          }
+        }
+      }
+    },
+    "Als Markdown teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share as Markdown"
+          }
+        }
+      }
+    },
+    "Als offen markieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as Open"
+          }
+        }
+      }
+    },
+    "Andere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Others"
+          }
+        }
+      }
+    },
+    "Ändere die Filter, um weitere Aufgaben zu sehen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the filters to see more tasks."
+          }
+        }
+      }
+    },
+    "Anonymisiert teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymized"
+          }
+        }
+      }
+    },
+    "Ansicht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        }
+      }
+    },
+    "App" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App"
+          }
+        }
+      }
+    },
+    "App anzeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show App"
+          }
+        }
+      }
+    },
+    "App mit %@ schützen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protect App with %@"
+          }
+        }
+      }
+    },
+    "App und Gerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App and Device"
+          }
+        }
+      }
+    },
+    "App-Sperre: %@, Backup: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "App-Sperre: %1$@, Backup: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App lock: %1$@, backup: %2$@"
+          }
+        }
+      }
+    },
+    "Apple Intelligence" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence"
+          }
+        }
+      }
+    },
+    "Apple Intelligence ist derzeit nicht verfügbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence is currently unavailable."
+          }
+        }
+      }
+    },
+    "Apple Intelligence ist in den Systemeinstellungen deaktiviert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence is turned off in System Settings."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not merge the chapters; the summary was assembled from the chapters."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte diesen Text nicht zusammenfassen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not summarize this text."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte keine Antwort formulieren." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not write an answer."
+          }
+        }
+      }
+    },
+    "Apple Intelligence unterstützt %@ noch nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence does not support %@ yet."
+          }
+        }
+      }
+    },
+    "Apple Speech" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Speech"
+          }
+        }
+      }
+    },
+    "Art" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        }
+      }
+    },
+    "Art des Gesprächs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type of Conversation"
+          }
+        }
+      }
+    },
+    "Audio-Callback anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create audio callback"
+          }
+        }
+      }
+    },
+    "Audiodatei" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio File"
+          }
+        }
+      }
+    },
+    "Audiodatei, PDF oder Bild importieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import an audio file, PDF or image"
+          }
+        }
+      }
+    },
+    "Audioquelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio Source"
+          }
+        }
+      }
+    },
+    "Audioquelle: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio source: %@"
+          }
+        }
+      }
+    },
+    "Auf dem Gerät sind nur noch %@ frei. Die Aufnahme wurde beendet, bevor der Speicher voll ist; alles bisher Aufgenommene ist gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %@ of storage is left on this device. The recording was stopped before the storage ran full; everything recorded so far has been saved."
+          }
+        }
+      }
+    },
+    "Auf die Datei konnte nicht zugegriffen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file could not be accessed."
+          }
+        }
+      }
+    },
+    "Auf diesem Gerät ist kein Code und keine biometrische Anmeldung eingerichtet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No passcode or biometric authentication is set up on this device."
+          }
+        }
+      }
+    },
+    "Aufgaben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks"
+          }
+        }
+      }
+    },
+    "Aufgaben aus deinen Zusammenfassungen erscheinen hier." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks from your summaries appear here."
+          }
+        }
+      }
+    },
+    "Aufgaben nach Person und Fälligkeit filtern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter tasks by person and due date"
+          }
+        }
+      }
+    },
+    "Aufnahme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme beenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme beenden (⌘↩)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Recording (⌘↩)"
+          }
+        }
+      }
+    },
+    "Aufnahme beendet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording Stopped"
+          }
+        }
+      }
+    },
+    "Aufnahme läuft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme nicht möglich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot Record"
+          }
+        }
+      }
+    },
+    "Aufnahme pausieren oder fortsetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause or Resume Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme pausiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording Paused"
+          }
+        }
+      }
+    },
+    "Aufnahme starten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme verwerfen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard Recording?"
+          }
+        }
+      }
+    },
+    "Aufnahme wird verarbeitet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing Recording"
+          }
+        }
+      }
+    },
+    "Aufnahmedauer %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording duration %@"
+          }
+        }
+      }
+    },
+    "Aufnahmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings"
+          }
+        }
+      }
+    },
+    "Aufnahmen ab 20 Minuten werden in Kapitel von etwa 10 Minuten geteilt. Fertige Kapitel werden bereits während der Aufnahme verdichtet, damit die Zusammenfassung Sekunden nach dem Stopp bereitsteht. Pausiert automatisch, wenn das Gerät warm wird oder der Stromsparmodus aktiv ist. Benötigt das Live-Transkript." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings of 20 minutes or longer are divided into chapters of about 10 minutes. Finished chapters are condensed while you are still recording, so the summary is ready seconds after you stop. Pauses automatically when the device gets warm or Low Power Mode is on. Requires the live transcript."
+          }
+        }
+      }
+    },
+    "Aufnahmen nicht wiederhergestellt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings Not Restored"
+          }
+        }
+      }
+    },
+    "Aufnahmen werden wiederhergestellt …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring recordings…"
+          }
+        }
+      }
+    },
+    "Aufnahmen, Transkripte und Zusammenfassungen werden lokal verarbeitet und gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings, transcripts and summaries are processed and stored locally."
+          }
+        }
+      }
+    },
+    "Aufnahmen: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings: %@"
+          }
+        }
+      }
+    },
+    "Aufnahmequelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording Source"
+          }
+        }
+      }
+    },
+    "Aus Favoriten entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Favorites"
+          }
+        }
+      }
+    },
+    "Ausgabegerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output device"
+          }
+        }
+      }
+    },
+    "Ausgewählt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
+          }
+        }
+      }
+    },
+    "Auswählen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        }
+      }
+    },
+    "Auswertung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysis"
+          }
+        }
+      }
+    },
+    "Beenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit"
+          }
+        }
+      }
+    },
+    "Bei „Mikrofon + Systemton“ wird deine Stimme als „Ich“ und der Ton der App als „Andere“ beschriftet. Ist genau eine teilnehmende Person eingetragen, erscheint ihr Name." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With “Microphone + System Audio”, your voice is labeled “Me” and the app’s audio “Others”. If exactly one participant is entered, their name is shown."
+          }
+        }
+      }
+    },
+    "Beides läuft vollständig auf diesem Gerät." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Both run entirely on this device."
+          }
+        }
+      }
+    },
+    "Beim ersten Start fragt macOS, ob NotifyAI Systemaudio aufnehmen darf." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first time, macOS asks whether NotifyAI may record system audio."
+          }
+        }
+      }
+    },
+    "Bild" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        }
+      }
+    },
+    "bis %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "by %@"
+          }
+        }
+      }
+    },
+    "bis %@ (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "bis %1$@ (%2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "by %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Bleibt auf deinem Gerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stays on Your Device"
+          }
+        }
+      }
+    },
+    "ca. 150 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 150 MB"
+          }
+        }
+      }
+    },
+    "ca. 500 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 500 MB"
+          }
+        }
+      }
+    },
+    "ca. 630 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 630 MB"
+          }
+        }
+      }
+    },
+    "Darstellung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        }
+      }
+    },
+    "Darstellung: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance: %@"
+          }
+        }
+      }
+    },
+    "Das Audioformat des Mikrofons wird nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The microphone’s audio format is not supported."
+          }
+        }
+      }
+    },
+    "Das Audiogerät für den Systemton konnte nicht eingerichtet werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio device for system audio could not be set up."
+          }
+        }
+      }
+    },
+    "Das Modell „%@“ ist noch nicht geladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model “%@” has not been downloaded yet."
+          }
+        }
+      }
+    },
+    "Das Protokoll ist nicht verfügbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The log is not available."
+          }
+        }
+      }
+    },
+    "Das sind die passendsten Stellen in deinen Notizen:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These are the most relevant passages in your notes:"
+          }
+        }
+      }
+    },
+    "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Apple Intelligence language model is still loading. Please try again later."
+          }
+        }
+      }
+    },
+    "Das Sprachpaket für Apple Speech ist nicht verfügbar. Bitte prüfe die Internetverbindung für den einmaligen Download." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Apple Speech language pack is not available. Please check your internet connection for the one-time download."
+          }
+        }
+      }
+    },
+    "Das Transkript wird gerade erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript is being created."
+          }
+        }
+      }
+    },
+    "Das Transkript wird nach der Aufnahme erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript will be created after the recording."
+          }
+        }
+      }
+    },
+    "Das Whisper-Modell „%@“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Whisper model “%@” has not been downloaded yet. You can download it in Settings."
+          }
+        }
+      }
+    },
+    "Datei importieren …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import File…"
+          }
+        }
+      }
+    },
+    "Datenbank zurücksetzen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Database…"
+          }
+        }
+      }
+    },
+    "Datenbank zurücksetzen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Database?"
+          }
+        }
+      }
+    },
+    "Datenschutz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        }
+      }
+    },
+    "Datenschutz-Einstellungen öffnen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Privacy Settings…"
+          }
+        }
+      }
+    },
+    "Dazu habe ich in deinen Notizen nichts gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found nothing about that in your notes."
+          }
+        }
+      }
+    },
+    "Der Diagnosebericht enthält Versionen, Einstellungen, Speicherbelegung und das technische Protokoll – keine Inhalte deiner Notizen. Er wird nur gespeichert oder geteilt, wenn du es auswählst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The diagnostic report contains versions, settings, storage usage and the technical log — no content of your notes. It is only saved or shared when you choose to."
+          }
+        }
+      }
+    },
+    "Diagnosebericht exportieren …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Diagnostic Report…"
+          }
+        }
+      }
+    },
+    "Die Änderung konnte nicht gespeichert werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The change could not be saved: %@"
+          }
+        }
+      }
+    },
+    "Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The type of conversation determines what the summary focuses on."
+          }
+        }
+      }
+    },
+    "Die Audiodatei dieser Notiz fehlt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file of this note is missing."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht angelegt werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be created: %@"
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht gelesen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be read."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht geöffnet werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be opened."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht weiter geschrieben werden (%@). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be written anymore (%@). Everything recorded up to this point has been saved."
+          }
+        }
+      }
+    },
+    "Die Aufnahme konnte nicht gestartet werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording could not be started: %@"
+          }
+        }
+      }
+    },
+    "Die Aufnahme läuft noch." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording is still in progress."
+          }
+        }
+      }
+    },
+    "Die Aufnahme wird gelöscht und nicht gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording will be deleted and not saved."
+          }
+        }
+      }
+    },
+    "Die Aufnahme wurde pausiert, weil der Mac in den Ruhezustand gewechselt ist. Setze sie fort, sobald das Gespräch weitergeht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording was paused because the Mac went to sleep. Resume it once the conversation continues."
+          }
+        }
+      }
+    },
+    "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording was interrupted by the system, for example by a phone call."
+          }
+        }
+      }
+    },
+    "Die Aufnahme, das Transkript und die Zusammenfassung werden endgültig entfernt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording, transcript and summary will be permanently removed."
+          }
+        }
+      }
+    },
+    "Die Aufnahmen liegen weiterhin im Ordner „Recordings“, konnten aber nicht als Notizen angelegt werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recordings are still in the “Recordings” folder but could not be turned into notes: %@"
+          }
+        }
+      }
+    },
+    "Die bisherige Datenbank wird nicht gelöscht, sondern in den Ordner „Recovery“ verschoben. Alle Aufnahmen werden als neue Notizen angelegt und erneut transkribiert und zusammengefasst. Bearbeitete Titel, Markierungen und erledigte Aufgaben gehen dabei verloren." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The current database is not deleted but moved to the “Recovery” folder. All recordings are added as new notes and transcribed and summarized again. Edited titles, markers and completed tasks will be lost."
+          }
+        }
+      }
+    },
+    "Die Datei konnte nicht gelesen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file could not be read."
+          }
+        }
+      }
+    },
+    "Die Datenbank konnte nicht verschoben werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The database could not be moved: %@"
+          }
+        }
+      }
+    },
+    "Die Datenbank von NotifyAI ist beschädigt oder konnte nicht aktualisiert werden. Deine Aufnahmen sind davon nicht betroffen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI’s database is damaged or could not be updated. Your recordings are not affected."
+          }
+        }
+      }
+    },
+    "Die Entsperrung ist fehlgeschlagen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlocking failed."
+          }
+        }
+      }
+    },
+    "Die Notiz konnte nicht gelöscht werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The note could not be deleted: %@"
+          }
+        }
+      }
+    },
+    "Die Notizen können nicht geöffnet werden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Notes Can’t Be Opened"
+          }
+        }
+      }
+    },
+    "Die Notizen konnten nicht gelöscht werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The notes could not be deleted: %@"
+          }
+        }
+      }
+    },
+    "Die passendsten Notizen findest du unten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll find the most relevant notes below."
+          }
+        }
+      }
+    },
+    "Die Spracherkennung kommt auf diesem Gerät nicht hinterher. Das Transkript wird nach der Aufnahme aus der Audiodatei erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition can’t keep up on this device. The transcript will be created from the audio file after the recording."
+          }
+        }
+      }
+    },
+    "Diese Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Week"
+          }
+        }
+      }
+    },
+    "Dieser Dateityp wird nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file type is not supported."
+          }
+        }
+      }
+    },
+    "Dieser Monat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Month"
+          }
+        }
+      }
+    },
+    "Dieses Gerät unterstützt Apple Intelligence nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device does not support Apple Intelligence."
+          }
+        }
+      }
+    },
+    "Dieses Jahr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Year"
+          }
+        }
+      }
+    },
+    "Download fehlgeschlagen. Bitte prüfe die Internetverbindung und versuche es erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download failed. Please check your internet connection and try again."
+          }
+        }
+      }
+    },
+    "Du kannst die App weiter nutzen. Die Verarbeitung läuft lokal auf diesem Gerät." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can keep using the app. Processing runs locally on this device."
+          }
+        }
+      }
+    },
+    "Durchsuche deine Notizen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching your notes…"
+          }
+        }
+      }
+    },
+    "Einfache Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simple Summary"
+          }
+        }
+      }
+    },
+    "Einfache Zusammenfassung aus den wichtigsten Sätzen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simple summary from the most important sentences."
+          }
+        }
+      }
+    },
+    "Einmaliger Download. Danach läuft Whisper ohne Internet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One-time download. After that, Whisper works offline."
+          }
+        }
+      }
+    },
+    "Einstellungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "Empfohlen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended"
+          }
+        }
+      }
+    },
+    "Entscheidungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decisions"
+          }
+        }
+      }
+    },
+    "Entsperre die App, um deine Notizen zu sehen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock the app to see your notes."
+          }
+        }
+      }
+    },
+    "Entsperre NotifyAI, um auf deine Notizen zuzugreifen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock NotifyAI to access your notes."
+          }
+        }
+      }
+    },
+    "Erlauben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow"
+          }
+        }
+      }
+    },
+    "Erlaubt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed"
+          }
+        }
+      }
+    },
+    "Erledigt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "Erledigte anzeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Completed"
+          }
+        }
+      }
+    },
+    "Erneut versuchen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
+          }
+        }
+      }
+    },
+    "Erstellt mit Apple Intelligence auf diesem Gerät. Prüfe wichtige Details im Transkript." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created with Apple Intelligence on this device. Check important details in the transcript."
+          }
+        }
+      }
+    },
+    "Erstellt: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created: %@"
+          }
+        }
+      }
+    },
+    "Es gibt noch keine fertigen Notizen, die ich durchsuchen kann. Sobald eine Aufnahme oder ein Import verarbeitet ist, kannst du hier Fragen dazu stellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no processed notes I can search yet. As soon as a recording or import has been processed, you can ask questions about it here."
+          }
+        }
+      }
+    },
+    "Es läuft bereits eine Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A recording is already in progress."
+          }
+        }
+      }
+    },
+    "Es wurde kein Mikrofon gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No microphone was found."
+          }
+        }
+      }
+    },
+    "Fällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due"
+          }
+        }
+      }
+    },
+    "Favorit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite"
+          }
+        }
+      }
+    },
+    "Favorit entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Favorite"
+          }
+        }
+      }
+    },
+    "Favoriten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        }
+      }
+    },
+    "Fehlgeschlagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        }
+      }
+    },
+    "Fertig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        }
+      }
+    },
+    "Filter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter"
+          }
+        }
+      }
+    },
+    "Fortsetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        }
+      }
+    },
+    "Foto (Texterkennung) …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo (Text Recognition)…"
+          }
+        }
+      }
+    },
+    "Frag deine Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Your Notes"
+          }
+        }
+      }
+    },
+    "Frag etwas zu deinen Notizen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask something about your notes…"
+          }
+        }
+      }
+    },
+    "Fragen zu allen Notizen stellen (⌘K)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask questions about all notes (⌘K)"
+          }
+        }
+      }
+    },
+    "Frei: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free: %@"
+          }
+        }
+      }
+    },
+    "Für Aufnahmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For recordings"
+          }
+        }
+      }
+    },
+    "Für das Transkript, direkt auf dem Gerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For the transcript, right on your device"
+          }
+        }
+      }
+    },
+    "Für diese Aufnahme gibt es noch kein Transkript." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no transcript for this recording yet."
+          }
+        }
+      }
+    },
+    "Für diese Filter gibt es keine Notizen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no notes for these filters."
+          }
+        }
+      }
+    },
+    "Für diese Notiz wurde noch keine Zusammenfassung erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No summary has been created for this note yet."
+          }
+        }
+      }
+    },
+    "Für Online-Meetings fragt macOS beim ersten Mitschnitt zusätzlich, ob NotifyAI Systemaudio aufnehmen darf." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For online meetings, macOS also asks the first time whether NotifyAI may record system audio."
+          }
+        }
+      }
+    },
+    "Für Online-Meetings: deine Stimme über das Mikrofon, die anderen Teilnehmenden direkt aus der App (z. B. Zoom, Teams, Discord)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For online meetings: your voice through the microphone, the other participants directly from the app (e.g. Zoom, Teams, Discord)."
+          }
+        }
+      }
+    },
+    "Geladen · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded · %@"
+          }
+        }
+      }
+    },
+    "Geladene Modelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded Models"
+          }
+        }
+      }
+    },
+    "Geladene Modelle löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Downloaded Models…"
+          }
+        }
+      }
+    },
+    "Geladene Modelle löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Downloaded Models?"
+          }
+        }
+      }
+    },
+    "Gerät: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device: %@"
+          }
+        }
+      }
+    },
+    "Gerätecode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Passcode"
+          }
+        }
+      }
+    },
+    "Geschwindigkeit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed"
+          }
+        }
+      }
+    },
+    "Gespräche dürfen nur mit Zustimmung aller Beteiligten aufgenommen werden. Die Aufnahme bleibt auf diesem Gerät." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversations may only be recorded with the consent of everyone involved. The recording stays on this device."
+          }
+        }
+      }
+    },
+    "Gestern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        }
+      }
+    },
+    "Gleiche Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same Week"
+          }
+        }
+      }
+    },
+    "Guter Kompromiss aus Genauigkeit und Geschwindigkeit auf dem iPhone." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A good balance of accuracy and speed on iPhone."
+          }
+        }
+      }
+    },
+    "Heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "Höchste Genauigkeit. Empfohlen für Mac und neuere iPhones (Pro-Modelle)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highest accuracy. Recommended for Mac and newer iPhones (Pro models)."
+          }
+        }
+      }
+    },
+    "Ich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Me"
+          }
+        }
+      }
+    },
+    "Ich habe %lld passende Notizen gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found %lld matching notes."
+          }
+        }
+      }
+    },
+    "Ich habe eine passende Notiz gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found one matching note."
+          }
+        }
+      }
+    },
+    "Im Dock für das Hauptfenster, in der Menüleiste für schnelle Aufnahmen – auch wenn das Fenster geschlossen ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the Dock for the main window, in the menu bar for quick recordings — even when the window is closed."
+          }
+        }
+      }
+    },
+    "Im Dock und in der Menüleiste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the Dock and Menu Bar"
+          }
+        }
+      }
+    },
+    "Import fehlgeschlagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Failed"
+          }
+        }
+      }
+    },
+    "Importe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imports"
+          }
+        }
+      }
+    },
+    "Importieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import"
+          }
+        }
+      }
+    },
+    "In den Einstellungen erlauben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow in Settings"
+          }
+        }
+      }
+    },
+    "In der Aufnahme wurde keine Sprache erkannt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speech was detected in the recording."
+          }
+        }
+      }
+    },
+    "In der Datei wurde kein Text gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No text was found in the file."
+          }
+        }
+      }
+    },
+    "In Geräte-Backups einschließen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include in Device Backups"
+          }
+        }
+      }
+    },
+    "In Warteschlange" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        }
+      }
+    },
+    "Inhaltlich passend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Similar content"
+          }
+        }
+      }
+    },
+    "Installiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        }
+      }
+    },
+    "Interview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interview"
+          }
+        }
+      }
+    },
+    "Jederzeit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any Time"
+          }
+        }
+      }
+    },
+    "Jetzt laden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Now"
+          }
+        }
+      }
+    },
+    "Jetzt laden (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Now (%@)"
+          }
+        }
+      }
+    },
+    "Kapitel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
+          }
+        }
+      }
+    },
+    "Kapitel %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %lld"
+          }
+        }
+      }
+    },
+    "Kein Transkript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Transcript"
+          }
+        }
+      }
+    },
+    "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No access to the microphone. Please allow access in System Settings."
+          }
+        }
+      }
+    },
+    "Keine Notiz ausgewählt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Note Selected"
+          }
+        }
+      }
+    },
+    "Keine Notiz erwähnt %@. Ich habe ohne diesen Filter gesucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No note mentions %@. I searched without this filter."
+          }
+        }
+      }
+    },
+    "Keine offenen Aufgaben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Open Tasks"
+          }
+        }
+      }
+    },
+    "Keine passenden Aufgaben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Matching Tasks"
+          }
+        }
+      }
+    },
+    "Keine Sprache an dieser Stelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speech at this point"
+          }
+        }
+      }
+    },
+    "Keine Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Summary"
+          }
+        }
+      }
+    },
+    "Kernpunkte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key Points"
+          }
+        }
+      }
+    },
+    "Kundengespräch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customer Conversation"
+          }
+        }
+      }
+    },
+    "Laden (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download (%@)"
+          }
+        }
+      }
+    },
+    "Lange Aufnahmen schon während der Aufnahme zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize long recordings while recording"
+          }
+        }
+      }
+    },
+    "Letzte %lld Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last %lld Days"
+          }
+        }
+      }
+    },
+    "Letzte 7 Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 7 Days"
+          }
+        }
+      }
+    },
+    "Letzte Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Week"
+          }
+        }
+      }
+    },
+    "Letzter Monat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Month"
+          }
+        }
+      }
+    },
+    "Letztes Jahr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Year"
+          }
+        }
+      }
+    },
+    "Live-Transkript anzeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Live Transcript"
+          }
+        }
+      }
+    },
+    "Live-Transkript nicht verfügbar: %@ Das Transkript wird nach der Aufnahme erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live transcript unavailable: %@ The transcript will be created after the recording."
+          }
+        }
+      }
+    },
+    "Live-Transkript während der Aufnahme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Transcript While Recording"
+          }
+        }
+      }
+    },
+    "Live-Transkript: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live transcript: %@"
+          }
+        }
+      }
+    },
+    "Los geht’s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let’s Go"
+          }
+        }
+      }
+    },
+    "Löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "Löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete…"
+          }
+        }
+      }
+    },
+    "Markiert bei %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marked at %@"
+          }
+        }
+      }
+    },
+    "Markierte Stellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marked Moments"
+          }
+        }
+      }
+    },
+    "Markierung bei %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marker at %@"
+          }
+        }
+      }
+    },
+    "Markierungen hervorheben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight Markers"
+          }
+        }
+      }
+    },
+    "Meeting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting"
+          }
+        }
+      }
+    },
+    "Mehr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "MetricKit-Berichte (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetricKit reports (%lld)"
+          }
+        }
+      }
+    },
+    "Mikrofon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
+          }
+        }
+      }
+    },
+    "Mikrofon + %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone + %@"
+          }
+        }
+      }
+    },
+    "Mikrofon + Systemton" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone + System Audio"
+          }
+        }
+      }
+    },
+    "Minimieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimize"
+          }
+        }
+      }
+    },
+    "Mit %@ entsperren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock with %@"
+          }
+        }
+      }
+    },
+    "Mit Apple Intelligence entstehen Überblick, Aufgaben und Entscheidungen ohne Cloud." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence creates an overview, tasks and decisions without the cloud."
+          }
+        }
+      }
+    },
+    "mit erledigten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "including completed"
+          }
+        }
+      }
+    },
+    "Mitlesen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow Along"
+          }
+        }
+      }
+    },
+    "Modell nicht gelöscht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model Not Deleted"
+          }
+        }
+      }
+    },
+    "Modelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Models"
+          }
+        }
+      }
+    },
+    "Modelle lassen sich jederzeit erneut laden. Laufende Aufnahmen und Transkriptionen müssen dafür abgeschlossen sein." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Models can be downloaded again at any time. Running recordings and transcriptions must be finished first."
+          }
+        }
+      }
+    },
+    "Modelle löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Models"
+          }
+        }
+      }
+    },
+    "Modelle werden einmalig von Hugging Face geladen und danach ausschließlich lokal ausgeführt. Deine Aufnahmen werden nie hochgeladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Models are downloaded once from Hugging Face and then run only locally. Your recordings are never uploaded."
+          }
+        }
+      }
+    },
+    "Neu transkribieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribe Again"
+          }
+        }
+      }
+    },
+    "Neu zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize Again"
+          }
+        }
+      }
+    },
+    "Neue Aufnahme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Recording"
+          }
+        }
+      }
+    },
+    "Neue Aufnahme …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Recording…"
+          }
+        }
+      }
+    },
+    "Neue Aufnahme starten (⇧⌘R)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a new recording (⇧⌘R)"
+          }
+        }
+      }
+    },
+    "Neue Unterhaltung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Conversation"
+          }
+        }
+      }
+    },
+    "Nicht gelöscht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Deleted"
+          }
+        }
+      }
+    },
+    "Nicht genügend freier Speicherplatz (%@ frei). Für eine Aufnahme werden mindestens %@ benötigt." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nicht genügend freier Speicherplatz (%1$@ frei). Für eine Aufnahme werden mindestens %2$@ benötigt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough free storage (%1$@ free). A recording needs at least %2$@."
+          }
+        }
+      }
+    },
+    "Nicht gespeichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Saved"
+          }
+        }
+      }
+    },
+    "nicht lesbar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not readable"
+          }
+        }
+      }
+    },
+    "Nimm Gespräche auf, lies sie als Transkript nach und erhalte eine Zusammenfassung mit Aufgaben und Entscheidungen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record conversations, read them as a transcript and get a summary with tasks and decisions."
+          }
+        }
+      }
+    },
+    "Nimm Zoom, Teams, Discord & Co. direkt am Mac auf. Deine Stimme und die der anderen werden getrennt beschriftet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Zoom, Teams, Discord and more right on your Mac. Your voice and the others’ are labeled separately."
+          }
+        }
+      }
+    },
+    "Nimmt auf, was im Raum gesprochen wird." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records what is said in the room."
+          }
+        }
+      }
+    },
+    "Nimmt nur den Ton von Apps auf, z. B. Webinare oder Videos. Das Mikrofon bleibt aus." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records only the audio of apps, e.g. webinars or videos. The microphone stays off."
+          }
+        }
+      }
+    },
+    "Noch kein Systemton empfangen. Läuft das Meeting schon? Falls ja, erlaube NotifyAI unter „Bildschirm- & Systemaudioaufnahme“ das Aufnehmen von Systemaudio." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No system audio received yet. Has the meeting started? If so, allow NotifyAI to record system audio under “Screen & System Audio Recording”."
+          }
+        }
+      }
+    },
+    "Noch keine Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Notes Yet"
+          }
+        }
+      }
+    },
+    "NotifyAI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI"
+          }
+        }
+      }
+    },
+    "NotifyAI – Diagnosebericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI – Diagnostic Report"
+          }
+        }
+      }
+    },
+    "NotifyAI beenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit NotifyAI"
+          }
+        }
+      }
+    },
+    "NotifyAI braucht das Mikrofon für Aufnahmen und die Spracherkennung für das Transkript." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI needs the microphone for recordings and speech recognition for the transcript."
+          }
+        }
+      }
+    },
+    "NotifyAI erscheint wie andere Apps im Dock und im App-Umschalter (⌘⇥). Aufnahmen startest du im Hauptfenster." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI appears in the Dock and the app switcher (⌘⇥) like other apps. You start recordings in the main window."
+          }
+        }
+      }
+    },
+    "NotifyAI ist gesperrt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI Is Locked"
+          }
+        }
+      }
+    },
+    "NotifyAI läuft unauffällig in der Menüleiste, ohne Dock-Symbol und ohne App-Menü. Das Hauptfenster öffnest du über „NotifyAI öffnen“ in der Menüleiste, beenden kannst du die App dort über ⏻." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI runs quietly in the menu bar, without a Dock icon or app menu. Open the main window with “Open NotifyAI” in the menu bar; quit the app there with ⏻."
+          }
+        }
+      }
+    },
+    "NotifyAI öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open NotifyAI"
+          }
+        }
+      }
+    },
+    "Notiz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        }
+      }
+    },
+    "Notiz an der Stelle öffnen, an der die Aufgabe genannt wurde" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the note where the task was mentioned"
+          }
+        }
+      }
+    },
+    "Notiz löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Note?"
+          }
+        }
+      }
+    },
+    "Notiz nicht gefunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note Not Found"
+          }
+        }
+      }
+    },
+    "Notiz öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Note"
+          }
+        }
+      }
+    },
+    "Notiz umbenennen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Note"
+          }
+        }
+      }
+    },
+    "Notizen fragen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Notes"
+          }
+        }
+      }
+    },
+    "Notizen werden für die Suche vorbereitet …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing notes for search…"
+          }
+        }
+      }
+    },
+    "Nur im Dock" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Only"
+          }
+        }
+      }
+    },
+    "Nur in der Menüleiste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu Bar Only"
+          }
+        }
+      }
+    },
+    "Nur Systemton" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Audio Only"
+          }
+        }
+      }
+    },
+    "Nur Zusammenfassung teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Summary Only"
+          }
+        }
+      }
+    },
+    "Offene Aufgaben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Tasks"
+          }
+        }
+      }
+    },
+    "Offene Fragen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Questions"
+          }
+        }
+      }
+    },
+    "Öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz an der Stelle, an der die Aufgabe genannt wurde" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note where the task was mentioned"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz an dieser Stelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note at this point"
+          }
+        }
+      }
+    },
+    "Ohne Termin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Due Date"
+          }
+        }
+      }
+    },
+    "Ohne Zuständige" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unassigned"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Online-Meetings mitschneiden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Online Meetings"
+          }
+        }
+      }
+    },
+    "Ordnet Abschnitte verschiedenen Stimmen zu. Funktioniert am besten bei deutlich unterschiedlichen Stimmen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assigns passages to different voices. Works best with clearly different voices."
+          }
+        }
+      }
+    },
+    "Passende Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching Notes"
+          }
+        }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
+          }
+        }
+      }
+    },
+    "Pause / Fortsetzen (⇧⌘P)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause / Resume (⇧⌘P)"
+          }
+        }
+      }
+    },
+    "Pausiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "PDF" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF"
+          }
+        }
+      }
+    },
+    "Person" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Person"
+          }
+        }
+      }
+    },
+    "Person: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Person: %@"
+          }
+        }
+      }
+    },
+    "Protokoll der laufenden Sitzung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log of the Current Session"
+          }
+        }
+      }
+    },
+    "Quelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source"
+          }
+        }
+      }
+    },
+    "Quelle bei %@ anhören" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen to the source at %@"
+          }
+        }
+      }
+    },
+    "Quellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
+          }
+        }
+      }
+    },
+    "Schließen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast and efficient. Text appears live; the system provides the language pack."
+          }
+        }
+      }
+    },
+    "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very accurate, even with technical terms. Requires a one-time model download; live text appears in sections."
+          }
+        }
+      }
+    },
+    "Sehr schnell, für klare Sprache in ruhiger Umgebung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very fast, for clear speech in a quiet environment."
+          }
+        }
+      }
+    },
+    "Senden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "Sichern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        }
+      }
+    },
+    "Sobald das Transkript fertig ist, wird die Zusammenfassung erstellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The summary will be created as soon as the transcript is ready."
+          }
+        }
+      }
+    },
+    "Später" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
+          }
+        }
+      }
+    },
+    "Speicher" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage"
+          }
+        }
+      }
+    },
+    "Speicher (RAM): %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory (RAM): %@"
+          }
+        }
+      }
+    },
+    "Spielt das Kapitel ab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays the chapter"
+          }
+        }
+      }
+    },
+    "Spielt die markierte Stelle ab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays the marked moment"
+          }
+        }
+      }
+    },
+    "Sprache" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        }
+      }
+    },
+    "Spracherkennung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech Recognition"
+          }
+        }
+      }
+    },
+    "Spracherkennung wird vorbereitet …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing speech recognition…"
+          }
+        }
+      }
+    },
+    "Spracherkennung, Sprache und das optionale Whisper-Modell kannst du jederzeit in den Einstellungen ändern." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change the speech recognition, language and optional Whisper model at any time in Settings."
+          }
+        }
+      }
+    },
+    "Spracherkennung: %@, Sprache: %@, Whisper-Modell: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Spracherkennung: %1$@, Sprache: %2$@, Whisper-Modell: %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition: %1$@, language: %2$@, Whisper model: %3$@"
+          }
+        }
+      }
+    },
+    "Sprachpaket" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language Pack"
+          }
+        }
+      }
+    },
+    "Sprecher %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker %lld"
+          }
+        }
+      }
+    },
+    "Sprecher erkennen (experimentell)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect Speakers (Experimental)"
+          }
+        }
+      }
+    },
+    "Sprecher nach Audioquelle trennen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate Speakers by Audio Source"
+          }
+        }
+      }
+    },
+    "Sprecher werden erkannt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifying Speakers"
+          }
+        }
+      }
+    },
+    "Sprechererkennung: %@, Ich/Andere aus Quelle: %@, Kapitel während der Aufnahme: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sprechererkennung: %1$@, Ich/Andere aus Quelle: %2$@, Kapitel während der Aufnahme: %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker detection: %1$@, Me/Others from source: %2$@, chapters while recording: %3$@"
+          }
+        }
+      }
+    },
+    "Sprich los – der Text erscheint hier." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start speaking — the text appears here."
+          }
+        }
+      }
+    },
+    "Starte eine Aufnahme oder importiere eine Audiodatei, ein PDF oder ein Foto." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a recording or import an audio file, a PDF or a photo."
+          }
+        }
+      }
+    },
+    "Stell Fragen in normaler Sprache, zum Beispiel zu Personen, Themen oder Zeiträumen. Die Antworten stammen nur aus deinen Notizen und nennen ihre Quellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask questions in everyday language, for example about people, topics or time periods. Answers come only from your notes and cite their sources."
+          }
+        }
+      }
+    },
+    "Stell Fragen über alle Aufnahmen, zum Beispiel zu Personen, Themen oder Zeiträumen. Jede Antwort nennt ihre Quellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask questions about all recordings, for example about people, topics or time periods. Every answer cites its sources."
+          }
+        }
+      }
+    },
+    "Stelle als wichtig markieren (⇧⌘M)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as Important (⇧⌘M)"
+          }
+        }
+      }
+    },
+    "Stelle im Transkript anhören" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen in the Transcript"
+          }
+        }
+      }
+    },
+    "Stelle markieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark Moment"
+          }
+        }
+      }
+    },
+    "Stromsparmodus: an" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low Power Mode: on"
+          }
+        }
+      }
+    },
+    "Stromsparmodus: aus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low Power Mode: off"
+          }
+        }
+      }
+    },
+    "Suchindex" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Index"
+          }
+        }
+      }
+    },
+    "Suchindex neu aufbauen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rebuild Search Index"
+          }
+        }
+      }
+    },
+    "Suchindex: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search index: %@"
+          }
+        }
+      }
+    },
+    "System: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System: %@"
+          }
+        }
+      }
+    },
+    "Systemton · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Audio · %@"
+          }
+        }
+      }
+    },
+    "Systemton kann auf diesem Gerät nicht aufgenommen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System audio cannot be recorded on this device."
+          }
+        }
+      }
+    },
+    "Systemton konnte nicht aufgenommen werden (%@, Fehler %d)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Systemton konnte nicht aufgenommen werden (%1$@, Fehler %2$d)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System audio could not be recorded (%1$@, error %2$d)."
+          }
+        }
+      }
+    },
+    "Systemton von %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System audio of %@"
+          }
+        }
+      }
+    },
+    "Tap anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create tap"
+          }
+        }
+      }
+    },
+    "Teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        }
+      }
+    },
+    "Teilnehmende (durch Komma getrennt)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participants (comma-separated)"
+          }
+        }
+      }
+    },
+    "Teilnehmende: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participants: %@"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        }
+      }
+    },
+    "Text kopieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Text"
+          }
+        }
+      }
+    },
+    "Thema: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic: %@"
+          }
+        }
+      }
+    },
+    "Themen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topics"
+          }
+        }
+      }
+    },
+    "Thermischer Zustand: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thermal state: %lld"
+          }
+        }
+      }
+    },
+    "Tipp: Mit Kopfhörern aufnehmen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: Record with headphones."
+          }
+        }
+      }
+    },
+    "Tipp: Nutze Kopfhörer. Über die Lautsprecher nimmt das Mikrofon die anderen Teilnehmenden ein zweites Mal auf." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: Use headphones. Through the speakers, the microphone records the other participants a second time."
+          }
+        }
+      }
+    },
+    "Tippe während der Aufnahme auf „Wichtig“. Die Stelle wird später im Transkript hervorgehoben." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap “Important” while recording. The moment will be highlighted in the transcript later."
+          }
+        }
+      }
+    },
+    "Titel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        }
+      }
+    },
+    "Titel (optional)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title (Optional)"
+          }
+        }
+      }
+    },
+    "Titel, Transkript, Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title, transcript, summary"
+          }
+        }
+      }
+    },
+    "Transkript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcript"
+          }
+        }
+      }
+    },
+    "Transkript folgt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcript Coming"
+          }
+        }
+      }
+    },
+    "Transkript und Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcript and summary"
+          }
+        }
+      }
+    },
+    "Transkript wird abgeschlossen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing transcript…"
+          }
+        }
+      }
+    },
+    "Transkription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription"
+          }
+        }
+      }
+    },
+    "Transkription & Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription & Summary"
+          }
+        }
+      }
+    },
+    "Überblick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overview"
+          }
+        }
+      }
+    },
+    "Überfällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overdue"
+          }
+        }
+      }
+    },
+    "Umbenennen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename…"
+          }
+        }
+      }
+    },
+    "Unbekannter Fehler." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown error."
+          }
+        }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
+    "Version: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version: %@"
+          }
+        }
+      }
+    },
+    "Verwandte Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related Notes"
+          }
+        }
+      }
+    },
+    "Verwerfen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        }
+      }
+    },
+    "Vorgestern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day Before Yesterday"
+          }
+        }
+      }
+    },
+    "Vorlesung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a note or start a new recording."
+          }
+        }
+      }
+    },
+    "Was wurde zuletzt entschieden?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What was decided most recently?"
+          }
+        }
+      }
+    },
+    "Weiter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Weitere passende Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Matching Notes"
+          }
+        }
+      }
+    },
+    "Welche Aufgaben habe ich diese Woche übernommen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which tasks did I take on this week?"
+          }
+        }
+      }
+    },
+    "Welche Fragen sind noch offen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which questions are still open?"
+          }
+        }
+      }
+    },
+    "Whisper %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper %@"
+          }
+        }
+      }
+    },
+    "Whisper schreibt abschnittsweise mit – der erste Text erscheint nach einer Sprechpause." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper transcribes in sections — the first text appears after a pause in speech."
+          }
+        }
+      }
+    },
+    "Whisper wird gerade für eine Aufnahme oder Transkription verwendet. Lösche das Modell, sobald sie abgeschlossen ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper is currently being used for a recording or transcription. Delete the model once it has finished."
+          }
+        }
+      }
+    },
+    "Whisper-Modell" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper Model"
+          }
+        }
+      }
+    },
+    "Whisper-Modell fehlt – bitte in den Einstellungen laden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper model missing — please download it in Settings."
+          }
+        }
+      }
+    },
+    "Whisper-Modelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper Models"
+          }
+        }
+      }
+    },
+    "Whisper-Modelle: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper models: %@"
+          }
+        }
+      }
+    },
+    "Wichtig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Important"
+          }
+        }
+      }
+    },
+    "Wichtiges markieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark What Matters"
+          }
+        }
+      }
+    },
+    "Wiedergabeposition" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback Position"
+          }
+        }
+      }
+    },
+    "Willkommen bei NotifyAI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to NotifyAI"
+          }
+        }
+      }
+    },
+    "Wird für dieses Gerät vorbereitet …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing for this device…"
+          }
+        }
+      }
+    },
+    "Wird geladen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading…"
+          }
+        }
+      }
+    },
+    "Wird gestartet …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting…"
+          }
+        }
+      }
+    },
+    "Wird importiert …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing…"
+          }
+        }
+      }
+    },
+    "Wird transkribiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribing"
+          }
+        }
+      }
+    },
+    "Wird zusammengefasst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarizing"
+          }
+        }
+      }
+    },
+    "Zeig mir alle Aufnahmen von letzter Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show me all recordings from last week"
+          }
+        }
+      }
+    },
+    "Zu Favoriten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Favorites"
+          }
+        }
+      }
+    },
+    "Zugriff erlauben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Access"
+          }
+        }
+      }
+    },
+    "Zuletzt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
+          }
+        }
+      }
+    },
+    "Zurück" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        }
+      }
+    },
+    "Zurücksetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        }
+      }
+    },
+    "Zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize"
+          }
+        }
+      }
+    },
+    "Zusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summary"
+          }
+        }
+      }
+    },
+    "Zusammenfassung auf dem Gerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summaries on Your Device"
+          }
+        }
+      }
+    },
+    "Zusammenfassung folgt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summary Coming"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

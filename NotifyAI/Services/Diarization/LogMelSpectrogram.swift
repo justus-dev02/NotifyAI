@@ -5,6 +5,7 @@
 
 import Accelerate
 import Foundation
+import NotifyAICore
 
 /// Computes log-mel filterbank energies, the standard short-time spectral representation
 /// used in speech processing.

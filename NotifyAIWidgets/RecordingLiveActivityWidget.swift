@@ -68,7 +68,7 @@ private struct LockScreenView: View {
                     Text(title)
                         .font(.headline)
                         .lineLimit(1)
-                    Text(state.isPaused ? "Aufnahme pausiert" : "Aufnahme läuft")
+                    Text(state.isPaused ? String(localized: "Aufnahme pausiert") : String(localized: "Aufnahme läuft"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -115,7 +115,7 @@ private struct RecordingButtons: View {
     var body: some View {
         HStack(spacing: 12) {
             Button(intent: ToggleRecordingPauseIntent()) {
-                Label(isPaused ? "Fortsetzen" : "Pause", systemImage: isPaused ? "play.fill" : "pause.fill")
+                Label(isPaused ? String(localized: "Fortsetzen") : String(localized: "Pause"), systemImage: isPaused ? "play.fill" : "pause.fill")
                     .frame(maxWidth: .infinity)
             }
             .tint(.gray)

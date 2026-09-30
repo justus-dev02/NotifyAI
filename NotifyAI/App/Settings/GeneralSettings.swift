@@ -16,9 +16,9 @@ enum AppPresence: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .dock: "Nur im Dock"
-        case .dockAndMenuBar: "Im Dock und in der Menüleiste"
-        case .menuBar: "Nur in der Menüleiste"
+        case .dock: String(localized: "Nur im Dock")
+        case .dockAndMenuBar: String(localized: "Im Dock und in der Menüleiste")
+        case .menuBar: String(localized: "Nur in der Menüleiste")
         }
     }
 

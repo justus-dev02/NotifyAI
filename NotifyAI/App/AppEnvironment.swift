@@ -25,22 +25,36 @@ final class AppEnvironment {
     let importer: ImportService
     let knowledge: KnowledgeIndexService
     let chat: NoteChatModel
+    let notices: UserNotices
+    let tasks: TaskBoard
     #if os(iOS)
     let backgroundScheduler: BackgroundProcessingScheduler
+    #else
+    let audioEnvironment: AudioEnvironmentMonitor
     #endif
     private var hasStarted = false
 
     init(settings: AppSettings = AppSettings(), locations: StorageLocations, inMemory: Bool = false) throws {
         self.settings = settings
         navigation = AppNavigation()
+        notices = UserNotices()
         audioSession = AudioSessionController()
         store = try NoteStore(locations: locations, inMemory: inMemory)
+        store.onFailure = { [notices] message in
+            notices.post(UserNotice(title: String(localized: "Nicht gespeichert"), message: message))
+        }
+        tasks = TaskBoard(store: store)
+        #if os(macOS)
+        audioEnvironment = AudioEnvironmentMonitor()
+        #endif
 
         let modelStore = WhisperModelStore(downloadBase: locations.whisperModelsDirectory)
         let whisperEngine = WhisperEngine(modelStore: modelStore)
         let transcription = TranscriptionService(appleSpeech: AppleSpeechEngine(), whisper: whisperEngine)
 
         whisperModels = WhisperModelManager(store: modelStore) {
+            await whisperEngine.isInUse
+        } onModelRemoved: {
             await whisperEngine.unloadModel()
         }
         let embedder = SentenceEmbedder()
@@ -73,6 +87,7 @@ final class AppEnvironment {
             transcription: transcription,
             processing: processing,
             audioSession: audioSession,
+            notices: notices,
             liveChapters: LiveChapterSummarizer(summarization: summarization, store: digestStore)
         )
         importer = ImportService(store: store, settings: settings, processing: processing)
@@ -126,25 +141,26 @@ final class AppEnvironment {
 
     /// The production environment. Unit and UI tests get an isolated in-memory store and
     /// never touch the user's data.
-    static func makeDefault() -> AppEnvironment {
+    /// - Throws: When the database cannot be opened; `AppLaunch` then offers a recovery.
+    static func makeDefault() throws -> AppEnvironment {
         let processInfo = ProcessInfo.processInfo
         let isRunningUnitTests = processInfo.environment["XCTestConfigurationFilePath"] != nil
         let isRunningUITests = processInfo.arguments.contains(uiTestingArgument)
-        do {
-            if isRunningUnitTests || isRunningUITests {
-                let suiteName = "NotifyAI-Testing"
-                let defaults = UserDefaults(suiteName: suiteName) ?? .standard
-                defaults.removePersistentDomain(forName: suiteName)
-                let settings = AppSettings(defaults: defaults)
-                settings.general.hasCompletedOnboarding = isRunningUITests
-                return try AppEnvironment(settings: settings, locations: try StorageLocations.temporary(), inMemory: true)
+        if isRunningUnitTests || isRunningUITests {
+            let suiteName = "NotifyAI-Testing"
+            let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+            defaults.removePersistentDomain(forName: suiteName)
+            let settings = AppSettings(defaults: defaults)
+            settings.general.hasCompletedOnboarding = isRunningUITests
+            let environment = try AppEnvironment(settings: settings, locations: try StorageLocations.temporary(), inMemory: true)
+            #if DEBUG
+            if processInfo.arguments.contains(UITestSampleData.argument) {
+                try UITestSampleData.insert(into: environment.store)
             }
-            return try AppEnvironment(locations: try StorageLocations.applicationSupport())
-        } catch {
-            // Without a store the app cannot do anything useful; fail loudly and early.
-            Logger.persistence.fault("Creating the app environment failed: \(error.localizedDescription, privacy: .public)")
-            fatalError("NotifyAI could not open its database: \(error)")
+            #endif
+            return environment
         }
+        return try AppEnvironment(locations: try StorageLocations.applicationSupport())
     }
 
     func applyBackupPreference() {
@@ -175,6 +191,7 @@ final class AppEnvironment {
         hasStarted = true
         processing.resumePendingWork()
         knowledge.scheduleRefresh()
+        tasks.startObserving()
         await whisperModels.refresh()
     }
 }
@@ -191,6 +208,11 @@ extension View {
             .environment(app.appLock)
             .environment(app.knowledge)
             .environment(app.chat)
+            .environment(app.notices)
+            .environment(app.tasks)
+            #if os(macOS)
+            .environment(app.audioEnvironment)
+            #endif
             .environment(\.appEnvironment, app)
             .modelContainer(app.store.container)
     }

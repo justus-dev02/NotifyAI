@@ -6,6 +6,7 @@
 import Accelerate
 import AVFoundation
 import Foundation
+import NotifyAICore
 
 /// A time span attributed to one speaker.
 struct SpeakerTurn: Equatable, Sendable {
@@ -32,6 +33,11 @@ struct SpeakerTurn: Equatable, Sendable {
 /// than neural speaker embeddings, and the threshold has not been calibrated on real
 /// recordings. The feature is therefore opt-in and labelled experimental in the UI.
 struct SpeakerDiarizer: Sendable {
+    /// "Sprecher 1", "Sprecher 2" …, in the language of the app.
+    static func speakerLabel(_ number: Int) -> String {
+        String(localized: "Sprecher \(number)")
+    }
+
     struct Configuration: Sendable {
         var windowDuration: TimeInterval = 1.5
         var minimumHop: TimeInterval = 0.75
@@ -138,7 +144,7 @@ struct SpeakerDiarizer: Sendable {
             }
             var updated = segment
             if let best = overlapBySpeaker.max(by: { $0.value < $1.value }), best.value > 0.1 {
-                updated.speaker = "Sprecher \(best.key + 1)"
+                updated.speaker = Self.speakerLabel(best.key + 1)
             }
             return updated
         }

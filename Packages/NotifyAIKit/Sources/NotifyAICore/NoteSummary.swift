@@ -1,39 +1,39 @@
 //
 //  NoteSummary.swift
-//  NotifyAI
+//  NotifyAICore
 //
 
 import Foundation
 
 /// The structured result of summarizing a note.
-struct NoteSummary: Codable, Hashable, Sendable {
+public struct NoteSummary: Codable, Hashable, Sendable {
     /// Which technique produced the summary. Shown in the UI so users know what to expect.
-    enum Source: String, Codable, Sendable {
+    public enum Source: String, Codable, Sendable {
         /// Apple's on-device foundation model (Apple Intelligence).
         case appleIntelligence
         /// Sentence extraction without a language model (fallback).
         case extractive
     }
 
-    var suggestedTitle: String?
-    var overview: String
-    var keyPoints: [String]
-    var decisions: [String]
-    var actionItems: [ActionItem]
-    var openQuestions: [String]
-    var topics: [SummaryTopic]
-    var source: Source
+    public var suggestedTitle: String?
+    public var overview: String
+    public var keyPoints: [String]
+    public var decisions: [String]
+    public var actionItems: [ActionItem]
+    public var openQuestions: [String]
+    public var topics: [SummaryTopic]
+    public var source: Source
     /// Why the language model was not used, if `source` is `.extractive`.
-    var fallbackReason: String?
-    var createdAt: Date
+    public var fallbackReason: String?
+    public var createdAt: Date
     /// One to three keywords that identify the content; used for automatic titles and search.
-    var keywords: [String]
+    public var keywords: [String]
     /// Transcript position (seconds) that supports a key point, decision, task or question, by item text.
-    var sourceTimes: [String: TimeInterval]
+    public var sourceTimes: [String: TimeInterval]
     /// Chapters of a long recording, empty for short ones.
-    var chapters: [SummaryChapter]
+    public var chapters: [SummaryChapter]
 
-    init(
+    public init(
         suggestedTitle: String? = nil,
         overview: String,
         keyPoints: [String] = [],
@@ -69,7 +69,7 @@ struct NoteSummary: Codable, Hashable, Sendable {
     }
 
     /// Summaries saved before `keywords`, `sourceTimes` and `chapters` existed decode with empty values.
-    init(from decoder: any Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         suggestedTitle = try container.decodeIfPresent(String.self, forKey: .suggestedTitle)
         overview = try container.decode(String.self, forKey: .overview)
@@ -87,16 +87,16 @@ struct NoteSummary: Codable, Hashable, Sendable {
     }
 }
 
-struct ActionItem: Identifiable, Codable, Hashable, Sendable {
-    var id: UUID
-    var task: String
-    var owner: String?
+public struct ActionItem: Identifiable, Codable, Hashable, Sendable {
+    public var id: UUID
+    public var task: String
+    public var owner: String?
     /// Deadline as it was mentioned ("bis Freitag"). Kept as text because spoken
     /// deadlines are often relative or vague.
-    var due: String?
-    var isDone: Bool
+    public var due: String?
+    public var isDone: Bool
 
-    init(id: UUID = UUID(), task: String, owner: String? = nil, due: String? = nil, isDone: Bool = false) {
+    public init(id: UUID = UUID(), task: String, owner: String? = nil, due: String? = nil, isDone: Bool = false) {
         self.id = id
         self.task = task
         self.owner = owner
@@ -105,12 +105,12 @@ struct ActionItem: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct SummaryTopic: Identifiable, Codable, Hashable, Sendable {
-    var id: UUID
-    var title: String
-    var points: [String]
+public struct SummaryTopic: Identifiable, Codable, Hashable, Sendable {
+    public var id: UUID
+    public var title: String
+    public var points: [String]
 
-    init(id: UUID = UUID(), title: String, points: [String]) {
+    public init(id: UUID = UUID(), title: String, points: [String]) {
         self.id = id
         self.title = title
         self.points = points

@@ -5,6 +5,7 @@
 
 import Foundation
 import FoundationModels
+import NotifyAICore
 import OSLog
 
 /// Everything a summarizer needs to know about a note.
@@ -57,7 +58,7 @@ extension Summarizer {
         request.markedPassages = chapter.markedPassages
         let summary = try await summarize(request) { _ in }
         return ChapterDigest(
-            title: summary.suggestedTitle ?? summary.topics.first?.title ?? summary.keywords.first ?? "Kapitel \(chapter.number)",
+            title: summary.suggestedTitle ?? summary.topics.first?.title ?? summary.keywords.first ?? String(localized: "Kapitel \(chapter.number)"),
             overview: summary.overview,
             keyPoints: summary.keyPoints,
             decisions: summary.decisions,
@@ -116,17 +117,17 @@ enum LanguageModelAvailability: Equatable, Sendable {
         switch model.availability {
         case .available:
             guard model.supportsLocale(language.locale) else {
-                return .unavailable(reason: "Apple Intelligence unterstützt \(language.displayName) noch nicht.")
+                return .unavailable(reason: String(localized: "Apple Intelligence unterstützt \(language.displayName) noch nicht."))
             }
             return .available
         case .unavailable(.deviceNotEligible):
-            return .unavailable(reason: "Dieses Gerät unterstützt Apple Intelligence nicht.")
+            return .unavailable(reason: String(localized: "Dieses Gerät unterstützt Apple Intelligence nicht."))
         case .unavailable(.appleIntelligenceNotEnabled):
-            return .unavailable(reason: "Apple Intelligence ist in den Systemeinstellungen deaktiviert.")
+            return .unavailable(reason: String(localized: "Apple Intelligence ist in den Systemeinstellungen deaktiviert."))
         case .unavailable(.modelNotReady):
-            return .unavailable(reason: "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut.")
+            return .unavailable(reason: String(localized: "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut."))
         case .unavailable:
-            return .unavailable(reason: "Apple Intelligence ist derzeit nicht verfügbar.")
+            return .unavailable(reason: String(localized: "Apple Intelligence ist derzeit nicht verfügbar."))
         }
     }
 }
@@ -198,7 +199,7 @@ struct SummarizationService: Sendable {
                     digest = try await self.digest(chapter)
                 } catch SummarizationError.emptyInput {
                     // A chapter without speech (a long break) must not fail the whole summary.
-                    digest = ChapterDigest(title: "Kapitel \(chapter.number)", overview: "", source: expectedSource)
+                    digest = ChapterDigest(title: String(localized: "Kapitel \(chapter.number)"), overview: "", source: expectedSource)
                 }
                 await store.save(digest, noteID: noteID, key: key)
             }
@@ -218,7 +219,7 @@ struct SummarizationService: Sendable {
             } catch {
                 Logger.summarization.error("Combining chapters failed: \(error.localizedDescription, privacy: .public)")
                 summary = ChapterMerger.merge(timed)
-                summary.fallbackReason = "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt."
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt.")
             }
         } else {
             summary = try await fallback.combine(timed, request: request, progress: progress)
@@ -243,7 +244,7 @@ struct SummarizationService: Sendable {
             } catch {
                 Logger.summarization.error("Language model summary failed: \(error.localizedDescription, privacy: .public)")
                 var summary = try await fallback.summarize(request, progress: progress)
-                summary.fallbackReason = "Apple Intelligence konnte diesen Text nicht zusammenfassen."
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte diesen Text nicht zusammenfassen.")
                 return summary
             }
         case .unavailable(let reason):

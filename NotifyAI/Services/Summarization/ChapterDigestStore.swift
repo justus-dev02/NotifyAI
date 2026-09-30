@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 import OSLog
 
 /// Stores chapter digests while a long summary is being made.

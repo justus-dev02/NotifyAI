@@ -144,8 +144,12 @@ enum TextAnalysis {
 
     /// Labels added by speaker attribution ("Ich", "Andere", "Sprecher 2") are not names.
     static func isSpeakerLabel(_ text: String) -> Bool {
+        // Labels are written in the language of the app at the time of the recording.
         let folded = fold(text)
-        return folded == "ich" || folded == "andere" || folded.hasPrefix("sprecher")
+        let localizedLabels = [SourceSpeakerAttribution.userLabel, SourceSpeakerAttribution.defaultOthersLabel].map(fold)
+        let speakerPrefix = fold(SpeakerDiarizer.speakerLabel(1)).split(separator: " ").first.map(String.init) ?? "sprecher"
+        return ["ich", "andere", "me", "others"].contains(folded) || localizedLabels.contains(folded)
+            || folded.hasPrefix("sprecher") || folded.hasPrefix("speaker") || folded.hasPrefix(speakerPrefix)
     }
 
     /// Nouns that occur in almost every conversation and say nothing about its subject.

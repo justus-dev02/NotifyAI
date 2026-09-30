@@ -5,10 +5,15 @@
 
 #if os(macOS)
 import AppKit
+import DesignSystem
+import NotifyAICore
 import SwiftData
 import SwiftUI
 
 /// The icon in the menu bar. Shows the elapsed time while recording.
+///
+/// Reads only `elapsedSeconds`, which changes once per second: the menu bar item is
+/// re-rendered once per second, not with every level update.
 struct MenuBarLabel: View {
     let recording: RecordingController
 
@@ -16,7 +21,7 @@ struct MenuBarLabel: View {
         if recording.isActive {
             HStack(spacing: 4) {
                 Image(systemName: recording.phase == .paused ? "pause.circle.fill" : "record.circle.fill")
-                Text(TimeFormatting.timestamp(recording.meter.elapsed))
+                Text(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))
                     .monospacedDigit()
             }
         } else {
@@ -82,11 +87,10 @@ struct MenuBarPanel: View {
     private var activeRecording: some View {
         VStack(spacing: Theme.Spacing.medium) {
             HStack(alignment: .center) {
-                Text(TimeFormatting.timestamp(recording.meter.elapsed))
-                    .font(.system(size: 30, weight: .light, design: .rounded).monospacedDigit())
-                    .contentTransition(.numericText())
+                RecordingElapsedTime()
+                    .font(.system(size: 30, weight: .light, design: .rounded))
                 Spacer()
-                LevelMeter(levels: Array(recording.meter.levels.suffix(20)), isActive: recording.phase == .recording)
+                RecordingLevelMeter(source: .main, barCount: 20)
                     .frame(width: 120, height: 28)
             }
 
@@ -98,7 +102,7 @@ struct MenuBarPanel: View {
 
             SystemAudioStatus(isCompact: true)
 
-            LiveTranscriptPanel(lineLimit: 8)
+            LiveTranscriptPanel(recentSegmentLimit: 12)
                 .frame(height: 140)
 
             if recording.phase == .finishing {
@@ -151,6 +155,7 @@ private struct QuickStartForm: View {
     @Environment(RecordingController.self) private var recording
     @Environment(AppSettings.self) private var settings
     @Environment(WhisperModelManager.self) private var whisperModels
+    @Environment(AudioEnvironmentMonitor.self) private var audioEnvironment
 
     var body: some View {
         @Bindable var recording = recording
@@ -167,7 +172,7 @@ private struct QuickStartForm: View {
 
             AudioSourceRows()
 
-            if settings.recording.audioSource == .microphoneAndSystemAudio, CoreAudioObject.defaultOutputIsLoudspeaker() {
+            if settings.recording.audioSource == .microphoneAndSystemAudio, audioEnvironment.isLoudspeaker {
                 Label("Tipp: Mit Kopfhörern aufnehmen.", systemImage: "headphones")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -205,6 +210,7 @@ private struct QuickStartForm: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
         }
+        .observesAudioEnvironment(.output)
     }
 
     private var canStart: Bool {
@@ -214,7 +220,7 @@ private struct QuickStartForm: View {
     private var sourceSummary: String {
         switch settings.recording.audioSource {
         case .microphone: RecordingAudioSource.microphone.title
-        case .microphoneAndSystemAudio: "Mikrofon + \(settings.recording.systemAudioTarget.displayName)"
+        case .microphoneAndSystemAudio: String(localized: "Mikrofon + \(settings.recording.systemAudioTarget.displayName)")
         case .systemAudio: settings.recording.systemAudioTarget.displayName
         }
     }
@@ -272,18 +278,17 @@ private struct RecentNotesSection: View {
 
 /// Menu bar commands of the main window.
 struct AppCommands: Commands {
-    let navigation: AppNavigation
-    let recording: RecordingController
+    let launch: AppLaunch
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("Neue Aufnahme …") {
                 openWindow(id: SceneID.main)
-                navigation.isRecorderPresented = true
+                launch.environment?.navigation.isRecorderPresented = true
             }
             .keyboardShortcut("r", modifiers: [.command, .shift])
-            .disabled(recording.isActive)
+            .disabled(launch.environment?.recording.isActive ?? true)
         }
     }
 }

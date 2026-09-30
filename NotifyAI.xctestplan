@@ -1,0 +1,55 @@
+{
+  "configurations" : [
+    {
+      "id" : "8D6D3E52-6B1C-4C9A-9A55-2B7C1A0E6F01",
+      "name" : "Deutsch (Quellsprache)",
+      "options" : {
+        "language" : "de",
+        "region" : "DE"
+      }
+    },
+    {
+      "id" : "8D6D3E52-6B1C-4C9A-9A55-2B7C1A0E6F02",
+      "name" : "English",
+      "options" : {
+        "language" : "en",
+        "region" : "US"
+      },
+      "enabled" : false
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:NotifyAI.xcodeproj",
+          "identifier" : "275D60582E6F188200EB7BA5",
+          "name" : "NotifyAI"
+        }
+      ]
+    },
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:NotifyAI.xcodeproj",
+      "identifier" : "275D60582E6F188200EB7BA5",
+      "name" : "NotifyAI"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:NotifyAI.xcodeproj",
+        "identifier" : "275D606A2E6F188300EB7BA5",
+        "name" : "NotifyAITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:NotifyAI.xcodeproj",
+        "identifier" : "275D60742E6F188300EB7BA5",
+        "name" : "NotifyAIUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

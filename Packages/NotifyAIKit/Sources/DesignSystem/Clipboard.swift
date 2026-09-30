@@ -1,6 +1,6 @@
 //
 //  Clipboard.swift
-//  NotifyAI
+//  DesignSystem
 //
 
 #if os(iOS)
@@ -9,8 +9,8 @@ import UIKit
 import AppKit
 #endif
 
-enum Clipboard {
-    static func copy(_ text: String) {
+public enum Clipboard {
+    public static func copy(_ text: String) {
         #if os(iOS)
         UIPasteboard.general.string = text
         #else

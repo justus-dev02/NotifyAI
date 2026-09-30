@@ -10,8 +10,11 @@ import Synchronization
 
 /// A unit-length vector that describes the meaning of a text.
 ///
-/// Stored as raw Float32 bytes: a 512-dimensional vector takes 2 KB instead of the ~10 KB a
-/// JSON number array would need.
+/// Stored as raw half-precision (Float16) bytes: a 512-dimensional vector takes 1 KB instead
+/// of 2 KB as Float32 or ~10 KB as a JSON number array. Half precision (about three
+/// significant digits) changes cosine similarities by less than 0.001, far below the
+/// differences that decide a ranking. In memory the values stay Float32 for vDSP.
+/// The conversion uses vImage, which also works on Intel Macs (Swift's `Float16` does not).
 struct EmbeddingVector: Codable, Hashable, Sendable {
     let values: [Float]
 
@@ -43,12 +46,65 @@ struct EmbeddingVector: Codable, Hashable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let data = try decoder.singleValueContainer().decode(Data.self)
-        values = data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
+        guard let values = Self.decodeHalfPrecision(data) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Invalid Float16 vector"))
+        }
+        self.values = values
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(values.withUnsafeBufferPointer { Data(buffer: $0) })
+        try container.encode(Self.encodeHalfPrecision(values))
+    }
+
+    /// Float32 → Float16 bytes.
+    static func encodeHalfPrecision(_ values: [Float]) -> Data {
+        var output = Data(count: values.count * MemoryLayout<UInt16>.size)
+        guard !values.isEmpty else { return output }
+        values.withUnsafeBufferPointer { source in
+            output.withUnsafeMutableBytes { destination in
+                var sourceBuffer = vImage_Buffer(
+                    data: UnsafeMutableRawPointer(mutating: source.baseAddress),
+                    height: 1,
+                    width: vImagePixelCount(values.count),
+                    rowBytes: values.count * MemoryLayout<Float>.size
+                )
+                var destinationBuffer = vImage_Buffer(
+                    data: destination.baseAddress,
+                    height: 1,
+                    width: vImagePixelCount(values.count),
+                    rowBytes: values.count * MemoryLayout<UInt16>.size
+                )
+                vImageConvert_PlanarFtoPlanar16F(&sourceBuffer, &destinationBuffer, vImage_Flags(kvImageNoFlags))
+            }
+        }
+        return output
+    }
+
+    /// Float16 bytes → Float32; `nil` if the data is not a whole number of Float16 values.
+    static func decodeHalfPrecision(_ data: Data) -> [Float]? {
+        guard data.count % MemoryLayout<UInt16>.size == 0 else { return nil }
+        let count = data.count / MemoryLayout<UInt16>.size
+        var values = [Float](repeating: 0, count: count)
+        guard count > 0 else { return values }
+        data.withUnsafeBytes { source in
+            values.withUnsafeMutableBufferPointer { destination in
+                var sourceBuffer = vImage_Buffer(
+                    data: UnsafeMutableRawPointer(mutating: source.baseAddress),
+                    height: 1,
+                    width: vImagePixelCount(count),
+                    rowBytes: count * MemoryLayout<UInt16>.size
+                )
+                var destinationBuffer = vImage_Buffer(
+                    data: destination.baseAddress,
+                    height: 1,
+                    width: vImagePixelCount(count),
+                    rowBytes: count * MemoryLayout<Float>.size
+                )
+                vImageConvert_Planar16FtoPlanarF(&sourceBuffer, &destinationBuffer, vImage_Flags(kvImageNoFlags))
+            }
+        }
+        return values
     }
 }
 

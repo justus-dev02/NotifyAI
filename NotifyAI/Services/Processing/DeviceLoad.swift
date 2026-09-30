@@ -20,20 +20,35 @@ enum DeviceLoad {
         return info.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue || info.isLowPowerModeEnabled
     }
 
-    /// Waits while the device is hot, checking every `interval`, but never longer than
-    /// `maximumWait`: the work has to finish eventually.
-    static func waitWhileHot(
-        interval: Duration = .seconds(10),
-        maximumWait: Duration = .seconds(120)
-    ) async {
-        var waited = Duration.zero
-        while ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue,
-              waited < maximumWait, !Task.isCancelled {
-            if waited == .zero {
-                Logger.processing.info("Device is hot, pausing processing")
+    private static var isHot: Bool {
+        ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
+    }
+
+    /// Waits while the device is hot, but never longer than `maximumWait`: the work has to
+    /// finish eventually.
+    ///
+    /// Event-driven: the task sleeps until the system reports a thermal state change
+    /// (`thermalStateDidChangeNotification`) instead of waking up to poll.
+    static func waitWhileHot(maximumWait: Duration = .seconds(120)) async {
+        guard isHot, !Task.isCancelled else { return }
+        Logger.processing.info("Device is hot, pausing processing")
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                let changes = NotificationCenter.default.notifications(named: ProcessInfo.thermalStateDidChangeNotification)
+                    .map { _ in () }
+                // The state may have changed between the check above and subscribing.
+                guard isHot else { return }
+                for await _ in changes where !isHot {
+                    return
+                }
             }
-            try? await Task.sleep(for: interval)
-            waited += interval
+            group.addTask {
+                try? await Task.sleep(for: maximumWait)
+            }
+            // Whichever finishes first (cooled down, timeout or cancellation) ends the wait.
+            await group.next()
+            group.cancelAll()
         }
+        Logger.processing.info("Resuming processing (thermal state \(ProcessInfo.processInfo.thermalState.rawValue, privacy: .public))")
     }
 }

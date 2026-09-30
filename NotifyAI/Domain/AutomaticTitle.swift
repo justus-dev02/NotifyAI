@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// Titles for recordings without a user-defined title: one to three keywords from the
 /// conversation plus the recording date, e.g. "Budget, Website-Relaunch – 29. Sept. 2026".

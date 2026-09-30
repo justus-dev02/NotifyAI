@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// Finds the transcript position that supports each key point, decision, task and open
 /// question of a summary, so the user can check it with one tap.

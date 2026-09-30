@@ -5,6 +5,7 @@
 
 import AVFoundation
 import Foundation
+import NotifyAICore
 import PDFKit
 import UniformTypeIdentifiers
 import Vision
@@ -17,10 +18,10 @@ enum ImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedType: "Dieser Dateityp wird nicht unterstützt."
-        case .accessDenied: "Auf die Datei konnte nicht zugegriffen werden."
-        case .noTextFound: "In der Datei wurde kein Text gefunden."
-        case .unreadableFile: "Die Datei konnte nicht gelesen werden."
+        case .unsupportedType: String(localized: "Dieser Dateityp wird nicht unterstützt.")
+        case .accessDenied: String(localized: "Auf die Datei konnte nicht zugegriffen werden.")
+        case .noTextFound: String(localized: "In der Datei wurde kein Text gefunden.")
+        case .unreadableFile: String(localized: "Die Datei konnte nicht gelesen werden.")
         }
     }
 }

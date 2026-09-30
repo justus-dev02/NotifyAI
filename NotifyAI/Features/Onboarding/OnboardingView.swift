@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import DesignSystem
 import SwiftUI
 
 /// First-launch introduction: what the app does, permissions and engine status.
@@ -151,7 +152,7 @@ struct OnboardingView: View {
                 .buttonStyle(.bordered)
             }
             Spacer()
-            Button(step == .intelligence ? "Los geht’s" : "Weiter") {
+            Button(step == .intelligence ? String(localized: "Los geht’s") : String(localized: "Weiter")) {
                 if let next = Step(rawValue: step.rawValue + 1) {
                     step = next
                 } else {
@@ -165,7 +166,7 @@ struct OnboardingView: View {
         .padding(Theme.Spacing.large)
     }
 
-    private func header(_ systemImage: String, _ title: String, _ subtitle: String) -> some View {
+    private func header(_ systemImage: String, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey) -> some View {
         VStack(spacing: Theme.Spacing.medium) {
             Image(systemName: systemImage)
                 .font(.system(size: 56))
@@ -180,7 +181,7 @@ struct OnboardingView: View {
         .padding(.top, Theme.Spacing.large)
     }
 
-    private func feature(_ systemImage: String, _ title: String, _ text: String) -> some View {
+    private func feature(_ systemImage: String, _ title: LocalizedStringKey, _ text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: Theme.Spacing.medium) {
             Image(systemName: systemImage)
                 .font(.title2)
@@ -194,8 +195,8 @@ struct OnboardingView: View {
     }
 
     private func permissionRow(
-        title: String,
-        detail: String,
+        title: LocalizedStringKey,
+        detail: LocalizedStringKey,
         systemImage: String,
         state: PermissionState,
         request: @escaping () async -> Void

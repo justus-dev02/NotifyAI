@@ -17,19 +17,26 @@ struct NoteProcessingPipeline {
     let summary: SummaryStep
 
     func run(_ note: Note, options: ProcessingOptions, context: ProcessingContext) async throws {
+        let signposter = Signposts.processing
         if transcription.needsToRun(for: note, options: options) {
+            let interval = signposter.beginInterval("Transcribe file", "\(note.duration, format: .fixed(precision: 0)) s")
+            defer { signposter.endInterval("Transcribe file", interval) }
             try await transcription.run(note, context: context)
         }
 
-        guard note.kind.hasAudio ? note.hasTranscript : !note.bodyText.isEmpty else {
+        guard note.kind.hasAudio ? note.hasTranscript : note.hasText else {
             throw ProcessingError.noSpeechDetected
         }
 
         if speakers.needsToRun(for: note, options: options) {
+            let interval = signposter.beginInterval("Identify speakers")
+            defer { signposter.endInterval("Identify speakers", interval) }
             try await speakers.run(note, context: context)
         }
 
         if summary.needsToRun(for: note, options: options) {
+            let interval = signposter.beginInterval("Summarize")
+            defer { signposter.endInterval("Summarize", interval) }
             try await summary.run(note, options: options, context: context)
         }
 

@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// Shows whether the selected Whisper model is available and offers the download.
@@ -42,6 +44,46 @@ struct WhisperModelStatusRow: View {
     }
 }
 
+/// A level meter of the running recording. It registers with the controller while it is
+/// on screen, so levels are only published ten times per second when someone can see them.
+struct RecordingLevelMeter: View {
+    enum Source {
+        /// The microphone, or the system audio when only system audio is recorded.
+        case main
+        /// The system audio next to the microphone.
+        case system
+    }
+
+    let source: Source
+    /// Shows only the most recent levels, for narrow meters.
+    var barCount: Int?
+    @Environment(RecordingController.self) private var recording
+    @State private var id = UUID().uuidString
+
+    var body: some View {
+        let levels = source == .main ? recording.meter.levels : recording.meter.systemLevels
+        LevelMeter(
+            levels: barCount.map { Array(levels.suffix($0)) } ?? levels,
+            isActive: recording.phase == .recording
+        )
+        .onScreenVisibilityChange { visible in
+            recording.setMeterVisible(visible, id: id)
+        }
+    }
+}
+
+/// The recorded time, updated once per second.
+struct RecordingElapsedTime: View {
+    @Environment(RecordingController.self) private var recording
+
+    var body: some View {
+        Text(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .accessibilityLabel("Aufnahmedauer \(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))")
+    }
+}
+
 /// "● Aufnahme" / "Pausiert" indicator.
 struct RecordingStatusPill: View {
     @Environment(RecordingController.self) private var recording
@@ -53,7 +95,7 @@ struct RecordingStatusPill: View {
                 .font(.system(size: 8))
                 .foregroundStyle(isPaused ? Color.secondary : Theme.recording)
                 .symbolEffect(.pulse, isActive: !isPaused)
-            Text(isPaused ? "Pausiert" : "Aufnahme")
+            Text(isPaused ? String(localized: "Pausiert") : String(localized: "Aufnahme"))
                 .font(.caption.weight(.semibold))
                 .textCase(.uppercase)
         }
@@ -74,7 +116,7 @@ struct RecordingControls: View {
             Button {
                 recording.togglePause()
             } label: {
-                Label(recording.phase == .paused ? "Fortsetzen" : "Pause", systemImage: recording.phase == .paused ? "play.fill" : "pause.fill")
+                Label(recording.phase == .paused ? String(localized: "Fortsetzen") : String(localized: "Pause"), systemImage: recording.phase == .paused ? "play.fill" : "pause.fill")
                     .frame(width: buttonSize, height: buttonSize)
                     .background(.fill.tertiary, in: Circle())
                     .contentShape(Circle())

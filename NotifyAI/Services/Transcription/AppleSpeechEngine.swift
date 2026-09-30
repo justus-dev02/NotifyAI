@@ -5,6 +5,7 @@
 
 import AVFoundation
 import CoreMedia
+import NotifyAICore
 import OSLog
 import Speech
 
@@ -93,6 +94,25 @@ final class AppleSpeechEngine: TranscriptionEngine {
         }
         let transcriber = SpeechTranscriber(locale: locale, preset: .transcription)
         return await AssetInventory.status(forModules: [transcriber])
+    }
+
+    /// Language packs this app has reserved. Downloading a pack reserves its locale for
+    /// the app; the system keeps reserved packs installed.
+    static var reservedLocales: [Locale] {
+        get async { await AssetInventory.reservedLocales }
+    }
+
+    /// Gives up the app's reservations. The system removes a pack once no app reserves it,
+    /// and downloads it again when it is needed.
+    /// - Returns: The number of released language packs.
+    @discardableResult
+    static func releaseReservedLocales() async -> Int {
+        var released = 0
+        for locale in await AssetInventory.reservedLocales where await AssetInventory.release(reservedLocale: locale) {
+            released += 1
+        }
+        Logger.transcription.info("Released \(released, privacy: .public) speech language packs")
+        return released
     }
 
     /// Downloads Apple's speech model for `locale` if it is missing. This is a one-time

@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import NotifyAICore
 import SwiftUI
 
 /// Exports a note as Markdown. Sharing is always an explicit user action; nothing leaves

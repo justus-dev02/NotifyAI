@@ -98,6 +98,8 @@ final class KnowledgeIndexService {
     // MARK: - Refresh
 
     private func refreshPass() async {
+        let interval = Signposts.knowledge.beginInterval("Refresh index")
+        defer { Signposts.knowledge.endInterval("Refresh index", interval) }
         if !hasLoaded {
             hasLoaded = true
             if let persistence {

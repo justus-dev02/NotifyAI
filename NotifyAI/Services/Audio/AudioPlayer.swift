@@ -24,6 +24,9 @@ final class AudioPlayer {
     @ObservationIgnored private var player: AVAudioPlayer?
     @ObservationIgnored private var delegate: PlaybackDelegate?
     @ObservationIgnored private var ticker: Task<Void, Never>?
+    /// Whether a view shows the position; without one, playback continues but the position
+    /// is not published (no wake-ups ten times per second for nobody).
+    @ObservationIgnored private var isDisplayed = true
     @ObservationIgnored private let session: AudioSessionController
 
     init(session: AudioSessionController) {
@@ -49,7 +52,7 @@ final class AudioPlayer {
             currentTime = 0
             errorMessage = nil
         } catch {
-            errorMessage = "Die Audiodatei konnte nicht geöffnet werden."
+            errorMessage = String(localized: "Die Audiodatei konnte nicht geöffnet werden.")
             Logger.audio.error("Loading audio failed: \(error.localizedDescription, privacy: .public)")
         }
     }
@@ -96,6 +99,20 @@ final class AudioPlayer {
         stopTicker()
     }
 
+    /// Called when the views showing the position appear on or leave the screen.
+    func setDisplayed(_ displayed: Bool) {
+        guard displayed != isDisplayed else { return }
+        isDisplayed = displayed
+        if displayed {
+            syncTime()
+            if isPlaying {
+                startTicker()
+            }
+        } else {
+            stopTicker()
+        }
+    }
+
     private func syncTime() {
         currentTime = player?.currentTime ?? 0
     }
@@ -104,6 +121,7 @@ final class AudioPlayer {
     /// for word highlighting without re-rendering the transcript on every frame.
     private func startTicker() {
         stopTicker()
+        guard isDisplayed else { return }
         ticker = Task { [weak self] in
             while !Task.isCancelled {
                 self?.syncTime()

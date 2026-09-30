@@ -3,8 +3,9 @@
 //  NotifyAITests
 //
 
-import Testing
 @testable import NotifyAI
+import NotifyAICore
+import Testing
 
 @Suite("Whisper chunking")
 struct SpeechChunkerTests {

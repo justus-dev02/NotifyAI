@@ -21,6 +21,9 @@ struct SettingsView: View {
             StorageSettingsSection()
             Section {
                 LabeledContent("Version", value: Bundle.main.versionDescription)
+                DiagnosticsExportButton()
+            } footer: {
+                Text("Der Diagnosebericht enthält Versionen, Einstellungen, Speicherbelegung und das technische Protokoll – keine Inhalte deiner Notizen. Er wird nur gespeichert oder geteilt, wenn du es auswählst.")
             }
         }
         .formStyle(.grouped)
@@ -32,13 +35,5 @@ struct SettingsView: View {
             }
         }
         #endif
-    }
-}
-
-private extension Bundle {
-    var versionDescription: String {
-        let version = object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
-        let build = object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "–"
-        return "\(version) (\(build))"
     }
 }

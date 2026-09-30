@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// What a recording captures.
 ///
@@ -21,20 +22,20 @@ enum RecordingAudioSource: String, Codable, CaseIterable, Identifiable, Sendable
 
     var title: String {
         switch self {
-        case .microphone: "Mikrofon"
-        case .microphoneAndSystemAudio: "Mikrofon + Systemton"
-        case .systemAudio: "Nur Systemton"
+        case .microphone: String(localized: "Mikrofon")
+        case .microphoneAndSystemAudio: String(localized: "Mikrofon + Systemton")
+        case .systemAudio: String(localized: "Nur Systemton")
         }
     }
 
     var detail: String {
         switch self {
         case .microphone:
-            "Nimmt auf, was im Raum gesprochen wird."
+            String(localized: "Nimmt auf, was im Raum gesprochen wird.")
         case .microphoneAndSystemAudio:
-            "Für Online-Meetings: deine Stimme über das Mikrofon, die anderen Teilnehmenden direkt aus der App (z. B. Zoom, Teams, Discord)."
+            String(localized: "Für Online-Meetings: deine Stimme über das Mikrofon, die anderen Teilnehmenden direkt aus der App (z. B. Zoom, Teams, Discord).")
         case .systemAudio:
-            "Nimmt nur den Ton von Apps auf, z. B. Webinare oder Videos. Das Mikrofon bleibt aus."
+            String(localized: "Nimmt nur den Ton von Apps auf, z. B. Webinare oder Videos. Das Mikrofon bleibt aus.")
         }
     }
 
@@ -68,7 +69,7 @@ enum SystemAudioTarget: Codable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .allApps: "Alle Apps"
+        case .allApps: String(localized: "Alle Apps")
         case .app(_, let name): name
         }
     }
@@ -78,97 +79,6 @@ enum SystemAudioTarget: Codable, Hashable, Sendable {
         case .allApps: nil
         case .app(let bundleID, _): bundleID
         }
-    }
-}
-
-// MARK: - Source activity
-
-/// Loudness of the microphone and of the system audio in fixed time bins, recorded
-/// alongside a "Mikrofon + Systemton" recording.
-///
-/// The two sources are mixed into one file, but their levels are kept separately. This
-/// tells the user ("Ich", microphone) apart from the other participants ("Andere",
-/// system audio) far more reliably than guessing from voices. Bins lie on the recording
-/// timeline (pauses excluded), like transcript and marker times.
-struct SourceActivity: Codable, Equatable, Sendable {
-    static let binDuration: TimeInterval = 0.1
-    /// Levels are stored as dBFS + `levelOffset`, clamped to 0…255: one byte per bin.
-    private static let levelOffset: Float = 100
-
-    private var microphoneBytes: Data
-    private var systemBytes: Data
-
-    /// - Parameters: Levels per bin in dBFS. Both arrays must have the same length.
-    init(microphoneLevels: [Float], systemLevels: [Float]) {
-        precondition(microphoneLevels.count == systemLevels.count, "Both sources need one level per bin")
-        microphoneBytes = Data(microphoneLevels.map(Self.encode))
-        systemBytes = Data(systemLevels.map(Self.encode))
-    }
-
-    var binCount: Int { microphoneBytes.count }
-
-    /// Level of bin `index` in dBFS (−100 means silence).
-    func microphoneLevel(at index: Int) -> Float { Self.decode(microphoneBytes[microphoneBytes.startIndex + index]) }
-    func systemLevel(at index: Int) -> Float { Self.decode(systemBytes[systemBytes.startIndex + index]) }
-
-    var microphoneLevels: [Float] { microphoneBytes.map(Self.decode) }
-    var systemLevels: [Float] { systemBytes.map(Self.decode) }
-
-    /// Bins overlapping `start..<end`, clamped to the recorded range.
-    func bins(from start: TimeInterval, to end: TimeInterval) -> Range<Int> {
-        let lower = max(0, Int((start / Self.binDuration).rounded(.down)))
-        let upper = min(binCount, Int((end / Self.binDuration).rounded(.up)))
-        return lower..<max(lower, upper)
-    }
-
-    private static func encode(_ level: Float) -> UInt8 {
-        guard level.isFinite else { return 0 }
-        return UInt8(min(255, max(0, (level + levelOffset).rounded())))
-    }
-
-    private static func decode(_ byte: UInt8) -> Float {
-        Float(byte) - levelOffset
-    }
-}
-
-/// Collects the per-bin energy of both sources while recording.
-///
-/// Bins are addressed by the absolute frame position on the recording timeline, so
-/// blocks of any size can be appended.
-struct SourceActivityRecorder: Sendable {
-    private let samplesPerBin = Int(AudioFormat.sampleRate * SourceActivity.binDuration)
-    private var microphoneEnergy: [Double] = []
-    private var systemEnergy: [Double] = []
-    private var sampleCounts: [Int] = []
-
-    /// Appends one block. `microphone` and `system` must have the same length.
-    mutating func append(microphone: ArraySlice<Float>, system: ArraySlice<Float>, startFrame: Int64) {
-        precondition(microphone.count == system.count, "Both sources need the same number of samples")
-        var frame = Int(startFrame)
-        for (mic, sys) in zip(microphone, system) {
-            let bin = frame / samplesPerBin
-            while sampleCounts.count <= bin {
-                microphoneEnergy.append(0)
-                systemEnergy.append(0)
-                sampleCounts.append(0)
-            }
-            microphoneEnergy[bin] += Double(mic * mic)
-            systemEnergy[bin] += Double(sys * sys)
-            sampleCounts[bin] += 1
-            frame += 1
-        }
-    }
-
-    var isEmpty: Bool { sampleCounts.isEmpty }
-
-    func makeActivity() -> SourceActivity {
-        func levels(_ energy: [Double]) -> [Float] {
-            zip(energy, sampleCounts).map { sum, count in
-                guard count > 0, sum > 0 else { return -100 }
-                return Float(10 * log10(sum / Double(count)))
-            }
-        }
-        return SourceActivity(microphoneLevels: levels(microphoneEnergy), systemLevels: levels(systemEnergy))
     }
 }
 
@@ -192,8 +102,8 @@ enum SourceSpeakerAttribution {
         case others
     }
 
-    static let userLabel = "Ich"
-    static let defaultOthersLabel = "Andere"
+    static let userLabel = String(localized: "Ich")
+    static let defaultOthersLabel = String(localized: "Andere")
 
     struct Configuration: Sendable {
         /// A bin is active when it is this far above the source's noise floor …

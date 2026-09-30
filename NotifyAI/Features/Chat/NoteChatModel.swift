@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 import Observation
 import OSLog
 
@@ -77,10 +78,10 @@ final class NoteChatModel {
     static let maximumSources = 8
 
     static let suggestions = [
-        "Welche Aufgaben habe ich diese Woche übernommen?",
-        "Was wurde zuletzt entschieden?",
-        "Welche Fragen sind noch offen?",
-        "Zeig mir alle Aufnahmen von letzter Woche",
+        String(localized: "Welche Aufgaben habe ich diese Woche übernommen?"),
+        String(localized: "Was wurde zuletzt entschieden?"),
+        String(localized: "Welche Fragen sind noch offen?"),
+        String(localized: "Zeig mir alle Aufnahmen von letzter Woche"),
     ]
 
     init(
@@ -141,7 +142,7 @@ final class NoteChatModel {
         guard !index.notes.isEmpty else {
             return ChatMessage(
                 role: .assistant,
-                text: "Es gibt noch keine fertigen Notizen, die ich durchsuchen kann. Sobald eine Aufnahme oder ein Import verarbeitet ist, kannst du hier Fragen dazu stellen."
+                text: String(localized: "Es gibt noch keine fertigen Notizen, die ich durchsuchen kann. Sobald eine Aufnahme oder ein Import verarbeitet ist, kannst du hier Fragen dazu stellen.")
             )
         }
 
@@ -164,15 +165,15 @@ final class NoteChatModel {
             ChatNoteLink(noteID: $0.note.id, title: $0.note.title, date: $0.note.createdAt, kind: $0.note.kind, reasons: $0.reasons)
         }
         if !result.relaxedPersons.isEmpty {
-            message.notice = "Keine Notiz erwähnt \(result.relaxedPersons.joined(separator: ", ")). Ich habe ohne diesen Filter gesucht."
+            message.notice = String(localized: "Keine Notiz erwähnt \(result.relaxedPersons.joined(separator: ", ")). Ich habe ohne diesen Filter gesucht.")
         }
 
         guard result.candidateCount > 0 else {
-            message.text = "Für diese Filter gibt es keine Notizen."
+            message.text = String(localized: "Für diese Filter gibt es keine Notizen.")
             return message
         }
         guard !result.passages.isEmpty || !result.notes.isEmpty else {
-            message.text = "Dazu habe ich in deinen Notizen nichts gefunden."
+            message.text = String(localized: "Dazu habe ich in deinen Notizen nichts gefunden.")
             return message
         }
 
@@ -180,14 +181,14 @@ final class NoteChatModel {
         let isListing = plan.wantsList || TextAnalysis.terms(in: plan.searchText, languageCode: request.languageCode).isEmpty && plan.expansions.isEmpty
         if isListing {
             message.text = result.notes.count == 1
-                ? "Ich habe eine passende Notiz gefunden."
-                : "Ich habe \(result.notes.count) passende Notizen gefunden."
+                ? String(localized: "Ich habe eine passende Notiz gefunden.")
+                : String(localized: "Ich habe \(result.notes.count) passende Notizen gefunden.")
             return message
         }
 
         let sources = selectSources(from: result.passages)
         guard canUseModel else {
-            message.text = "Das sind die passendsten Stellen in deinen Notizen:"
+            message.text = String(localized: "Das sind die passendsten Stellen in deinen Notizen:")
             message.sources = Array(sources.prefix(5))
             message.notice = [message.notice, Self.unavailableNotice(modelAvailability)].compactMap { $0 }.joined(separator: " ")
             return message
@@ -208,15 +209,15 @@ final class NoteChatModel {
                 let cited = answer.citedSources.compactMap { number in sources.first { $0.number == number } }
                 message.sources = cited.isEmpty ? Array(sources.prefix(3)) : cited
             } else {
-                message.notice = [message.notice, "Die passendsten Notizen findest du unten."].compactMap { $0 }.joined(separator: " ")
+                message.notice = [message.notice, String(localized: "Die passendsten Notizen findest du unten.")].compactMap { $0 }.joined(separator: " ")
             }
         } catch is CancellationError {
             message.text = ""
         } catch {
             logger.error("Answering a question failed: \(error.localizedDescription, privacy: .public)")
-            message.text = "Das sind die passendsten Stellen in deinen Notizen:"
+            message.text = String(localized: "Das sind die passendsten Stellen in deinen Notizen:")
             message.sources = Array(sources.prefix(5))
-            message.notice = [message.notice, "Apple Intelligence konnte keine Antwort formulieren."].compactMap { $0 }.joined(separator: " ")
+            message.notice = [message.notice, String(localized: "Apple Intelligence konnte keine Antwort formulieren.")].compactMap { $0 }.joined(separator: " ")
         }
         return message
     }
@@ -248,7 +249,7 @@ final class NoteChatModel {
         }
         for person in generated.persons where !plan.filters.persons.contains(where: { HybridRetriever.name($0, matches: person) }) {
             plan.filters.persons.append(person)
-            plan.filterDescriptions.append("Person: \(person)")
+            plan.filterDescriptions.append(String(localized: "Person: \(person)"))
         }
         plan.wantsList = plan.wantsList || generated.wantsList
     }
@@ -298,6 +299,6 @@ final class NoteChatModel {
 
     private static func unavailableNotice(_ availability: LanguageModelAvailability) -> String? {
         guard case .unavailable(let reason) = availability else { return nil }
-        return "\(reason) Ohne Apple Intelligence zeige ich die passenden Stellen statt einer formulierten Antwort."
+        return String(localized: "\(reason) Ohne Apple Intelligence zeige ich die passenden Stellen statt einer formulierten Antwort.")
     }
 }

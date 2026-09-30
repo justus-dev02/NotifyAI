@@ -4,6 +4,7 @@
 //
 
 #if os(macOS)
+import AudioCapture
 import AVFoundation
 import CoreAudio
 import OSLog
@@ -16,11 +17,11 @@ enum SystemAudioError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .appNotRunning(let name):
-            "„\(name)“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle."
+            String(localized: "„\(name)“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle.")
         case .noMicrophone:
-            "Es wurde kein Mikrofon gefunden."
+            String(localized: "Es wurde kein Mikrofon gefunden.")
         case .unexpectedStreamLayout:
-            "Das Audiogerät für den Systemton konnte nicht eingerichtet werden."
+            String(localized: "Das Audiogerät für den Systemton konnte nicht eingerichtet werden.")
         }
     }
 }
@@ -34,8 +35,9 @@ enum SystemAudioError: LocalizedError {
 /// 2. A private aggregate device combines the tap with a clock device: the microphone when
 ///    it is recorded too, otherwise the current output device. Microphone and tap then run
 ///    on one clock (the tap is drift-compensated), so both stay in sync for hours.
-/// 3. An I/O block on a dedicated queue hands every cycle to `AudioCaptureContext`,
-///    which converts, mixes and writes the audio.
+/// 3. An I/O block copies every cycle into the lock-free rings of an
+///    `AggregateCaptureInput`; `AudioCaptureContext` converts, mixes and writes the audio on
+///    its own queue.
 ///
 /// The aggregate is rebuilt when the default microphone or output device changes, and the
 /// tap when the tapped app starts or ends audio processes (e.g. Zoom joins a call).
@@ -127,7 +129,7 @@ actor SystemAudioCapture {
 
         var tap = AudioObjectID(kAudioObjectUnknown)
         let status = AudioHardwareCreateProcessTap(description, &tap)
-        guard status == noErr else { throw CoreAudioError(operation: "Tap anlegen", status: status) }
+        guard status == noErr else { throw CoreAudioError(operation: String(localized: "Tap anlegen"), status: status) }
         tapID = tap
         tappedProcesses = processes
     }
@@ -170,7 +172,7 @@ actor SystemAudioCapture {
         ]
         var aggregate = AudioObjectID(kAudioObjectUnknown)
         var status = AudioHardwareCreateAggregateDevice(composition as CFDictionary, &aggregate)
-        guard status == noErr else { throw CoreAudioError(operation: "Aggregate-Gerät anlegen", status: status) }
+        guard status == noErr else { throw CoreAudioError(operation: String(localized: "Aggregate-Gerät anlegen"), status: status) }
 
         var procID: AudioDeviceIOProcID?
         do {
@@ -183,14 +185,14 @@ actor SystemAudioCapture {
                     : nil,
                 system: .init(bufferIndex: clockInputStreams, streamFormat: try CoreAudioObject.virtualFormat(ofStream: streams[clockInputStreams]))
             )
-            try capture.configure(layout)
+            let input = try capture.configure(layout)
 
-            status = AudioDeviceCreateIOProcIDWithBlock(&procID, aggregate, ioQueue, Self.makeIOBlock(for: capture))
-            guard status == noErr, let procID else { throw CoreAudioError(operation: "Audio-Callback anlegen", status: status) }
+            status = AudioDeviceCreateIOProcIDWithBlock(&procID, aggregate, ioQueue, Self.makeIOBlock(for: input))
+            guard status == noErr, let procID else { throw CoreAudioError(operation: String(localized: "Audio-Callback anlegen"), status: status) }
             let usedStreams: Set<Int> = includesMicrophone ? [0, clockInputStreams] : [clockInputStreams]
             restrictInputStreams(of: aggregate, to: usedStreams, streamCount: streams.count, procID: procID)
             status = AudioDeviceStart(aggregate, procID)
-            guard status == noErr else { throw CoreAudioError(operation: "Aufnahme starten", status: status) }
+            guard status == noErr else { throw CoreAudioError(operation: String(localized: "Aufnahme starten"), status: status) }
         } catch {
             if let procID {
                 AudioDeviceDestroyIOProcID(aggregate, procID)
@@ -251,10 +253,11 @@ actor SystemAudioCapture {
         ioProcID = nil
     }
 
-    /// Built in a nonisolated context: the block runs on `ioQueue`, never on the actor.
-    private nonisolated static func makeIOBlock(for capture: AudioCaptureContext) -> AudioDeviceIOBlock {
+    /// Built in a nonisolated context: the block runs on the real-time I/O thread, never on
+    /// the actor. It only copies into the input's lock-free rings.
+    private nonisolated static func makeIOBlock(for input: AggregateCaptureInput) -> AudioDeviceIOBlock {
         { _, inputData, _, _, _ in
-            capture.process(aggregateInput: inputData)
+            input.process(inputData)
         }
     }
 
@@ -313,6 +316,27 @@ actor SystemAudioCapture {
         } catch {
             // Retried on the next device change, e.g. when a microphone is connected again.
             logger.error("Rebuilding the aggregate device failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Rebuilds the aggregate device if it is no longer running, e.g. after the Mac slept.
+    /// Called when a paused recording is resumed.
+    func restartIfStopped() {
+        guard isRunning else { return }
+        if aggregateID != kAudioObjectUnknown,
+           let running = try? CoreAudioObject.read(kAudioDevicePropertyDeviceIsRunning, of: aggregateID, initial: UInt32(0)),
+           running != 0 {
+            return
+        }
+        logger.info("The aggregate device stopped, rebuilding it")
+        stopAggregate()
+        do {
+            if tapID == kAudioObjectUnknown {
+                try createTap(processes: targetProcesses())
+            }
+            try startAggregate()
+        } catch {
+            logger.error("Restarting the aggregate device failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 

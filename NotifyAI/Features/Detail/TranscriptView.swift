@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// The transcript with marker highlighting and playback synchronisation.

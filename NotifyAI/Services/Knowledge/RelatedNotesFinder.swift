@@ -20,8 +20,8 @@ enum RelationReason: Hashable, Sendable {
         case .place(let name): name
         case .organization(let name): name
         case .topic(let topic): topic
-        case .similarContent: "Ähnlicher Inhalt"
-        case .sameWeek: "Gleiche Woche"
+        case .similarContent: String(localized: "Ähnlicher Inhalt")
+        case .sameWeek: String(localized: "Gleiche Woche")
         }
     }
 

@@ -3,34 +3,48 @@
 //  NotifyAI
 //
 
+import AudioCapture
 import Foundation
 import Observation
 
 /// Recorded time and level history of the running recording, for the meters.
 ///
-/// Updated about ten times per second. Kept apart from `RecordingController` so that only
-/// views that draw meters or the timer observe these frequent changes.
+/// Levels arrive ten times per second while a meter is visible and once per second
+/// otherwise. Views observe only what they draw: the time displays read `elapsedSeconds`,
+/// which changes once per second, so the menu bar item and the timers are not re-rendered
+/// ten times per second. Kept apart from `RecordingController` for the same reason.
 @MainActor
 @Observable
 final class RecordingMeter {
     static let historyLength = 48
 
-    /// Recorded time, pauses excluded.
-    private(set) var elapsed: TimeInterval = 0
-    /// Recent microphone levels (0…1), oldest first.
+    /// Whole recorded seconds, pauses excluded. Changes once per second.
+    private(set) var elapsedSeconds = 0
+    /// Recent microphone levels (0…1), oldest first. Only updated while shown.
     private(set) var levels = RecordingMeter.silence
     /// Recent system audio levels while it is recorded together with the microphone.
     private(set) var systemLevels = RecordingMeter.silence
     /// Whether any non-silent system audio arrived so far.
     private(set) var hasReceivedSystemAudio = false
 
+    /// Recorded time with sub-second precision. Not observed: it changes with every level.
+    @ObservationIgnored private(set) var elapsed: TimeInterval = 0
+    /// Whether a level meter is on screen; otherwise level readings only update the time.
+    @ObservationIgnored var showsLevels = true
+
     func record(_ level: AudioLevel) {
         elapsed = level.recordedTime
-        levels.removeFirst()
-        levels.append(Self.meterValue(level.rms))
-        if let systemRMS = level.systemRMS {
-            systemLevels.removeFirst()
-            systemLevels.append(Self.meterValue(systemRMS))
+        let seconds = Int(level.recordedTime)
+        if seconds != elapsedSeconds {
+            elapsedSeconds = seconds
+        }
+        if showsLevels {
+            levels.removeFirst()
+            levels.append(Self.meterValue(level.rms))
+            if let systemRMS = level.systemRMS {
+                systemLevels.removeFirst()
+                systemLevels.append(Self.meterValue(systemRMS))
+            }
         }
         if level.hasReceivedSystemAudio, !hasReceivedSystemAudio {
             hasReceivedSystemAudio = true
@@ -39,6 +53,7 @@ final class RecordingMeter {
 
     func reset() {
         elapsed = 0
+        elapsedSeconds = 0
         levels = Self.silence
         systemLevels = Self.silence
         hasReceivedSystemAudio = false

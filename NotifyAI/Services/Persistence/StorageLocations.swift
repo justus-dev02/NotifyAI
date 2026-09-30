@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// File-system layout of the app. Everything lives inside the app's own container
 /// (`Application Support/NotifyAI`) and never leaves the device.
@@ -19,6 +20,32 @@ struct StorageLocations: Sendable {
     var legacyKnowledgeIndexURL: URL { root.appending(path: "KnowledgeIndex.plist", directoryHint: .notDirectory) }
     /// Intermediate results of long summaries (chapter digests), removed when a summary is done.
     var processingDirectory: URL { root.appending(path: "Processing", directoryHint: .isDirectory) }
+    /// MetricKit reports, kept on the device until the user exports a diagnosis.
+    var diagnosticsDirectory: URL { root.appending(path: "Diagnostics", directoryHint: .isDirectory) }
+    /// Databases that could not be opened are moved here instead of being deleted.
+    var recoveryDirectory: URL { root.appending(path: "Recovery", directoryHint: .isDirectory) }
+
+    /// The database and its SQLite side files.
+    var databaseFiles: [URL] {
+        ["", "-wal", "-shm"].map { suffix in
+            root.appending(path: databaseURL.lastPathComponent + suffix, directoryHint: .notDirectory)
+        }
+    }
+
+    /// Moves the database into a dated folder below `recoveryDirectory`, so a new one can
+    /// be created. Nothing is deleted: the old database stays available for support.
+    /// - Returns: The folder the files were moved to.
+    @discardableResult
+    func moveDatabaseAside(now: Date = .now) throws -> URL {
+        let fileManager = FileManager.default
+        let stamp = now.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false).timeSeparator(.omitted))
+        let destination = recoveryDirectory.appending(path: "Database-\(stamp)", directoryHint: .isDirectory)
+        try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+        for file in databaseFiles where fileManager.fileExists(atPath: file.path(percentEncoded: false)) {
+            try fileManager.moveItem(at: file, to: destination.appending(path: file.lastPathComponent))
+        }
+        return destination
+    }
 
     /// The production layout inside Application Support.
     static func applicationSupport() throws -> StorageLocations {
@@ -73,6 +100,15 @@ struct StorageLocations: Sendable {
         var modelValues = URLResourceValues()
         modelValues.isExcludedFromBackup = true
         try modelsURL.setResourceValues(modelValues)
+    }
+
+    /// Free space on the volume holding `url` for data the user asked to keep, in bytes.
+    /// `nil` if the volume does not report it.
+    ///
+    /// Declared in the privacy manifest (disk space, reason E174.1): checked only before and
+    /// while writing a recording, so it neither starts nor runs into a full disk.
+    static func availableCapacity(at url: URL) -> Int64? {
+        DiskSpace.available(at: url)
     }
 
     /// Total size of all regular files below `directory`, in bytes.

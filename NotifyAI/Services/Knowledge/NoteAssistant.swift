@@ -5,6 +5,7 @@
 
 import Foundation
 import FoundationModels
+import NotifyAICore
 
 /// A numbered excerpt the answer may use.
 struct AssistantSource: Sendable {
@@ -97,7 +98,8 @@ struct FoundationModelNoteAssistant: NoteAssistant {
         Rules:
         - Use only the numbered sources. Never add outside knowledge and never guess.
         - Put the source number after every statement, for example [2] or [1][3].
-        - In transcripts, "Ich" is the user. Address the user as "du". Other labels are people in the conversation.
+        - In transcripts, "\(SourceSpeakerAttribution.userLabel)" is the user. Address the user directly and informally \
+        (German: "du"). Other labels are people in the conversation.
         - Every source has the date of its note. Relative dates in a source ("Freitag", "next week") refer to \
         that date; state the actual date when it matters.
         - Be concrete: names, numbers, amounts, dates and deadlines.

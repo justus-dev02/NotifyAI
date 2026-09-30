@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// Step 3: summarizes the note, links every summary item to its transcript position and
 /// gives an untitled recording its keyword title.

@@ -4,8 +4,9 @@
 //
 
 import Foundation
-import Testing
 @testable import NotifyAI
+import NotifyAICore
+import Testing
 
 @Suite("Text chunking")
 struct TextChunkerTests {

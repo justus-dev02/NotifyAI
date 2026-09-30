@@ -5,6 +5,7 @@
 
 import CryptoKit
 import Foundation
+import NotifyAICore
 
 /// A searchable piece of a note: a few transcript segments, a paragraph of a document or
 /// the note's summary.
@@ -57,7 +58,8 @@ struct IndexedNote: Codable, Hashable, Sendable, Identifiable {
 /// off the main actor while the index service updates its copy.
 struct KnowledgeIndex: Codable, Sendable {
     /// Bump when the indexing changes, so existing indexes are rebuilt.
-    static let formatVersion = 3
+    /// 4: fingerprints based on `contentRevision`, vectors stored as Float16.
+    static let formatVersion = 4
 
     var formatVersion = KnowledgeIndex.formatVersion
     var notes: [UUID: IndexedNote] = [:]
@@ -134,26 +136,22 @@ struct IndexableNote: Sendable {
 
     /// A fingerprint of everything the index uses, computed on every refresh for every note.
     ///
-    /// It must be cheap: instead of hashing the whole transcript it combines the sizes of
-    /// the text, transcript and summary with the beginning of the text and the small fields.
-    /// The text of a note only changes through (re)transcription, speaker assignment or a new
-    /// summary, which always change these sizes. An edit that kept every size and the first
-    /// 256 characters identical would be missed; "Suchindex neu aufbauen" covers that case.
+    /// It reads only small values of the note's row: `contentRevision` stands for the text,
+    /// transcript and summary (it increases whenever one of them is replaced), the rest are
+    /// the metadata the index stores. Neither the text nor the transcript file is loaded, so
+    /// a refresh over hundreds of unchanged notes costs microseconds per note.
     @MainActor
     static func fingerprint(of note: Note) -> String {
         var hasher = SHA256()
         let parts = [
             String(KnowledgeIndex.formatVersion),
+            String(note.contentRevision),
             note.title,
-            String(note.bodyText.utf8.count),
-            String(note.bodyText.prefix(256)),
-            note.summaryOverview,
             note.participants.joined(separator: "\u{1F}"),
             note.focusRawValue,
             note.languageID,
+            note.kindRawValue,
             String(note.isFavorite),
-            String(note.transcriptData?.count ?? 0),
-            String(note.summaryData?.count ?? 0),
         ]
         for part in parts {
             hasher.update(data: Data(part.utf8))

@@ -1,13 +1,13 @@
 //
 //  RecordingFocus.swift
-//  NotifyAI
+//  NotifyAICore
 //
 
 import Foundation
 
 /// What kind of conversation a note contains. The focus steers what the summary
 /// emphasises; it replaces the former template library.
-enum RecordingFocus: String, CaseIterable, Codable, Identifiable, Sendable {
+public enum RecordingFocus: String, CaseIterable, Codable, Identifiable, Sendable {
     case general
     case meeting
     case lecture
@@ -15,20 +15,9 @@ enum RecordingFocus: String, CaseIterable, Codable, Identifiable, Sendable {
     case sales
     case oneOnOne
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var title: String {
-        switch self {
-        case .general: "Allgemein"
-        case .meeting: "Meeting"
-        case .lecture: "Vorlesung"
-        case .interview: "Interview"
-        case .sales: "Kundengespräch"
-        case .oneOnOne: "1:1-Gespräch"
-        }
-    }
-
-    var symbolName: String {
+    public var symbolName: String {
         switch self {
         case .general: "text.bubble"
         case .meeting: "person.3"
@@ -42,7 +31,7 @@ enum RecordingFocus: String, CaseIterable, Codable, Identifiable, Sendable {
     /// Additional guidance for the language model. Written in English because the
     /// on-device model follows English instructions most reliably; the output
     /// language is set separately.
-    var modelGuidance: String {
+    public var modelGuidance: String {
         switch self {
         case .general:
             "Capture the main points in the order they were discussed."

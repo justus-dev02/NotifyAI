@@ -33,11 +33,11 @@ struct AppearanceSettingsSection: View {
     private func footer(for presence: AppPresence) -> String {
         switch presence {
         case .dock:
-            "NotifyAI erscheint wie andere Apps im Dock und im App-Umschalter (⌘⇥). Aufnahmen startest du im Hauptfenster."
+            String(localized: "NotifyAI erscheint wie andere Apps im Dock und im App-Umschalter (⌘⇥). Aufnahmen startest du im Hauptfenster.")
         case .dockAndMenuBar:
-            "Im Dock für das Hauptfenster, in der Menüleiste für schnelle Aufnahmen – auch wenn das Fenster geschlossen ist."
+            String(localized: "Im Dock für das Hauptfenster, in der Menüleiste für schnelle Aufnahmen – auch wenn das Fenster geschlossen ist.")
         case .menuBar:
-            "NotifyAI läuft unauffällig in der Menüleiste, ohne Dock-Symbol und ohne App-Menü. Das Hauptfenster öffnest du über „NotifyAI öffnen“ in der Menüleiste, beenden kannst du die App dort über ⏻."
+            String(localized: "NotifyAI läuft unauffällig in der Menüleiste, ohne Dock-Symbol und ohne App-Menü. Das Hauptfenster öffnest du über „NotifyAI öffnen“ in der Menüleiste, beenden kannst du die App dort über ⏻.")
         }
     }
 }

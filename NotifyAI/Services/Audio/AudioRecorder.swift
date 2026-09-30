@@ -3,21 +3,10 @@
 //  NotifyAI
 //
 
+import AudioCapture
 import AVFoundation
+import NotifyAICore
 import OSLog
-
-/// A level reading for the UI.
-struct AudioLevel: Sendable {
-    /// Root mean square of the last block, 0…1: the microphone, or the system audio when
-    /// only system audio is recorded.
-    let rms: Float
-    /// System audio level while it is recorded together with the microphone.
-    let systemRMS: Float?
-    /// Recorded time so far (pauses excluded).
-    let recordedTime: TimeInterval
-    /// Whether any non-silent system audio arrived so far.
-    let hasReceivedSystemAudio: Bool
-}
 
 /// What to record.
 struct CaptureConfiguration: Sendable {
@@ -25,20 +14,16 @@ struct CaptureConfiguration: Sendable {
     var systemAudioTarget: SystemAudioTarget = .allApps
 }
 
-/// The outcome of a finished recording.
-struct RecordingResult: Sendable {
-    /// Recorded seconds, pauses excluded.
-    let duration: TimeInterval
-    /// Levels of microphone and system audio; only for microphone + system audio recordings.
-    let sourceActivity: SourceActivity?
-}
-
-/// The two streams a running recording produces.
+/// The streams a running recording produces.
 struct AudioCaptureStreams: Sendable {
-    /// Every converted buffer, in order and without gaps. Unbounded so transcription never loses audio.
-    let chunks: AsyncStream<AudioChunk>
+    /// Every converted block, in order and without gaps, for live transcription; `nil` when
+    /// the recording is not transcribed live. Unbounded so transcription never loses audio;
+    /// `LiveTranscriptFeed` limits how far it may fall behind.
+    let chunks: AsyncStream<AudioChunk>?
     /// Level updates for metering. Only the newest value is kept.
     let levels: AsyncStream<AudioLevel>
+    /// Failures and warnings of the running capture (full disk).
+    let events: AsyncStream<CaptureEvent>
 }
 
 enum AudioRecorderError: LocalizedError {
@@ -48,21 +33,24 @@ enum AudioRecorderError: LocalizedError {
     case engineStartFailed(any Error)
     case fileCreationFailed(any Error)
     case systemAudioUnavailable
+    case insufficientStorage(availableBytes: Int64)
 
     var errorDescription: String? {
         switch self {
         case .alreadyRecording:
-            "Es läuft bereits eine Aufnahme."
+            String(localized: "Es läuft bereits eine Aufnahme.")
         case .noInputDevice:
-            "Es wurde kein Mikrofon gefunden."
+            String(localized: "Es wurde kein Mikrofon gefunden.")
         case .converterUnavailable:
-            "Das Audioformat des Mikrofons wird nicht unterstützt."
+            String(localized: "Das Audioformat des Mikrofons wird nicht unterstützt.")
         case .engineStartFailed(let error):
-            "Die Aufnahme konnte nicht gestartet werden: \(error.localizedDescription)"
+            String(localized: "Die Aufnahme konnte nicht gestartet werden: \(error.localizedDescription)")
         case .fileCreationFailed(let error):
-            "Die Audiodatei konnte nicht angelegt werden: \(error.localizedDescription)"
+            String(localized: "Die Audiodatei konnte nicht angelegt werden: \(error.localizedDescription)")
         case .systemAudioUnavailable:
-            "Systemton kann auf diesem Gerät nicht aufgenommen werden."
+            String(localized: "Systemton kann auf diesem Gerät nicht aufgenommen werden.")
+        case .insufficientStorage(let availableBytes):
+            String(localized: "Nicht genügend freier Speicherplatz (\(TimeFormatting.byteCount(availableBytes)) frei). Für eine Aufnahme werden mindestens \(TimeFormatting.byteCount(AudioRecorder.minimumFreeBytesToStart)) benötigt.")
         }
     }
 }
@@ -75,11 +63,16 @@ enum AudioRecorderError: LocalizedError {
 /// - Microphone + system audio, or system audio only: a Core Audio process tap in a private
 ///   aggregate device (`SystemAudioCapture`, macOS only).
 ///
-/// Threading: the public API is main-actor isolated. Audio callbacks only touch shared
-/// state through `AudioCaptureContext`, which is protected by a mutex. Time is measured in
-/// written samples, so it excludes pauses and matches the audio file exactly.
+/// Threading: the public API is main-actor isolated. The audio threads only write into the
+/// lock-free rings of a capture input; `AudioCaptureContext` processes them on its own
+/// queue. Time is measured in written samples, so it excludes pauses and matches the audio
+/// file exactly.
 @MainActor
 final class AudioRecorder {
+    /// A recording does not start with less free space: about 14 MB per hour of audio plus
+    /// transcript, index and the processing of a long recording.
+    nonisolated static let minimumFreeBytesToStart: Int64 = 200 * 1_024 * 1_024
+
     private let engine = AVAudioEngine()
     private let capture = AudioCaptureContext()
     private let logger = Logger.audio
@@ -104,8 +97,18 @@ final class AudioRecorder {
         #endif
     }
 
-    func start(writingTo url: URL, configuration: CaptureConfiguration = CaptureConfiguration()) async throws -> AudioCaptureStreams {
+    /// Starts recording into a new file at `url`.
+    /// - Parameter streamsAudio: Whether the audio is streamed for live transcription.
+    func start(
+        writingTo url: URL,
+        configuration: CaptureConfiguration = CaptureConfiguration(),
+        streamsAudio: Bool = true
+    ) async throws -> AudioCaptureStreams {
         guard !isRunning else { throw AudioRecorderError.alreadyRecording }
+        let directory = url.deletingLastPathComponent()
+        if let available = StorageLocations.availableCapacity(at: directory), available < Self.minimumFreeBytesToStart {
+            throw AudioRecorderError.insufficientStorage(availableBytes: available)
+        }
 
         let file: AVAudioFile
         do {
@@ -119,13 +122,22 @@ final class AudioRecorder {
             throw AudioRecorderError.fileCreationFailed(error)
         }
 
-        let (chunks, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .unbounded)
+        var chunks: AsyncStream<AudioChunk>?
+        var chunkContinuation: AsyncStream<AudioChunk>.Continuation?
+        if streamsAudio {
+            let (stream, continuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .unbounded)
+            chunks = stream
+            chunkContinuation = continuation
+        }
         let (levels, levelContinuation) = AsyncStream.makeStream(of: AudioLevel.self, bufferingPolicy: .bufferingNewest(1))
+        let (events, eventContinuation) = AsyncStream.makeStream(of: CaptureEvent.self)
         capture.begin(
-            file: file,
+            sink: file,
             chunks: chunkContinuation,
             levels: levelContinuation,
-            recordsSourceActivity: configuration.source == .microphoneAndSystemAudio
+            events: eventContinuation,
+            recordsSourceActivity: configuration.source == .microphoneAndSystemAudio,
+            storageDirectory: directory
         )
 
         switch configuration.source {
@@ -164,7 +176,7 @@ final class AudioRecorder {
 
         isRunning = true
         logger.info("Recording started (\(configuration.source.rawValue, privacy: .public))")
-        return AudioCaptureStreams(chunks: chunks, levels: levels)
+        return AudioCaptureStreams(chunks: chunks, levels: levels, events: events)
     }
 
     #if os(macOS)
@@ -187,7 +199,8 @@ final class AudioRecorder {
         capture.setPaused(true)
     }
 
-    /// Resumes writing. Restarts the engine if the system stopped it (e.g. after a phone call).
+    /// Resumes writing. Restarts the engine if the system stopped it (e.g. after a phone
+    /// call), or the aggregate device if it stopped while the Mac was asleep.
     func resume() throws {
         capture.setPaused(false)
         if isRunning, usesEngine, !engine.isRunning {
@@ -198,6 +211,21 @@ final class AudioRecorder {
                 throw AudioRecorderError.engineStartFailed(error)
             }
         }
+        #if os(macOS)
+        if let systemAudio {
+            Task { await systemAudio.restartIfStopped() }
+        }
+        #endif
+    }
+
+    /// Publishes levels only once per second while no meter is visible.
+    func setReducedLevelUpdates(_ reduced: Bool) {
+        capture.setReducedLevelUpdates(reduced)
+    }
+
+    /// Ends the audio stream for live transcription; the file is still written.
+    func stopStreamingAudio() {
+        capture.stopStreamingChunks()
     }
 
     /// Stops the recording, finalizes the file and finishes both streams.
@@ -233,22 +261,17 @@ final class AudioRecorder {
         guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
             throw AudioRecorderError.noInputDevice
         }
-        let outputFormat = AudioFormat.makeProcessingFormat()
-        guard let converter = AVAudioConverter(from: inputFormat, to: outputFormat) else {
-            throw AudioRecorderError.converterUnavailable
-        }
-        // Mix all input channels instead of silently using only the first one.
-        converter.downmix = true
-        capture.setEngineConverter(converter)
-
+        // The old tap is removed first, so nothing writes into the previous ring while its
+        // last samples are processed. All input channels are mixed, not just the first one.
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: Self.makeTapBlock(for: capture))
+        let captureInput = try capture.configureMicrophone(format: inputFormat)
+        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat, block: Self.makeTapBlock(for: captureInput))
     }
 
     /// Built in a nonisolated context: a closure created inside a main-actor method would
     /// inherit main-actor isolation and trap when Core Audio calls it on its own thread.
-    private nonisolated static func makeTapBlock(for capture: AudioCaptureContext) -> AVAudioNodeTapBlock {
-        { buffer, _ in capture.process(buffer) }
+    private nonisolated static func makeTapBlock(for input: MicrophoneCaptureInput) -> AVAudioNodeTapBlock {
+        { buffer, _ in input.process(buffer) }
     }
 
     /// The input device or its format changed (headset plugged in, other microphone

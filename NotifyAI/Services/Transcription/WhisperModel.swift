@@ -16,22 +16,22 @@ struct WhisperModel: Identifiable, Hashable, Codable, Sendable {
     static let base = WhisperModel(
         id: "openai_whisper-base",
         name: "Base",
-        detail: "Sehr schnell, für klare Sprache in ruhiger Umgebung.",
-        approximateSize: "ca. 150 MB"
+        detail: String(localized: "Sehr schnell, für klare Sprache in ruhiger Umgebung."),
+        approximateSize: String(localized: "ca. 150 MB")
     )
 
     static let small = WhisperModel(
         id: "openai_whisper-small",
         name: "Small",
-        detail: "Guter Kompromiss aus Genauigkeit und Geschwindigkeit auf dem iPhone.",
-        approximateSize: "ca. 500 MB"
+        detail: String(localized: "Guter Kompromiss aus Genauigkeit und Geschwindigkeit auf dem iPhone."),
+        approximateSize: String(localized: "ca. 500 MB")
     )
 
     static let largeTurbo = WhisperModel(
         id: "openai_whisper-large-v3-v20240930_turbo_632MB",
         name: "Large v3 Turbo",
-        detail: "Höchste Genauigkeit. Empfohlen für Mac und neuere iPhones (Pro-Modelle).",
-        approximateSize: "ca. 630 MB"
+        detail: String(localized: "Höchste Genauigkeit. Empfohlen für Mac und neuere iPhones (Pro-Modelle)."),
+        approximateSize: String(localized: "ca. 630 MB")
     )
 
     static let all: [WhisperModel] = [base, small, largeTurbo]

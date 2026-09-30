@@ -4,8 +4,9 @@
 //
 
 import AVFoundation
-import Testing
 @testable import NotifyAI
+import NotifyAICore
+import Testing
 
 @Suite("Recording file format")
 struct RecordingFileTests {

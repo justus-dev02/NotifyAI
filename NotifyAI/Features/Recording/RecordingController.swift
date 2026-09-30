@@ -3,9 +3,14 @@
 //  NotifyAI
 //
 
+import AudioCapture
 import Foundation
+import NotifyAICore
 import Observation
 import OSLog
+#if os(macOS)
+import AppKit
+#endif
 
 /// Drives a recording session: start, pause, markers, interruptions and stop.
 ///
@@ -13,6 +18,14 @@ import OSLog
 /// levels and time, `LiveTranscriptFeed` the live transcript, `RecordingNoteWriter` creates
 /// and completes the note. One instance exists per app; the main window, the macOS menu bar
 /// and the Live Activity all show its state.
+///
+/// Robustness:
+/// - A write error or an almost full disk stops the recording; what was recorded is kept
+///   and the user is told why (`UserNotices`).
+/// - On the Mac, App Nap and idle sleep are suspended while recording. When the Mac goes
+///   to sleep anyway (lid closed), the recording pauses and says so.
+/// - Live transcription that falls too far behind is abandoned; the file is transcribed
+///   after the recording.
 @MainActor
 @Observable
 final class RecordingController {
@@ -34,7 +47,7 @@ final class RecordingController {
     }
 
     /// After this much recorded time without any system audio, the UI suggests checking the permission.
-    static let systemAudioHintDelay: TimeInterval = 10
+    static let systemAudioHintDelay = 10
 
     var draft = Draft()
     private(set) var phase: Phase = .idle
@@ -47,6 +60,9 @@ final class RecordingController {
     private(set) var lastMarker: Marker?
     private(set) var errorMessage: String?
     private(set) var interruptionMessage: String?
+    /// The note of a recording that stopped on its own (full disk, write error). The
+    /// recording screen closes and opens the note.
+    private(set) var automaticallyStoppedNoteID: UUID?
 
     let meter = RecordingMeter()
     let transcript = LiveTranscriptFeed()
@@ -56,7 +72,7 @@ final class RecordingController {
 
     /// No system audio arrived yet: either nothing is playing, or macOS denied the permission.
     var isMissingSystemAudio: Bool {
-        audioSource.usesSystemAudio && isActive && !meter.hasReceivedSystemAudio && meter.elapsed >= Self.systemAudioHintDelay
+        audioSource.usesSystemAudio && isActive && !meter.hasReceivedSystemAudio && meter.elapsedSeconds >= Self.systemAudioHintDelay
     }
 
     @ObservationIgnored private let store: NoteStore
@@ -64,16 +80,25 @@ final class RecordingController {
     @ObservationIgnored private let transcription: TranscriptionService
     @ObservationIgnored private let processing: ProcessingCoordinator
     @ObservationIgnored private let audioSession: AudioSessionController
+    @ObservationIgnored private let notices: UserNotices?
     @ObservationIgnored private let recorder = AudioRecorder()
     @ObservationIgnored private let liveActivity = RecordingLiveActivity()
     @ObservationIgnored private let noteWriter: RecordingNoteWriter
     /// Condenses finished chapters of long recordings while recording; `nil` disables it.
     @ObservationIgnored private let liveChapters: LiveChapterSummarizer?
     @ObservationIgnored private var noteID: UUID?
-    /// Consume the recorder's level and chunk streams; they end when the recorder stops.
+    /// Consume the recorder's streams; they end when the recorder stops.
     @ObservationIgnored private var captureTasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var eventTask: Task<Void, Never>?
     @ObservationIgnored private var lastMarkerReset: Task<Void, Never>?
+    /// Identifiers of the level meters currently on screen.
+    @ObservationIgnored private var visibleMeters: Set<String> = []
     @ObservationIgnored private let logger = Logger.audio
+    #if os(macOS)
+    /// Keeps App Nap from throttling the capture and the Mac from idle sleep while recording.
+    @ObservationIgnored private var activity: (any NSObjectProtocol)?
+    @ObservationIgnored private var sleepObservers: [any NSObjectProtocol] = []
+    #endif
 
     init(
         store: NoteStore,
@@ -81,6 +106,7 @@ final class RecordingController {
         transcription: TranscriptionService,
         processing: ProcessingCoordinator,
         audioSession: AudioSessionController,
+        notices: UserNotices? = nil,
         liveChapters: LiveChapterSummarizer? = nil
     ) {
         self.store = store
@@ -88,6 +114,7 @@ final class RecordingController {
         self.transcription = transcription
         self.processing = processing
         self.audioSession = audioSession
+        self.notices = notices
         self.liveChapters = liveChapters
         noteWriter = RecordingNoteWriter(store: store)
         audioSession.onInterruption = { [weak self] interruption in
@@ -96,6 +123,11 @@ final class RecordingController {
         transcript.onSegmentsChanged = { [weak liveChapters] segments in
             liveChapters?.transcriptDidChange(segments)
         }
+        transcript.onFellBehind = { [weak self] in
+            // Nobody consumes the audio stream any more; stop filling it.
+            self?.recorder.stopStreamingAudio()
+        }
+        observeSystemSleep()
     }
 
     // MARK: - Session lifecycle
@@ -104,12 +136,13 @@ final class RecordingController {
         guard canStart else { return }
         errorMessage = nil
         interruptionMessage = nil
+        automaticallyStoppedNoteID = nil
         phase = .starting
 
         let configuration = settings.recording.captureConfiguration
         if configuration.source.usesMicrophone, !(await MicrophonePermission.request()) {
             phase = .idle
-            errorMessage = "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen."
+            errorMessage = String(localized: "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen.")
             return
         }
 
@@ -118,14 +151,20 @@ final class RecordingController {
             try store.insert(note)
             try audioSession.activateForRecording()
             let url = store.locations.audioURL(fileName: NoteStore.recordingFileName(for: note.id))
-            let streams = try await recorder.start(writingTo: url, configuration: configuration)
+            let streams = try await recorder.start(
+                writingTo: url,
+                configuration: configuration,
+                streamsAudio: settings.transcription.liveTranscription
+            )
             noteID = note.id
             audioSource = configuration.source
             systemAudioTarget = configuration.systemAudioTarget
             meter.reset()
+            applyMeterVisibility()
             markers = []
             lastMarker = nil
             phase = .recording
+            beginSystemActivity()
             liveActivity.start(title: note.title)
             processing.isPaused = true
             consume(streams)
@@ -133,7 +172,7 @@ final class RecordingController {
         } catch {
             logger.error("Starting the recording failed: \(error.localizedDescription, privacy: .public)")
             errorMessage = error.localizedDescription
-            try? store.delete(note)
+            store.deleteReportingErrors(note)
             audioSession.deactivate()
             phase = .idle
         }
@@ -166,7 +205,7 @@ final class RecordingController {
         markers.append(marker)
         // Persist immediately so the marker survives an unexpected termination.
         note.markers = markers
-        try? store.save()
+        store.saveReportingErrors()
         liveChapters?.markers = markers
 
         lastMarker = marker
@@ -185,8 +224,11 @@ final class RecordingController {
         guard phase == .recording || phase == .paused, let noteID else { return nil }
         phase = .finishing
         let result = await recorder.stop()
+        eventTask?.cancel()
+        eventTask = nil
         audioSession.deactivate()
         liveActivity.end()
+        endSystemActivity()
         // Chapters condensed so far stay in the digest store; the rest is done by the processing.
         liveChapters?.stop()
 
@@ -211,14 +253,17 @@ final class RecordingController {
     func discard() async {
         guard isActive, let noteID else { return }
         await recorder.stop()
+        eventTask?.cancel()
+        eventTask = nil
         audioSession.deactivate()
         liveActivity.end()
+        endSystemActivity()
         // Digests of this recording are removed together with the note (`onNotesDeleted`).
         liveChapters?.stop()
         captureTasks.forEach { $0.cancel() }
         await transcript.cancel()
         if let note = store.note(id: noteID) {
-            try? store.delete(note)
+            store.deleteReportingErrors(note)
         }
         reset()
         processing.isPaused = false
@@ -226,6 +271,30 @@ final class RecordingController {
 
     func dismissError() {
         errorMessage = nil
+    }
+
+    /// Called by the recording screen after it reacted to an automatic stop.
+    func acknowledgeAutomaticStop() {
+        automaticallyStoppedNoteID = nil
+    }
+
+    // MARK: - Meters
+
+    /// Level meters register while they are on screen. Without any, levels are published
+    /// only once per second (for the elapsed time) instead of ten times.
+    func setMeterVisible(_ visible: Bool, id: String) {
+        if visible {
+            visibleMeters.insert(id)
+        } else {
+            visibleMeters.remove(id)
+        }
+        applyMeterVisibility()
+    }
+
+    private func applyMeterVisibility() {
+        let isShown = !visibleMeters.isEmpty
+        meter.showsLevels = isShown
+        recorder.setReducedLevelUpdates(!isShown)
     }
 
     // MARK: - Private
@@ -257,27 +326,60 @@ final class RecordingController {
                     self?.meter.record(level)
                 }
             },
-            Task { [weak self] in
-                for await chunk in streams.chunks {
+        ]
+        if let chunks = streams.chunks {
+            captureTasks.append(Task { [weak self] in
+                for await chunk in chunks {
                     await self?.transcript.append(chunk)
                 }
-            },
-        ]
+            })
+        }
+        eventTask = Task { [weak self] in
+            for await event in streams.events {
+                self?.handle(event)
+            }
+        }
+    }
+
+    /// The capture cannot continue: stop and keep what was recorded. The stop runs in its
+    /// own task, because stopping cancels the task that delivers the events.
+    private func handle(_ event: CaptureEvent) {
+        Task { await stopAutomatically(after: event) }
+    }
+
+    private func stopAutomatically(after event: CaptureEvent) async {
+        guard phase == .recording || phase == .paused else { return }
+        let message = switch event {
+        case .writeFailed(let reason):
+            String(localized: "Die Audiodatei konnte nicht weiter geschrieben werden (\(reason)). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert.")
+        case .lowDiskSpace(let available):
+            String(localized: "Auf dem Gerät sind nur noch \(TimeFormatting.byteCount(available)) frei. Die Aufnahme wurde beendet, bevor der Speicher voll ist; alles bisher Aufgenommene ist gespeichert.")
+        }
+        logger.error("Stopping the recording automatically: \(String(describing: event), privacy: .public)")
+        let noteID = await stop()
+        automaticallyStoppedNoteID = noteID
+        notices?.post(UserNotice(title: String(localized: "Aufnahme beendet"), message: message, noteID: noteID))
     }
 
     private func handleInterruption(_ interruption: AudioSessionController.Interruption) {
         guard phase == .recording || phase == .paused else { return }
         switch interruption {
         case .began:
-            recorder.pause()
-            phase = .paused
-            interruptionMessage = "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf."
-            liveActivity.update(isPaused: true, elapsed: recorder.recordedTime)
+            pause(because: String(localized: "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf."))
         case .ended(let shouldResume):
             if shouldResume, phase == .paused {
                 togglePause()
             }
         }
+    }
+
+    private func pause(because message: String) {
+        if phase == .recording {
+            recorder.pause()
+            phase = .paused
+        }
+        interruptionMessage = message
+        liveActivity.update(isPaused: true, elapsed: recorder.recordedTime)
     }
 
     private func reset() {
@@ -292,5 +394,44 @@ final class RecordingController {
         systemAudioTarget = .allApps
         draft = Draft()
         phase = .idle
+    }
+
+    // MARK: - System activity and sleep (macOS)
+
+    private func beginSystemActivity() {
+        #if os(macOS)
+        guard activity == nil else { return }
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .idleSystemSleepDisabled],
+            reason: "Aufnahme läuft"
+        )
+        #endif
+    }
+
+    private func endSystemActivity() {
+        #if os(macOS)
+        if let activity {
+            ProcessInfo.processInfo.endActivity(activity)
+        }
+        activity = nil
+        #endif
+    }
+
+    /// Closing the lid or choosing "Ruhezustand" still puts the Mac to sleep. The audio
+    /// devices stop, so the recording pauses at a defined position instead of silently
+    /// recording nothing; after waking, the user resumes it.
+    private func observeSystemSleep() {
+        #if os(macOS)
+        let center = NSWorkspace.shared.notificationCenter
+        sleepObservers = [
+            center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, self.phase == .recording else { return }
+                    self.logger.info("The Mac goes to sleep, pausing the recording")
+                    self.pause(because: String(localized: "Die Aufnahme wurde pausiert, weil der Mac in den Ruhezustand gewechselt ist. Setze sie fort, sobald das Gespräch weitergeht."))
+                }
+            },
+        ]
+        #endif
     }
 }

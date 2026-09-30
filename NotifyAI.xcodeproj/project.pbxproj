@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2727B5553034A5DC00EDD2C1 /* WhisperKit */; };
 		27AA00012F00000000000002 /* NotifyAIWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27AA00012F00000000000001 /* NotifyAIWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		27BB00012F00000000000011 /* NotifyAICore in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000021 /* NotifyAICore */; };
+		27BB00012F00000000000012 /* AudioCapture in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000022 /* AudioCapture */; };
+		27BB00012F00000000000013 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000023 /* DesignSystem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +94,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */,
+				27BB00012F00000000000011 /* NotifyAICore in Frameworks */,
+				27BB00012F00000000000012 /* AudioCapture in Frameworks */,
+				27BB00012F00000000000013 /* DesignSystem in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -166,6 +172,9 @@
 			name = NotifyAI;
 			packageProductDependencies = (
 				2727B5553034A5DC00EDD2C1 /* WhisperKit */,
+				27BB00012F00000000000021 /* NotifyAICore */,
+				27BB00012F00000000000022 /* AudioCapture */,
+				27BB00012F00000000000023 /* DesignSystem */,
 			);
 			productName = NotifyAI;
 			productReference = 275D60592E6F188200EB7BA5 /* NotifyAI.app */;
@@ -267,9 +276,10 @@
 				};
 			};
 			buildConfigurationList = 275D60542E6F188200EB7BA5 /* Build configuration list for PBXProject "NotifyAI" */;
-			developmentRegion = en;
+			developmentRegion = de;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				de,
 				en,
 				Base,
 			);
@@ -277,6 +287,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+				27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 275D605A2E6F188200EB7BA5 /* Products */;
@@ -796,6 +807,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/NotifyAIKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -812,6 +830,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */;
 			productName = WhisperKit;
+		};
+		27BB00012F00000000000021 /* NotifyAICore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
+			productName = NotifyAICore;
+		};
+		27BB00012F00000000000022 /* AudioCapture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
+			productName = AudioCapture;
+		};
+		27BB00012F00000000000023 /* DesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
+			productName = DesignSystem;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -7,64 +7,92 @@ import SwiftUI
 
 @main
 struct NotifyAIApp: App {
-    @State private var app = AppEnvironment.makeDefault()
+    /// Creates the environment; when the database cannot be opened, the app shows a
+    /// recovery screen instead of crashing.
+    @State private var launch: AppLaunch
     #if os(macOS)
     @NSApplicationDelegateAdaptor(NotifyAIAppDelegate.self) private var appDelegate
     #endif
+
+    init() {
+        let launch = AppLaunch()
+        _launch = State(initialValue: launch)
+        #if os(macOS)
+        NotifyAIAppDelegate.launch = launch
+        #endif
+    }
 
     var body: some Scene {
         mainWindow
 
         #if os(macOS)
         Settings {
-            SettingsView()
-                .appEnvironment(app)
-                .frame(width: 560, height: 640)
+            if let app = launch.environment {
+                SettingsView()
+                    .appEnvironment(app)
+                    .frame(width: 560, height: 640)
+            } else {
+                DatabaseRecoveryView(launch: launch)
+                    .frame(width: 560, height: 480)
+            }
         }
 
         MenuBarExtra(isInserted: menuBarItemBinding) {
-            MenuBarPanel()
-                .appEnvironment(app)
+            if let app = launch.environment {
+                MenuBarPanel()
+                    .appEnvironment(app)
+            }
         } label: {
-            MenuBarLabel(recording: app.recording)
+            if let app = launch.environment {
+                MenuBarLabel(recording: app.recording)
+            } else {
+                Image(systemName: "waveform")
+            }
         }
         .menuBarExtraStyle(.window)
         #endif
     }
 
+    @ViewBuilder
+    private var rootContent: some View {
+        if let app = launch.environment {
+            RootView()
+                .appEnvironment(app)
+        } else {
+            DatabaseRecoveryView(launch: launch)
+        }
+    }
+
     #if os(macOS)
     /// The menu bar item follows the "App anzeigen in" setting. If the user removes it by
     /// ⌘-dragging it out of the menu bar, the app switches to the Dock so it stays reachable.
+    /// Without an environment (database recovery) the app lives in the Dock.
     private var menuBarItemBinding: Binding<Bool> {
-        let settings = app.settings
+        let settings = launch.environment?.settings
         return Binding {
-            settings.general.appPresence.showsMenuBarItem
+            settings?.general.appPresence.showsMenuBarItem ?? false
         } set: { isInserted in
-            guard !isInserted, settings.general.appPresence.showsMenuBarItem else { return }
+            guard let settings, !isInserted, settings.general.appPresence.showsMenuBarItem else { return }
             settings.general.appPresence = .dock
             AppPresenceController.apply(.dock)
         }
     }
-    #endif
 
-    #if os(macOS)
     /// A single-instance window: `openWindow(id:)` brings the existing window to the front
     /// instead of creating another one (the menu bar opens it repeatedly).
     private var mainWindow: some Scene {
         Window("NotifyAI", id: SceneID.main) {
-            RootView()
-                .appEnvironment(app)
+            rootContent
         }
         .defaultSize(width: 1_120, height: 740)
         .commands {
-            AppCommands(navigation: app.navigation, recording: app.recording)
+            AppCommands(launch: launch)
         }
     }
     #else
     private var mainWindow: some Scene {
         WindowGroup(id: SceneID.main) {
-            RootView()
-                .appEnvironment(app)
+            rootContent
         }
     }
     #endif

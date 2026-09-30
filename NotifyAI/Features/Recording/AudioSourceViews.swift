@@ -4,6 +4,7 @@
 //
 
 #if os(macOS)
+import DesignSystem
 import SwiftUI
 
 /// Source selection rows: microphone and/or system audio, the app to record and hints.
@@ -29,11 +30,13 @@ struct AudioSourceRows: View {
     }
 }
 
-/// Picks "Alle Apps" or one running app. The list refreshes while it is visible, so an
-/// app that starts playing audio moves to the top.
+/// Picks "Alle Apps" or one running app. While it is visible the list follows app launches
+/// and quits, and an app that starts playing audio moves to the top.
 struct SystemAudioAppPicker: View {
     @Environment(AppSettings.self) private var settings
-    @State private var apps: [AudioApp] = []
+    @Environment(AudioEnvironmentMonitor.self) private var monitor
+
+    private var apps: [AudioApp] { monitor.apps }
 
     var body: some View {
         @Bindable var recording = settings.recording
@@ -53,12 +56,7 @@ struct SystemAudioAppPicker: View {
                     .tag(closedTarget)
             }
         }
-        .task {
-            while !Task.isCancelled {
-                apps = AudioAppCatalog.runningApps()
-                try? await Task.sleep(for: .seconds(2))
-            }
-        }
+        .observesAudioEnvironment(.apps)
 
         if let closedTarget {
             Label("„\(closedTarget.displayName)“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“.", systemImage: "exclamationmark.triangle")
@@ -82,7 +80,7 @@ private struct AudioAppLabel: View {
 
     var body: some View {
         Label {
-            Text(app.isPlayingAudio ? "\(app.name) · spielt Ton ab" : app.name)
+            Text(app.isPlayingAudio ? String(localized: "\(app.name) · spielt Ton ab") : app.name)
         } icon: {
             if let icon = AudioAppCatalog.icon(bundleID: app.bundleID) {
                 Image(nsImage: Self.menuSized(icon))
@@ -103,7 +101,9 @@ private struct AudioAppLabel: View {
 /// Explains what system audio recording needs: the permission and, next to loudspeakers, headphones.
 struct SystemAudioHints: View {
     let source: RecordingAudioSource
-    @State private var isLoudspeaker = false
+    @Environment(AudioEnvironmentMonitor.self) private var monitor
+
+    private var isLoudspeaker: Bool { monitor.isLoudspeaker }
 
     var body: some View {
         if source.usesSystemAudio {
@@ -120,12 +120,39 @@ struct SystemAudioHints: View {
                 .buttonStyle(.link)
             }
             .font(.caption)
-            .task(id: source) {
-                // The output can change at any time (headphones plugged in, AirPods connected).
-                while !Task.isCancelled {
-                    isLoudspeaker = CoreAudioObject.defaultOutputIsLoudspeaker()
-                    try? await Task.sleep(for: .seconds(2))
-                }
+            // The output can change at any time (headphones plugged in, AirPods connected).
+            .observesAudioEnvironment(.output)
+        }
+    }
+}
+
+/// What a view needs from `AudioEnvironmentMonitor`.
+enum AudioEnvironmentAspect {
+    case apps
+    case output
+}
+
+extension View {
+    /// Subscribes to the monitor while the view is visible.
+    func observesAudioEnvironment(_ aspect: AudioEnvironmentAspect) -> some View {
+        modifier(AudioEnvironmentSubscription(aspect: aspect))
+    }
+}
+
+private struct AudioEnvironmentSubscription: ViewModifier {
+    let aspect: AudioEnvironmentAspect
+    @Environment(AudioEnvironmentMonitor.self) private var monitor
+    @State private var isSubscribed = false
+
+    func body(content: Content) -> some View {
+        content.onScreenVisibilityChange { visible in
+            guard visible != isSubscribed else { return }
+            isSubscribed = visible
+            switch (aspect, visible) {
+            case (.apps, true): monitor.beginObservingApps()
+            case (.apps, false): monitor.endObservingApps()
+            case (.output, true): monitor.beginObservingOutput()
+            case (.output, false): monitor.endObservingOutput()
             }
         }
     }
@@ -146,10 +173,7 @@ struct SystemAudioStatus: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .frame(width: isCompact ? 90 : 140, alignment: .leading)
-                    LevelMeter(
-                        levels: Array(recording.meter.systemLevels.suffix(isCompact ? 20 : 32)),
-                        isActive: recording.phase == .recording
-                    )
+                    RecordingLevelMeter(source: .system, barCount: isCompact ? 20 : 32)
                     .frame(height: isCompact ? 14 : 22)
                 }
                 .accessibilityElement(children: .combine)

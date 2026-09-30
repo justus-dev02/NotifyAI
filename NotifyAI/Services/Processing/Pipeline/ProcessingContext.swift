@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// Which steps a job forces even if their result already exists.
 struct ProcessingOptions: Equatable, Sendable {
@@ -43,8 +44,8 @@ enum ProcessingError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingAudio: "Die Audiodatei dieser Notiz fehlt."
-        case .noSpeechDetected: "In der Aufnahme wurde keine Sprache erkannt."
+        case .missingAudio: String(localized: "Die Audiodatei dieser Notiz fehlt.")
+        case .noSpeechDetected: String(localized: "In der Aufnahme wurde keine Sprache erkannt.")
         }
     }
 }

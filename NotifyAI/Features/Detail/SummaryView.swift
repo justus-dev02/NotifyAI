@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// The structured summary of a note.
@@ -92,7 +94,7 @@ struct SummaryView: View {
                 Button("Zusammenfassen") {
                     processing.enqueue(.resummarize(note.id))
                 }
-                .disabled(note.bodyText.isEmpty)
+                .disabled(!note.hasText)
             }
         }
     }
@@ -146,7 +148,7 @@ struct SummaryView: View {
 
     private func passage(for marker: Marker) -> String {
         let text = Transcript.text(in: marker.highlightRange(duration: note.duration), of: segments)
-        return text.isEmpty ? "Keine Sprache an dieser Stelle" : "„\(text)“"
+        return text.isEmpty ? String(localized: "Keine Sprache an dieser Stelle") : String(localized: "„\(text)“")
     }
 
     private func footer(_ summary: NoteSummary) -> some View {
@@ -166,10 +168,8 @@ struct SummaryView: View {
     }
 
     private func toggle(_ item: ActionItem) {
-        guard var summary = note.summary, let index = summary.actionItems.firstIndex(where: { $0.id == item.id }) else { return }
-        summary.actionItems[index].isDone.toggle()
-        note.summary = summary
-        try? app?.store.save()
+        guard note.setActionItem(item.id, isDone: !item.isDone) else { return }
+        app?.store.saveReportingErrors()
     }
 }
 
@@ -192,7 +192,7 @@ private struct ActionItemRow: View {
                             .strikethrough(item.isDone)
                             .foregroundStyle(item.isDone ? .secondary : .primary)
                             .multilineTextAlignment(.leading)
-                        let details = [item.owner, item.due.map { "bis \($0)" }].compactMap { $0 }
+                        let details = [item.owner, item.due.map { String(localized: "bis \($0)") }].compactMap { $0 }
                         if !details.isEmpty {
                             Text(details.joined(separator: " · "))
                                 .font(.caption)

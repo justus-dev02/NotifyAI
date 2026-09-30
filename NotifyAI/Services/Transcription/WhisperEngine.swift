@@ -4,19 +4,36 @@
 //
 
 import Foundation
+import NotifyAICore
 import OSLog
+import Synchronization
 @preconcurrency import WhisperKit
+
 
 /// Transcription with Whisper via WhisperKit.
 ///
 /// Models are only ever loaded from the local model directory (`download: false`), so
 /// transcription works offline once a model has been downloaded in the settings.
+///
+/// A loaded model takes several hundred megabytes. It is released two minutes after the last
+/// transcription and immediately when the system reports memory pressure, unless it is in use.
 final class WhisperEngine: TranscriptionEngine {
     let kind = TranscriptionEngineKind.whisper
     private let runtime: WhisperRuntime
+    private let memoryPressure: any DispatchSourceMemoryPressure
 
     init(modelStore: WhisperModelStore) {
-        runtime = WhisperRuntime(modelStore: modelStore)
+        let runtime = WhisperRuntime(modelStore: modelStore)
+        self.runtime = runtime
+        memoryPressure = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .global(qos: .utility))
+        memoryPressure.setEventHandler {
+            Task { await runtime.unloadIfIdle(reason: "memory pressure") }
+        }
+        memoryPressure.activate()
+    }
+
+    deinit {
+        memoryPressure.cancel()
     }
 
     func startLiveSession(options: TranscriptionOptions) async throws -> any LiveTranscriptionSession {
@@ -39,33 +56,87 @@ final class WhisperEngine: TranscriptionEngine {
     func unloadModel() async {
         await runtime.unload()
     }
+
+    /// Whether a transcription is using the model right now; deleting it must wait.
+    var isInUse: Bool {
+        get async { await runtime.isInUse }
+    }
 }
 
 // MARK: - Runtime
 
 /// Owns the WhisperKit pipeline. As an actor it serializes access to the (non-thread-safe)
 /// pipeline, so live transcription and file transcription never run concurrently.
+///
+/// Users of the model bracket their work with `beginUse()` / `endUse()`. When the last use
+/// ends, the model is unloaded after `idleUnloadDelay`; memory pressure unloads it at once.
+/// A model in use is never unloaded, because WhisperKit would crash mid-transcription.
 actor WhisperRuntime {
+    static let idleUnloadDelay: Duration = .seconds(120)
+
     private let modelStore: WhisperModelStore
+    private let idleDelay: Duration
     private var pipeline: WhisperKit?
     private var loadedModelID: String?
+    private var activeUses = 0
+    private var idleUnload: Task<Void, Never>?
 
-    init(modelStore: WhisperModelStore) {
+    init(modelStore: WhisperModelStore, idleDelay: Duration = WhisperRuntime.idleUnloadDelay) {
         self.modelStore = modelStore
+        self.idleDelay = idleDelay
     }
 
+    var isInUse: Bool { activeUses > 0 }
+    var isLoaded: Bool { pipeline != nil }
+
+    /// Loads the model ahead of a live session. The session's own use keeps it loaded.
     func prepare(_ model: WhisperModel) async throws {
+        beginUse()
+        defer { endUse() }
         _ = try await pipeline(for: model)
     }
 
+    func beginUse() {
+        activeUses += 1
+        idleUnload?.cancel()
+        idleUnload = nil
+    }
+
+    func endUse() {
+        activeUses = max(0, activeUses - 1)
+        scheduleIdleUnload()
+    }
+
+    /// Unloads the model unless it is in use.
+    func unloadIfIdle(reason: String) async {
+        guard activeUses == 0, pipeline != nil else { return }
+        Logger.transcription.info("Unloading the Whisper model (\(reason, privacy: .public))")
+        await unload()
+    }
+
     func unload() async {
+        idleUnload?.cancel()
+        idleUnload = nil
         await pipeline?.unloadModels()
         pipeline = nil
         loadedModelID = nil
     }
 
+    private func scheduleIdleUnload() {
+        guard activeUses == 0, pipeline != nil else { return }
+        idleUnload?.cancel()
+        let delay = idleDelay
+        idleUnload = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            await self?.unloadIfIdle(reason: "idle")
+        }
+    }
+
     /// Transcribes a chunk of the live recording.
-    func transcribe(_ chunk: AudioChunk, options: TranscriptionOptions) async throws -> [TranscriptSegment] {
+    func transcribe(_ chunk: NotifyAICore.AudioChunk, options: TranscriptionOptions) async throws -> [TranscriptSegment] {
+        let interval = Signposts.transcription.beginInterval("Whisper chunk", "\(chunk.duration, format: .fixed(precision: 1)) s")
+        defer { Signposts.transcription.endInterval("Whisper chunk", interval) }
         let pipeline = try await pipeline(for: options.whisperModel)
         let results = try await pipeline.transcribe(
             audioArray: chunk.samples,
@@ -79,6 +150,8 @@ actor WhisperRuntime {
         options: TranscriptionOptions,
         progress: @escaping @Sendable (Double) -> Void
     ) async throws -> [TranscriptSegment] {
+        beginUse()
+        defer { endUse() }
         let pipeline = try await pipeline(for: options.whisperModel)
         let fractionCompleted = pipeline.progress
         let results = try await pipeline.transcribe(
@@ -169,23 +242,31 @@ actor WhisperRuntime {
 /// Cuts the live audio into phrase-sized chunks and transcribes them one after another.
 ///
 /// Each chunk is transcribed exactly once, so the work grows linearly with the recording.
-/// If transcription falls behind, chunks queue up and are completed in `finish()`.
+/// If transcription falls behind, chunks queue up; the session reports how much audio is
+/// waiting (`.backlog`), so the feed can give up on live transcription before the queue
+/// grows without bound. Whatever is queued is completed in `finish()`.
 private actor WhisperLiveSession: LiveTranscriptionSession {
     nonisolated let events: AsyncStream<LiveTranscriptionEvent>
 
     private let eventContinuation: AsyncStream<LiveTranscriptionEvent>.Continuation
-    private let chunkContinuation: AsyncStream<AudioChunk>.Continuation
+    private let chunkContinuation: AsyncStream<NotifyAICore.AudioChunk>.Continuation
     private let worker: Task<[TranscriptSegment], any Error>
+    /// Seconds of audio handed to the worker and not transcribed yet.
+    private let queue: QueuedAudio
     private var chunker = SpeechChunker()
     private var isFinished = false
 
     init(runtime: WhisperRuntime, options: TranscriptionOptions) {
         let (events, eventContinuation) = AsyncStream.makeStream(of: LiveTranscriptionEvent.self)
-        let (chunks, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self)
+        let (chunks, chunkContinuation) = AsyncStream.makeStream(of: NotifyAICore.AudioChunk.self)
+        let queue = QueuedAudio()
         self.events = events
         self.eventContinuation = eventContinuation
         self.chunkContinuation = chunkContinuation
+        self.queue = queue
         self.worker = Task {
+            await runtime.beginUse()
+            defer { Task { await runtime.endUse() } }
             var transcript: [TranscriptSegment] = []
             for await chunk in chunks {
                 try Task.checkCancellation()
@@ -194,15 +275,19 @@ private actor WhisperLiveSession: LiveTranscriptionSession {
                 if !segments.isEmpty {
                     eventContinuation.yield(.finalized(segments))
                 }
+                let remaining = queue.remove(chunk.duration)
+                eventContinuation.yield(.backlog(remaining))
             }
             return transcript
         }
     }
 
-    func append(_ chunk: AudioChunk) {
+    func append(_ chunk: NotifyAICore.AudioChunk) {
         guard !isFinished else { return }
         for completed in chunker.append(chunk) {
             chunkContinuation.yield(completed)
+            let queued = queue.add(completed.duration)
+            eventContinuation.yield(.backlog(queued))
         }
     }
 
@@ -223,5 +308,24 @@ private actor WhisperLiveSession: LiveTranscriptionSession {
         chunkContinuation.finish()
         worker.cancel()
         eventContinuation.finish()
+    }
+}
+
+/// Seconds of audio waiting for the Whisper worker; shared by the session and its worker.
+private final class QueuedAudio: Sendable {
+    private let seconds = Mutex<TimeInterval>(0)
+
+    func add(_ duration: TimeInterval) -> TimeInterval {
+        seconds.withLock { seconds in
+            seconds += duration
+            return seconds
+        }
+    }
+
+    func remove(_ duration: TimeInterval) -> TimeInterval {
+        seconds.withLock { seconds in
+            seconds = max(0, seconds - duration)
+            return seconds
+        }
     }
 }

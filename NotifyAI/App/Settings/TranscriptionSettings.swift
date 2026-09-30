@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 import Observation
 
 /// Speech recognition: engine, language, Whisper model and live transcription.

@@ -39,20 +39,20 @@ final class AppLock {
         // `.deviceOwnerAuthentication` falls back to the passcode. The former
         // implementation unlocked without any check when biometrics were unavailable.
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &policyError) else {
-            errorMessage = "Auf diesem Gerät ist kein Code und keine biometrische Anmeldung eingerichtet."
+            errorMessage = String(localized: "Auf diesem Gerät ist kein Code und keine biometrische Anmeldung eingerichtet.")
             return
         }
         do {
             try await context.evaluatePolicy(
                 .deviceOwnerAuthentication,
-                localizedReason: "Entsperre NotifyAI, um auf deine Notizen zuzugreifen."
+                localizedReason: String(localized: "Entsperre NotifyAI, um auf deine Notizen zuzugreifen.")
             )
             isLocked = false
             errorMessage = nil
         } catch let error as LAError where error.code == .userCancel || error.code == .appCancel || error.code == .systemCancel {
             errorMessage = nil
         } catch {
-            errorMessage = "Die Entsperrung ist fehlgeschlagen."
+            errorMessage = String(localized: "Die Entsperrung ist fehlgeschlagen.")
         }
     }
 
@@ -70,7 +70,7 @@ final class AppLock {
         case .faceID: "Face ID"
         case .touchID: "Touch ID"
         case .opticID: "Optic ID"
-        default: "Gerätecode"
+        default: String(localized: "Gerätecode")
         }
     }
 }

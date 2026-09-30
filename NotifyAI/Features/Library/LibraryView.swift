@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import DesignSystem
 import PhotosUI
 import SwiftData
 import SwiftUI
@@ -22,7 +23,7 @@ struct LibraryView: View {
     var body: some View {
         @Bindable var navigation = navigation
 
-        NoteList(filter: navigation.filter, searchText: navigation.searchText, selection: $navigation.selectedNoteID)
+        NoteList(filter: navigation.filter, searchText: navigation.searchText, selection: $navigation.selection)
             .navigationTitle(navigation.filter.title)
             .searchable(text: $navigation.searchText, prompt: "Titel, Transkript, Zusammenfassung")
             .toolbar { toolbarContent }

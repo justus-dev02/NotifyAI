@@ -3,7 +3,9 @@
 //  NotifyAI
 //
 
+import AudioCapture
 import Foundation
+import NotifyAICore
 
 /// Creates the note of a new recording and completes it when the recording stops.
 @MainActor
@@ -71,6 +73,6 @@ struct RecordingNoteWriter {
         if !keywords.isEmpty {
             note.title = AutomaticTitle.make(keywords: keywords, date: createdAt)
         }
-        try? store.save()
+        store.saveReportingErrors()
     }
 }

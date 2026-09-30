@@ -5,6 +5,7 @@
 
 import Accelerate
 import Foundation
+import NotifyAICore
 
 /// Splits a continuous audio stream into chunks for Whisper.
 ///

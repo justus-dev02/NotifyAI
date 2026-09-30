@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// The available on-device speech recognizers.
 enum TranscriptionEngineKind: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -24,9 +25,9 @@ enum TranscriptionEngineKind: String, CaseIterable, Codable, Identifiable, Senda
     var summary: String {
         switch self {
         case .appleSpeech:
-            "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit."
+            String(localized: "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit.")
         case .whisper:
-            "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise."
+            String(localized: "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise.")
         }
     }
 }
@@ -43,6 +44,9 @@ enum LiveTranscriptionEvent: Sendable {
     case finalized([TranscriptSegment])
     /// The current, still changing hypothesis for the audio after the last finalized segment.
     case volatile(String)
+    /// Seconds of appended audio that still wait for transcription. Sessions that keep up
+    /// with real time by design (Apple Speech) never report it.
+    case backlog(TimeInterval)
 }
 
 /// Transcribes audio while it is being recorded.
@@ -77,13 +81,13 @@ enum TranscriptionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .languageNotSupported(let language):
-            "\(language) wird von der gewählten Spracherkennung nicht unterstützt."
+            String(localized: "\(language) wird von der gewählten Spracherkennung nicht unterstützt.")
         case .speechAssetsUnavailable:
-            "Das Sprachpaket für Apple Speech ist nicht verfügbar. Bitte prüfe die Internetverbindung für den einmaligen Download."
+            String(localized: "Das Sprachpaket für Apple Speech ist nicht verfügbar. Bitte prüfe die Internetverbindung für den einmaligen Download.")
         case .whisperModelNotInstalled(let name):
-            "Das Whisper-Modell „\(name)“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen."
+            String(localized: "Das Whisper-Modell „\(name)“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen.")
         case .unreadableAudio:
-            "Die Audiodatei konnte nicht gelesen werden."
+            String(localized: "Die Audiodatei konnte nicht gelesen werden.")
         }
     }
 }

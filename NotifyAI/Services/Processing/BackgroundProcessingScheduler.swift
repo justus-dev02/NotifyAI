@@ -77,8 +77,8 @@ final class BackgroundProcessingScheduler {
 
         let request = BGContinuedProcessingTaskRequest(
             identifier: identifier,
-            title: "Aufnahme wird verarbeitet",
-            subtitle: "Transkript und Zusammenfassung"
+            title: String(localized: "Aufnahme wird verarbeitet"),
+            subtitle: String(localized: "Transkript und Zusammenfassung")
         )
         // Fail instead of queueing: a queued request would start later without the app.
         request.strategy = .fail
@@ -120,7 +120,7 @@ final class BackgroundProcessingScheduler {
                 }
                 task.progress.completedUnitCount = Int64(processing.overallProgress * 1_000)
                 if let stage = processing.currentStage {
-                    task.updateTitle("Aufnahme wird verarbeitet", subtitle: stage.displayName)
+                    task.updateTitle(String(localized: "Aufnahme wird verarbeitet"), subtitle: stage.displayName)
                 }
                 try? await Task.sleep(for: .seconds(2))
             }

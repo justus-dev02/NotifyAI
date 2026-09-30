@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// A Whisper model with its download state and actions.
@@ -12,6 +14,7 @@ struct WhisperModelRow: View {
     let onSelect: () -> Void
     @Environment(WhisperModelManager.self) private var manager
     @State private var isConfirmingDelete = false
+    @State private var deleteError: String?
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.medium) {
@@ -21,7 +24,7 @@ struct WhisperModelRow: View {
                     .foregroundStyle(isSelected ? Color.accentColor : .secondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(isSelected ? "Ausgewählt" : "Auswählen")
+            .accessibilityLabel(isSelected ? String(localized: "Ausgewählt") : String(localized: "Auswählen"))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -45,8 +48,19 @@ struct WhisperModelRow: View {
         .padding(.vertical, 2)
         .confirmationDialog("„\(model.name)“ löschen?", isPresented: $isConfirmingDelete) {
             Button("Löschen", role: .destructive) {
-                Task { await manager.delete(model) }
+                Task {
+                    do {
+                        try await manager.delete(model)
+                    } catch {
+                        deleteError = error.localizedDescription
+                    }
+                }
             }
+        }
+        .alert("Modell nicht gelöscht", isPresented: Binding(presenting: $deleteError)) {
+            Button("OK") { deleteError = nil }
+        } message: {
+            Text(deleteError ?? "")
         }
     }
 

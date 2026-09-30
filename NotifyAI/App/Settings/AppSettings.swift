@@ -29,3 +29,18 @@ final class AppSettings {
         general = GeneralSettings(defaults: defaults)
     }
 }
+
+extension AppSettings {
+    /// The technical preferences for a diagnosis report. The target app of a system audio
+    /// recording is left out; it says something about the user's work.
+    var diagnosticsSummary: [String] {
+        [
+            String(localized: "Spracherkennung: \(transcription.engine.rawValue), Sprache: \(transcription.language.id), Whisper-Modell: \(transcription.whisperModel.id)"),
+            String(localized: "Live-Transkript: \(String(describing: transcription.liveTranscription))"),
+            String(localized: "Audioquelle: \(recording.audioSource.rawValue)"),
+            String(localized: "Sprechererkennung: \(String(describing: analysis.speakerDetection)), Ich/Andere aus Quelle: \(String(describing: analysis.speakersFromAudioSource)), Kapitel während der Aufnahme: \(String(describing: analysis.summarizeWhileRecording))"),
+            String(localized: "App-Sperre: \(String(describing: privacy.appLockEnabled)), Backup: \(String(describing: privacy.includeInBackup))"),
+            String(localized: "Darstellung: \(general.appPresence.rawValue)"),
+        ]
+    }
+}

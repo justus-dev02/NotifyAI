@@ -1,0 +1,96 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "NotifyAI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "NotifyAI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI"
+          }
+        }
+      }
+    },
+    "NSAudioCaptureUsageDescription": {
+      "comment": "macOS: permission to record the audio of other apps (online meetings)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI nimmt den Ton von Apps wie Zoom, Teams oder Discord auf, damit Online-Meetings transkribiert und zusammengefasst werden können. Die Aufnahmen bleiben auf diesem Mac."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI records the audio of apps like Zoom, Teams or Discord so that online meetings can be transcribed and summarized. Recordings stay on this Mac."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "comment": "Privacy - Microphone Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "NotifyAI nimmt Gespräche über das Mikrofon auf. Die Aufnahmen bleiben auf diesem Gerät."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI records conversations with the microphone. Recordings stay on this device."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription": {
+      "comment": "Privacy - Speech Recognition Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "new",
+            "value": "NotifyAI wandelt deine Aufnahmen direkt auf dem Gerät in Text um."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NotifyAI turns your recordings into text right on your device."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

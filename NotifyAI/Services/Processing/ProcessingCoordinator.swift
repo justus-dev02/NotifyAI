@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 import Observation
 import OSLog
 
@@ -111,7 +112,7 @@ final class ProcessingCoordinator {
         if let note = store.note(id: job.noteID), !note.status.isProcessing {
             note.status = .queued
             note.statusMessage = nil
-            try? store.save()
+            store.saveReportingErrors()
         }
         queue.append(job)
         activities[job.noteID] = Activity(stage: .queued, progress: nil)
@@ -127,7 +128,7 @@ final class ProcessingCoordinator {
         // CAF files stay readable, so the audio recorded so far is processed.
         for note in store.notes(withStatus: [.recording]) {
             note.status = .queued
-            try? store.save()
+            store.saveReportingErrors()
             enqueue(.process(note.id))
         }
     }
@@ -217,7 +218,7 @@ final class ProcessingCoordinator {
             guard !Task.isCancelled, let note = store.note(id: job.noteID) else { return }
             logger.error("Processing failed: \(error.localizedDescription, privacy: .public)")
             note.markFailed(error.localizedDescription)
-            try? store.save()
+            store.saveReportingErrors()
         }
     }
 
@@ -240,7 +241,7 @@ final class ProcessingCoordinator {
         if let note = store.note(id: noteID) {
             note.status = stage
             note.statusMessage = nil
-            try? store.save()
+            store.saveReportingErrors()
         }
         activities[noteID] = Activity(stage: stage, progress: progress)
     }

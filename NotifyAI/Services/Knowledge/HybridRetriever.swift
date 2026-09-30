@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// Restrictions a question implies, e.g. "letzte Woche" or "mit Anna".
 struct SearchFilters: Equatable, Sendable {
@@ -266,15 +267,15 @@ struct HybridRetriever: Sendable {
         var reasons: [String] = []
         for person in filters.persons {
             if let match = note.persons.first(where: { Self.name($0, matches: person) }) {
-                reasons.append("Person: \(match)")
+                reasons.append(String(localized: "Person: \(match)"))
             }
         }
         let keywordMatches = note.keywords.filter { keyword in
             TextAnalysis.terms(in: keyword, languageCode: note.languageCode).contains { matchedTerms.contains($0) }
         }
-        reasons += keywordMatches.prefix(3).map { "Thema: \($0)" }
+        reasons += keywordMatches.prefix(3).map { String(localized: "Thema: \($0)") }
         if reasons.isEmpty, !matchedTerms.isEmpty {
-            reasons.append("Inhaltlich passend")
+            reasons.append(String(localized: "Inhaltlich passend"))
         }
         return reasons
     }

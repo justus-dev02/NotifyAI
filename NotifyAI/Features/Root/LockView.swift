@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import DesignSystem
 import SwiftUI
 
 /// Covers the interface until the user authenticates.

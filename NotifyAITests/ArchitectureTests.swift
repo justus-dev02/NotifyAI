@@ -6,9 +6,11 @@
 //  recording collaborators and grouped settings.
 //
 
+@testable import AudioCapture
 import Foundation
-import Testing
 @testable import NotifyAI
+import NotifyAICore
+import Testing
 
 // MARK: - Index persistence
 

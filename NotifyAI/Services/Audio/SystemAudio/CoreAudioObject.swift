@@ -14,7 +14,7 @@ struct CoreAudioError: LocalizedError {
     let status: OSStatus
 
     var errorDescription: String? {
-        "Systemton konnte nicht aufgenommen werden (\(operation), Fehler \(status))."
+        String(localized: "Systemton konnte nicht aufgenommen werden (\(operation), Fehler \(status)).")
     }
 }
 
@@ -81,7 +81,7 @@ enum CoreAudioObject {
         let selector = direction == .input ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice
         let device = try read(selector, of: system, initial: AudioObjectID(kAudioObjectUnknown))
         guard device != kAudioObjectUnknown else {
-            throw CoreAudioError(operation: direction == .input ? "Mikrofon" : "Ausgabegerät", status: kAudioHardwareBadDeviceError)
+            throw CoreAudioError(operation: direction == .input ? String(localized: "Mikrofon") : String(localized: "Ausgabegerät"), status: kAudioHardwareBadDeviceError)
         }
         return device
     }

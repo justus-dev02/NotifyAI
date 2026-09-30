@@ -5,6 +5,7 @@
 
 import Foundation
 import FoundationModels
+import NotifyAICore
 import OSLog
 
 /// Summarizes with Apple's on-device foundation model (Apple Intelligence).
@@ -230,7 +231,7 @@ struct FoundationModelSummarizer: Summarizer {
             context += " Participants: \(request.participants.joined(separator: ", "))."
         }
         if request.kind.hasAudio {
-            context += " Lines starting with \"Ich:\" are spoken by the user who recorded; other labels are the other participants."
+            context += " Lines starting with \"\(SourceSpeakerAttribution.userLabel):\" are spoken by the user who recorded; other labels are the other participants."
         }
 
         return """

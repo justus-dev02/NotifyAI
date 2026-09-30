@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import NotifyAICore
 import Speech
 import SwiftUI
 
@@ -56,6 +57,7 @@ private struct AppleSpeechAssetRow: View {
     let language: TranscriptionLanguage
     @State private var status: AssetInventory.Status?
     @State private var isInstalling = false
+    @State private var installError: String?
 
     var body: some View {
         content
@@ -66,6 +68,11 @@ private struct AppleSpeechAssetRow: View {
 
     @ViewBuilder
     private var content: some View {
+        if let installError {
+            Label(installError, systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(.orange)
+        }
         switch status {
         case .installed:
             LabeledContent("Sprachpaket") {
@@ -74,7 +81,7 @@ private struct AppleSpeechAssetRow: View {
             }
         case .supported:
             LabeledContent("Sprachpaket") {
-                Button(isInstalling ? "Wird geladen …" : "Jetzt laden", action: install)
+                Button(isInstalling ? String(localized: "Wird geladen …") : String(localized: "Jetzt laden"), action: install)
                     .disabled(isInstalling)
             }
         case .downloading:
@@ -95,8 +102,13 @@ private struct AppleSpeechAssetRow: View {
         isInstalling = true
         Task {
             defer { isInstalling = false }
-            if let locale = await SpeechTranscriber.supportedLocale(equivalentTo: language.locale) {
-                try? await AppleSpeechEngine.installAssetsIfNeeded(for: locale)
+            installError = nil
+            do {
+                if let locale = await SpeechTranscriber.supportedLocale(equivalentTo: language.locale) {
+                    try await AppleSpeechEngine.installAssetsIfNeeded(for: locale)
+                }
+            } catch {
+                installError = error.localizedDescription
             }
             status = await AppleSpeechEngine.assetStatus(for: language)
         }

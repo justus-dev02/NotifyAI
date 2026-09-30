@@ -5,6 +5,7 @@
 
 import Foundation
 @testable import NotifyAI
+import NotifyAICore
 
 /// Synthetic audio signals at the app's sample rate.
 enum Signal {

@@ -50,7 +50,7 @@ struct AnalysisSettingsSection: View {
             }
         case .unavailable(let reason):
             VStack(alignment: .leading, spacing: 4) {
-                LabeledContent("Zusammenfassung", value: "Einfache Zusammenfassung")
+                LabeledContent("Zusammenfassung", value: String(localized: "Einfache Zusammenfassung"))
                 Text(reason)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -61,10 +61,10 @@ struct AnalysisSettingsSection: View {
 
 /// A setting's title with an explanation below it.
 struct SettingLabel: View {
-    let title: String
-    let detail: String
+    let title: LocalizedStringKey
+    let detail: LocalizedStringKey
 
-    init(_ title: String, detail: String) {
+    init(_ title: LocalizedStringKey, detail: LocalizedStringKey) {
         self.title = title
         self.detail = detail
     }

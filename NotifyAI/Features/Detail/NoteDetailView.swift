@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftData
 import SwiftUI
 
@@ -52,7 +54,7 @@ struct NoteDetailView: View {
 
                     Picker("Ansicht", selection: $tab) {
                         Text("Zusammenfassung").tag(Tab.summary)
-                        Text(note.kind.hasAudio ? "Transkript" : "Text").tag(Tab.transcript)
+                        Text(note.kind.hasAudio ? String(localized: "Transkript") : String(localized: "Text")).tag(Tab.transcript)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -102,6 +104,10 @@ struct NoteDetailView: View {
         .onDisappear {
             model?.stop()
         }
+        .onScreenVisibilityChange { visible in
+            // Playback may continue in the background; the position is published only while visible.
+            model?.player.setDisplayed(visible)
+        }
         .alert("Notiz umbenennen", isPresented: $isRenaming) {
             TextField("Titel", text: $draftTitle)
             Button("Abbrechen", role: .cancel) {}
@@ -116,7 +122,7 @@ struct NoteDetailView: View {
 
     /// Changes whenever the model needs to re-read the note.
     private var updateKey: String {
-        "\(note.statusRawValue)|\(note.transcriptData?.count ?? -1)|\(note.markersData?.count ?? -1)"
+        "\(note.statusRawValue)|\(note.contentRevision)|\(note.markersData?.count ?? -1)"
     }
 
     // MARK: Toolbar
@@ -124,7 +130,7 @@ struct NoteDetailView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem {
-            Button(note.isFavorite ? "Aus Favoriten entfernen" : "Zu Favoriten", systemImage: note.isFavorite ? "star.fill" : "star") {
+            Button(note.isFavorite ? String(localized: "Aus Favoriten entfernen") : String(localized: "Zu Favoriten"), systemImage: note.isFavorite ? "star.fill" : "star") {
                 note.isFavorite.toggle()
                 save()
             }
@@ -141,12 +147,12 @@ struct NoteDetailView: View {
                 Button("Text kopieren", systemImage: "doc.on.doc") {
                     Clipboard.copy(note.bodyText)
                 }
-                .disabled(note.bodyText.isEmpty)
+                .disabled(!note.hasText)
                 Divider()
                 Button("Neu zusammenfassen", systemImage: "sparkles") {
                     processing.enqueue(.resummarize(note.id))
                 }
-                .disabled(note.status.isProcessing || note.bodyText.isEmpty)
+                .disabled(note.status.isProcessing || !note.hasText)
                 if note.kind.hasAudio {
                     Button("Neu transkribieren", systemImage: "waveform") {
                         processing.enqueue(.retranscribe(note.id))
@@ -191,11 +197,11 @@ struct NoteDetailView: View {
         model?.stop()
         processing.cancel(noteID: note.id)
         navigation.selectedNoteID = nil
-        try? app?.store.delete(note)
+        app?.store.deleteReportingErrors(note)
     }
 
     private func save() {
-        try? app?.store.save()
+        app?.store.saveReportingErrors()
     }
 }
 
@@ -209,12 +215,15 @@ private struct NoteHeader: View {
             HStack(alignment: .top, spacing: Theme.Spacing.medium) {
                 NoteKindIcon(kind: note.kind, size: 44)
                 VStack(alignment: .leading, spacing: 2) {
+                    // Long titles and large Dynamic Type sizes wrap instead of being cut off.
                     Text(note.title)
                         .font(.title2.bold())
                         .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(note.createdAt.formatted(date: .complete, time: .shortened))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -231,7 +240,7 @@ private struct NoteHeader: View {
                     Tag(text: engine.displayName, systemImage: "waveform")
                 }
                 if !note.markers.isEmpty {
-                    Tag(text: "\(note.markers.count) markiert", systemImage: "star.fill")
+                    Tag(text: String(localized: "\(note.markers.count) markiert"), systemImage: "star.fill")
                 }
                 ForEach(note.participants, id: \.self) { name in
                     Tag(text: name, systemImage: "person")
@@ -269,7 +278,7 @@ private struct ProcessingBanner: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else if status == .failed {
-                    Text(note.statusMessage ?? "Unbekannter Fehler.")
+                    Text(note.statusMessage ?? String(localized: "Unbekannter Fehler."))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     Button("Erneut versuchen", systemImage: "arrow.clockwise") {

@@ -3,11 +3,13 @@
 //  NotifyAITests
 //
 
+@testable import AudioCapture
 import AVFoundation
 import Foundation
+@testable import NotifyAI
+import NotifyAICore
 import SwiftData
 import Testing
-@testable import NotifyAI
 
 // MARK: - Source activity
 
@@ -194,7 +196,7 @@ struct AggregateCaptureTests {
 
     /// Feeds `seconds` of audio like an aggregate device: microphone (mono) in buffer 0,
     /// tap (stereo, interleaved) in buffer 1. System audio starts after half the time.
-    private func feed(_ capture: AudioCaptureContext, seconds: Double) {
+    private func feed(_ input: AggregateCaptureInput, seconds: Double) {
         let totalFrames = Int(seconds * Self.deviceRate)
         let list = AudioBufferList.allocate(maximumBuffers: 2)
         defer { free(list.unsafeMutablePointer) }
@@ -213,7 +215,7 @@ struct AggregateCaptureTests {
                 system.withUnsafeMutableBytes { systemBytes in
                     list[0] = AudioBuffer(mNumberChannels: 1, mDataByteSize: UInt32(microphoneBytes.count), mData: microphoneBytes.baseAddress)
                     list[1] = AudioBuffer(mNumberChannels: 2, mDataByteSize: UInt32(systemBytes.count), mData: systemBytes.baseAddress)
-                    capture.process(aggregateInput: list.unsafePointer)
+                    input.process(list.unsafePointer)
                 }
             }
         }
@@ -229,13 +231,13 @@ struct AggregateCaptureTests {
         let capture = AudioCaptureContext()
         let (chunks, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self)
         let (levels, levelContinuation) = AsyncStream.makeStream(of: AudioLevel.self)
-        capture.begin(file: try makeFile(), chunks: chunkContinuation, levels: levelContinuation, recordsSourceActivity: true)
-        try capture.configure(AggregateInputLayout(
+        capture.begin(sink: try makeFile(), chunks: chunkContinuation, levels: levelContinuation, recordsSourceActivity: true)
+        let input = try capture.configure(AggregateInputLayout(
             microphone: .init(bufferIndex: 0, streamFormat: Self.floatFormat(channels: 1)),
             system: .init(bufferIndex: 1, streamFormat: Self.floatFormat(channels: 2))
         ))
 
-        feed(capture, seconds: 2)
+        feed(input, seconds: 2)
         let result = capture.finish()
 
         #expect(abs(result.duration - 2) < 0.05)
@@ -266,14 +268,14 @@ struct AggregateCaptureTests {
         let capture = AudioCaptureContext()
         let (_, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self)
         let (_, levelContinuation) = AsyncStream.makeStream(of: AudioLevel.self)
-        capture.begin(file: try makeFile(), chunks: chunkContinuation, levels: levelContinuation, recordsSourceActivity: false)
-        try capture.configure(AggregateInputLayout(microphone: nil, system: .init(bufferIndex: 1, streamFormat: Self.floatFormat(channels: 2))))
+        capture.begin(sink: try makeFile(), chunks: chunkContinuation, levels: levelContinuation, recordsSourceActivity: false)
+        let input = try capture.configure(AggregateInputLayout(microphone: nil, system: .init(bufferIndex: 1, streamFormat: Self.floatFormat(channels: 2))))
 
-        feed(capture, seconds: 1)
+        feed(input, seconds: 1)
         capture.setPaused(true)
-        feed(capture, seconds: 1)
+        feed(input, seconds: 1)
         capture.setPaused(false)
-        feed(capture, seconds: 0.5)
+        feed(input, seconds: 0.5)
         let result = capture.finish()
 
         #expect(abs(result.duration - 1.5) < 0.05)

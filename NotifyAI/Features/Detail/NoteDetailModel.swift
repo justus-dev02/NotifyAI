@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 import Observation
 
 /// View state of the detail screen: decoded transcript, highlight windows and playback.
@@ -20,7 +21,8 @@ final class NoteDetailModel {
     var showsHighlights = true
     var followsPlayback = true
 
-    @ObservationIgnored private var loadedTranscript: Data?
+    /// `contentRevision` of the note whose transcript is decoded, `nil` before the first update.
+    @ObservationIgnored private var loadedRevision: Int?
     @ObservationIgnored private var loadedAudioURL: URL?
 
     init(audioSession: AudioSessionController) {
@@ -34,7 +36,7 @@ final class NoteDetailModel {
     func update(from note: Note, audioURL: URL?) async {
         let markers = note.markers
         let duration = note.duration
-        let transcriptData = note.transcriptData
+        let revision = note.contentRevision
         let isRecording = note.status == .recording
 
         self.markers = markers
@@ -47,9 +49,10 @@ final class NoteDetailModel {
             player.load(url: audioURL)
         }
 
-        if transcriptData != loadedTranscript {
-            loadedTranscript = transcriptData
-            if let transcriptData {
+        // Comparing the revision avoids loading the transcript file on every update.
+        if revision != loadedRevision {
+            loadedRevision = revision
+            if let transcriptData = note.transcriptData {
                 segments = await Task.detached(priority: .userInitiated) {
                     (try? Transcript.decode(transcriptData)) ?? []
                 }.value

@@ -3,6 +3,8 @@
 //  NotifyAI
 //
 
+import DesignSystem
+import NotifyAICore
 import SwiftUI
 
 /// "Notizen fragen": a conversation about all notes.
@@ -208,7 +210,7 @@ private struct ChatMessageView: View {
                 let otherNotes = message.notes.filter { !sourceNotes.contains($0.noteID) }
                 if !otherNotes.isEmpty {
                     VStack(alignment: .leading, spacing: Theme.Spacing.small) {
-                        Text(message.sources.isEmpty ? "Passende Notizen" : "Weitere passende Notizen")
+                        Text(message.sources.isEmpty ? String(localized: "Passende Notizen") : String(localized: "Weitere passende Notizen"))
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                         ForEach(otherNotes.prefix(8)) { note in
@@ -280,7 +282,7 @@ private struct SourceCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHint(source.start == nil ? "Öffnet die Notiz" : "Öffnet die Notiz an dieser Stelle")
+        .accessibilityHint(source.start == nil ? String(localized: "Öffnet die Notiz") : String(localized: "Öffnet die Notiz an dieser Stelle"))
     }
 }
 

@@ -1,16 +1,17 @@
 //
 //  Components.swift
-//  NotifyAI
+//  DesignSystem
 //
 
+import NotifyAICore
 import SwiftUI
 
 /// The rounded, tinted symbol that identifies a note's kind.
-struct NoteKindIcon: View {
-    let kind: NoteKind
-    var size: CGFloat = 36
+public struct NoteKindIcon: View {
+    public let kind: NoteKind
+    public var size: CGFloat = 36
 
-    var body: some View {
+    public var body: some View {
         Image(systemName: kind.symbolName)
             .font(.system(size: size * 0.42, weight: .semibold))
             .foregroundStyle(.tint)
@@ -18,16 +19,28 @@ struct NoteKindIcon: View {
             .background(.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
             .accessibilityHidden(true)
     }
+
+    public init(kind: NoteKind, size: CGFloat = 36) {
+        self.kind = kind
+        self.size = size
+    }
 }
 
 /// A titled content block used on the detail screen.
-struct ContentSection<Content: View>: View {
-    let title: String
-    let systemImage: String
-    var tint: Color = .accentColor
-    @ViewBuilder let content: Content
+public struct ContentSection<Content: View>: View {
+    public let title: LocalizedStringKey
+    public let systemImage: String
+    public var tint: Color = .accentColor
+    public let content: Content
 
-    var body: some View {
+    public init(title: LocalizedStringKey, systemImage: String, tint: Color = .accentColor, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.systemImage = systemImage
+        self.tint = tint
+        self.content = content()
+    }
+
+    public var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
             Label(title, systemImage: systemImage)
                 .font(.headline)
@@ -42,12 +55,12 @@ struct ContentSection<Content: View>: View {
 }
 
 /// A bullet list with consistent spacing and alignment.
-struct BulletList: View {
-    let items: [String]
-    var bullet: String = "circle.fill"
-    var tint: Color = .secondary
+public struct BulletList: View {
+    public let items: [String]
+    public var bullet: String = "circle.fill"
+    public var tint: Color = .secondary
 
-    var body: some View {
+    public var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.small) {
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.small) {
@@ -62,38 +75,20 @@ struct BulletList: View {
             }
         }
     }
-}
 
-/// Status line for a note, with progress while it is processed.
-struct NoteStatusLabel: View {
-    let status: NoteStatus
-    var progress: Double?
-
-    var body: some View {
-        HStack(spacing: Theme.Spacing.xSmall) {
-            if status.isProcessing {
-                ProgressView()
-                    .controlSize(.mini)
-            } else {
-                Image(systemName: status.symbolName)
-            }
-            Text(status.displayName)
-            if let progress, status.isProcessing {
-                Text(progress, format: .percent.precision(.fractionLength(0)))
-                    .monospacedDigit()
-            }
-        }
-        .font(.caption)
-        .foregroundStyle(status.tint)
+    public init(items: [String], bullet: String = "circle.fill", tint: Color = .secondary) {
+        self.items = items
+        self.bullet = bullet
+        self.tint = tint
     }
 }
 
 /// Animated bars showing the recent microphone level.
-struct LevelMeter: View {
-    let levels: [Float]
-    var isActive = true
+public struct LevelMeter: View {
+    public let levels: [Float]
+    public var isActive = true
 
-    var body: some View {
+    public var body: some View {
         GeometryReader { proxy in
             let spacing: CGFloat = 3
             let barWidth = max(2, (proxy.size.width - spacing * CGFloat(levels.count - 1)) / CGFloat(max(levels.count, 1)))
@@ -109,14 +104,19 @@ struct LevelMeter: View {
         }
         .accessibilityHidden(true)
     }
+
+    public init(levels: [Float], isActive: Bool = true) {
+        self.levels = levels
+        self.isActive = isActive
+    }
 }
 
 /// A small capsule for secondary metadata.
-struct Tag: View {
-    let text: String
-    var systemImage: String?
+public struct Tag: View {
+    public let text: String
+    public var systemImage: String?
 
-    var body: some View {
+    public var body: some View {
         HStack(spacing: 4) {
             if let systemImage {
                 Image(systemName: systemImage)
@@ -128,17 +128,44 @@ struct Tag: View {
         .padding(.vertical, 4)
         .background(.fill.tertiary, in: Capsule())
     }
+
+    public init(text: String, systemImage: String? = nil) {
+        self.text = text
+        self.systemImage = systemImage
+    }
 }
 
 extension Binding where Value == Bool {
     /// `true` while `optional` holds a value. Setting it to `false` clears the value, which
     /// lets alerts and dialogs driven by an optional dismiss themselves correctly.
-    init<Wrapped: Sendable>(presenting optional: Binding<Wrapped?>) {
+    public init<Wrapped: Sendable>(presenting optional: Binding<Wrapped?>) {
         self.init(
             get: { optional.wrappedValue != nil },
             set: { isPresented in
                 if !isPresented { optional.wrappedValue = nil }
             }
         )
+    }
+}
+
+/// A section header of a list or form with an explicit Dynamic Type text style, so it grows
+/// with the user's text size like the rows below it.
+public struct SectionHeader: View {
+    private let text: Text
+
+    public init(_ title: LocalizedStringKey) {
+        text = Text(title)
+    }
+
+    /// For titles that are already localized.
+    public init(verbatim title: String) {
+        text = Text(verbatim: title)
+    }
+
+    public var body: some View {
+        text
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .accessibilityAddTraits(.isHeader)
     }
 }

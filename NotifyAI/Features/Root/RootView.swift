@@ -29,6 +29,8 @@ struct RootView: View {
             }
         }
         .animation(.default, value: appLock.isLocked)
+        // While the recorder covers the window (iOS), it presents the notices itself.
+        .userNoticeAlert(isActive: !navigation.isRecorderPresented && !appLock.isLocked)
         .task {
             await app?.start()
             if appLock.isLocked {

@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import DesignSystem
 import SwiftUI
 
 /// Library on the left, note on the right. On iPhone the split view collapses into a stack.
@@ -19,10 +20,13 @@ struct MainView: View {
                 .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 420)
                 #endif
         } detail: {
-            if let noteID = navigation.selectedNoteID {
+            switch navigation.selection {
+            case .note(let noteID):
                 NoteDetailContainer(noteID: noteID)
                     .id(noteID)
-            } else {
+            case .tasks:
+                TaskOverviewView()
+            case nil:
                 ContentUnavailableView(
                     "Keine Notiz ausgewählt",
                     systemImage: "waveform",
@@ -79,10 +83,10 @@ private struct RecordingStatusBar: View {
                     .foregroundStyle(Theme.recording)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(recording.phase == .paused ? "Aufnahme pausiert" : "Aufnahme läuft")
+                    Text(recording.phase == .paused ? String(localized: "Aufnahme pausiert") : String(localized: "Aufnahme läuft"))
                         .font(.subheadline.weight(.semibold))
-                    Text(TimeFormatting.timestamp(recording.meter.elapsed))
-                        .font(.caption.monospacedDigit())
+                    RecordingElapsedTime()
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()

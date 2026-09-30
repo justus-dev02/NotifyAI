@@ -5,6 +5,7 @@
 
 import CryptoKit
 import Foundation
+import NotifyAICore
 
 /// A chapter of a transcript, ready to be summarized.
 struct TranscriptChapter: Equatable, Sendable {

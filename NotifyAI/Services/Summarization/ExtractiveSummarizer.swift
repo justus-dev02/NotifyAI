@@ -5,6 +5,7 @@
 
 import Foundation
 import NaturalLanguage
+import NotifyAICore
 
 /// A summarizer without a language model, used when Apple Intelligence is unavailable.
 ///

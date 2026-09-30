@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAICore
 
 /// A relative time frame mentioned in a question.
 enum Timeframe: String, CaseIterable, Sendable {
@@ -31,14 +32,14 @@ enum Timeframe: String, CaseIterable, Sendable {
     var title: String {
         switch self {
         case .none: ""
-        case .today: "Heute"
-        case .yesterday: "Gestern"
-        case .thisWeek: "Diese Woche"
-        case .lastWeek: "Letzte Woche"
-        case .thisMonth: "Dieser Monat"
-        case .lastMonth: "Letzter Monat"
-        case .thisYear: "Dieses Jahr"
-        case .lastYear: "Letztes Jahr"
+        case .today: String(localized: "Heute")
+        case .yesterday: String(localized: "Gestern")
+        case .thisWeek: String(localized: "Diese Woche")
+        case .lastWeek: String(localized: "Letzte Woche")
+        case .thisMonth: String(localized: "Dieser Monat")
+        case .lastMonth: String(localized: "Letzter Monat")
+        case .thisYear: String(localized: "Dieses Jahr")
+        case .lastYear: String(localized: "Letztes Jahr")
         }
     }
 }
@@ -84,7 +85,7 @@ struct RuleBasedQueryParser: Sendable {
         let personNames = Self.firstNames(of: persons, mentionedIn: words)
         if !personNames.isEmpty {
             plan.filters.persons = personNames
-            plan.filterDescriptions += personNames.map { "Person: \($0)" }
+            plan.filterDescriptions += personNames.map { String(localized: "Person: \($0)") }
         }
 
         // Kinds and favorites.
@@ -99,7 +100,7 @@ struct RuleBasedQueryParser: Sendable {
         }
         if folded.containsAny([" favorit", " favourite", " favorite"]) {
             plan.filters.favoritesOnly = true
-            plan.filterDescriptions.append("Favoriten")
+            plan.filterDescriptions.append(String(localized: "Favoriten"))
         }
 
         // Focus (a soft preference).
@@ -151,7 +152,7 @@ struct RuleBasedQueryParser: Sendable {
         ]
         if folded.contains(" vorgestern"), let day = calendar.date(byAdding: .day, value: -2, to: now),
            let range = calendar.dateInterval(of: .day, for: day) {
-            return (range, "Vorgestern", "vorgestern")
+            return (range, String(localized: "Vorgestern"), "vorgestern")
         }
         for (timeframe, words) in phrases {
             if let phrase = words.first(where: folded.contains), let range = timeframe.dateRange(now: now, calendar: calendar) {
@@ -160,7 +161,7 @@ struct RuleBasedQueryParser: Sendable {
         }
         if let match = folded.firstMatch(of: /(?:letzten|vergangenen|last|past) (\d{1,3}) (?:tagen|tage|days)/),
            let days = Int(match.1), let start = calendar.date(byAdding: .day, value: -days, to: calendar.startOfDay(for: now)) {
-            return (DateInterval(start: start, end: now), "Letzte \(days) Tage", String(match.0))
+            return (DateInterval(start: start, end: now), String(localized: "Letzte \(days) Tage"), String(match.0))
         }
         if let (range, name, phrase) = monthRange(in: folded) {
             return (range, name, phrase)
