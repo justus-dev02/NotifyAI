@@ -90,6 +90,22 @@ Aufnahme. Auf dem Mac hält eine `ProcessInfo`-Activity App Nap und den Ruhezust
 Mac trotzdem schlafen (Deckel zu), pausiert die Aufnahme an einer definierten Stelle. ⌘Q während einer Aufnahme beendet
 sie zuerst sauber. Fehlgeschlagene Speichervorgänge erscheinen als Hinweis (`UserNotices`).
 
+Fällt ein Audiogerät aus und lässt sich nicht neu starten (Mikrofon getrennt, Aggregate-Gerät nicht neu aufzubauen),
+meldet die Aufnahmeschicht das (`CaptureEvent.inputFailed`), statt still weiterzulaufen oder selbst zu pausieren. Der
+`RecordingController` besitzt als Einziger den Aufnahmezustand: Er pausiert sichtbar mit Begründung, und „Fortsetzen“
+setzt die Aufnahme erst fort, wenn die Geräte tatsächlich wieder laufen. Nach einem Anruf wird nur eine Pause
+aufgehoben, die der Anruf ausgelöst hat, nie eine, die der Nutzer gewählt hat (`InterruptionPolicy`).
+
+Der Main Thread wartet nie auf die Platte: Umrechnen und Mischen laufen unter einem kurzen Lock, Kodieren und Schreiben
+unter einem eigenen Lock auf der Verarbeitungs-Queue. Verlorene Samples (voller Ringpuffer, fehlgeschlagene Umrechnung)
+werden gesammelt protokolliert.
+
+Die Verarbeitung nach der Aufnahme wartet während einer Aufnahme; mit Live-Transkript wird auch ein laufender Job
+angehalten und danach ab seinem letzten gespeicherten Schritt fortgesetzt. Endet unter iOS die Hintergrundzeit, wird
+der Hintergrund-Task sofort beendet und die Arbeit beim nächsten Aktivwerden der App fortgesetzt. Abschnitte, die
+Apple Intelligence nicht verarbeiten kann, fließen mit ihren wichtigsten Sätzen ein; gekürzte Notizen und nicht
+berücksichtigte markierte Stellen stehen unter der Zusammenfassung.
+
 ### Ablauf einer Aufnahme
 
 ```

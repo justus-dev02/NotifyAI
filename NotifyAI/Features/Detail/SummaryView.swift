@@ -158,9 +158,14 @@ struct SummaryView: View {
                 Label("Erstellt mit Apple Intelligence auf diesem Gerät. Prüfe wichtige Details im Transkript.", systemImage: "apple.intelligence")
             case .extractive:
                 Label("Einfache Zusammenfassung aus den wichtigsten Sätzen.", systemImage: "text.line.first.and.arrowtriangle.forward")
-                if let reason = summary.fallbackReason {
-                    Text(reason)
-                }
+            }
+            // Also shown for Apple Intelligence: a long recording whose chapters could not
+            // be combined by the model says so here.
+            if let reason = summary.fallbackReason {
+                Text(reason)
+            }
+            ForEach(summary.processingNotes, id: \.self) { note in
+                Label(note, systemImage: "exclamationmark.triangle")
             }
         }
         .font(.footnote)

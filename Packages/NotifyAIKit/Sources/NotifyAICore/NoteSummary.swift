@@ -32,6 +32,10 @@ public struct NoteSummary: Codable, Hashable, Sendable {
     public var sourceTimes: [String: TimeInterval]
     /// Chapters of a long recording, empty for short ones.
     public var chapters: [SummaryChapter]
+    /// What could only be processed with limitations, e.g. excerpts the language model
+    /// refused or notes that had to be shortened. Shown below the summary, so nothing is
+    /// left out silently.
+    public var processingNotes: [String]
 
     public init(
         suggestedTitle: String? = nil,
@@ -46,9 +50,11 @@ public struct NoteSummary: Codable, Hashable, Sendable {
         createdAt: Date = .now,
         keywords: [String] = [],
         sourceTimes: [String: TimeInterval] = [:],
-        chapters: [SummaryChapter] = []
+        chapters: [SummaryChapter] = [],
+        processingNotes: [String] = []
     ) {
         self.chapters = chapters
+        self.processingNotes = processingNotes
         self.keywords = keywords
         self.sourceTimes = sourceTimes
         self.suggestedTitle = suggestedTitle
@@ -65,10 +71,11 @@ public struct NoteSummary: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case suggestedTitle, overview, keyPoints, decisions, actionItems, openQuestions, topics
-        case source, fallbackReason, createdAt, keywords, sourceTimes, chapters
+        case source, fallbackReason, createdAt, keywords, sourceTimes, chapters, processingNotes
     }
 
-    /// Summaries saved before `keywords`, `sourceTimes` and `chapters` existed decode with empty values.
+    /// Summaries saved before `keywords`, `sourceTimes`, `chapters` and `processingNotes`
+    /// existed decode with empty values.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         suggestedTitle = try container.decodeIfPresent(String.self, forKey: .suggestedTitle)
@@ -84,6 +91,7 @@ public struct NoteSummary: Codable, Hashable, Sendable {
         keywords = try container.decodeIfPresent([String].self, forKey: .keywords) ?? []
         sourceTimes = try container.decodeIfPresent([String: TimeInterval].self, forKey: .sourceTimes) ?? [:]
         chapters = try container.decodeIfPresent([SummaryChapter].self, forKey: .chapters) ?? []
+        processingNotes = try container.decodeIfPresent([String].self, forKey: .processingNotes) ?? []
     }
 }
 

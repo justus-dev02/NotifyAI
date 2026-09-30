@@ -23,23 +23,30 @@ public enum CaptureEvent: Sendable, Equatable {
     case writeFailed(String)
     /// The volume holding the recording is almost full; the recording should stop.
     case lowDiskSpace(availableBytes: Int64)
+    /// An audio device stopped delivering and could not be restarted (e.g. the microphone
+    /// was disconnected and no other one is available). Nothing is recorded until the
+    /// recording is resumed successfully.
+    case inputFailed(String)
 }
 
 /// Converts, mixes, writes and streams the recorded audio, away from the audio threads.
 ///
-/// Two layers keep the real-time threads free of work that can block:
+/// Three layers keep blocking work away from the threads that must not block:
 /// 1. The audio threads (`MicrophoneCaptureInput`, `AggregateCaptureInput`) only downmix
 ///    into lock-free ring buffers.
-/// 2. A timer on a serial processing queue empties the rings every 100 ms: it converts each
-///    source to 16 kHz mono, mixes them in blocks of `blockSize` samples, encodes and
-///    writes the file, measures levels and streams the audio to live transcription.
+/// 2. Converting, mixing and metering happen under the `state` lock, in 100 ms blocks. The
+///    finished blocks wait in `State.blocks`. This part is pure computation.
+/// 3. Encoding and writing the file happen under the separate `writer` lock, on the
+///    processing queue. Only this layer touches the disk.
 ///
-/// A slow disk therefore delays only the processing queue; the rings absorb up to
-/// `CaptureSource.bufferedSeconds` before audio is dropped (and logged).
+/// Control calls from the main actor (`setPaused`, `configure…`, `setReducedLevelUpdates`)
+/// take only the `state` lock, which is never held during file access: a stalled disk delays
+/// the processing queue, never the main thread. Because these calls process everything
+/// already captured, pausing happens exactly at the current position. `finish()` waits for
+/// the remaining writes on the processing queue, asynchronously.
 ///
-/// All mutable state is protected by a mutex that the audio threads never take. Control
-/// calls from the main actor (`setPaused`, `finish`, …) first process everything already
-/// captured, so pausing and stopping happen exactly at the current position.
+/// Lock order: `writer` before `state` and before `chunks`. `state` and `chunks` are only
+/// held for short, non-blocking work.
 public final class AudioCaptureContext: Sendable {
     /// 100 ms: one level update, one source-activity bin and one transcription chunk per block.
     public static let blockSize = Int(AudioFormat.sampleRate * SourceActivity.binDuration)
@@ -48,8 +55,28 @@ public final class AudioCaptureContext: Sendable {
     /// Below this much free space the recording stops before the disk runs full.
     public static let minimumFreeBytes: Int64 = 50 * 1_024 * 1_024
     private static let diskCheckInterval: Duration = .seconds(30)
+    /// Lost audio is logged at most this often (and when the capture is reconfigured or finished).
+    private static let lossReportInterval: Duration = .seconds(5)
     /// Largest block written at once (also the capacity of the reused write buffer).
     private static let writeCapacity = Int(AudioFormat.sampleRate)
+
+    /// Audio a source lost before it reached the file.
+    private struct SampleLosses {
+        /// Dropped by the audio thread because the ring was full.
+        var dropped = 0
+        /// Lost because converting to 16 kHz failed.
+        var failedConversion = 0
+        /// The latest conversion error.
+        var conversionError: String?
+
+        var isEmpty: Bool { dropped == 0 && failedConversion == 0 }
+
+        mutating func add(_ other: SampleLosses) {
+            dropped += other.dropped
+            failedConversion += other.failedConversion
+            conversionError = other.conversionError ?? conversionError
+        }
+    }
 
     /// Converts one source from its native rate to 16 kHz mono with reused buffers.
     private struct SourceReader {
@@ -57,8 +84,12 @@ public final class AudioCaptureContext: Sendable {
         let converter: AVAudioConverter
         let inputBuffer: AVAudioPCMBuffer
         let outputBuffer: AVAudioPCMBuffer
+        /// Samples lost to conversion errors since the last `takeLosses()`.
+        private var failedConversion = 0
+        private var conversionError: String?
 
-        init(source: CaptureSource, outputFormat: AVAudioFormat) throws {
+        init(source: CaptureSource) throws {
+            let outputFormat = AudioFormat.makeProcessingFormat()
             // The rings hold downmixed mono at the source's rate.
             guard let inputFormat = AVAudioFormat(
                 commonFormat: .pcmFormatFloat32,
@@ -85,16 +116,29 @@ public final class AudioCaptureContext: Sendable {
         }
 
         /// Converts everything in the ring and appends it to `output`.
-        func drain(into output: inout SampleFIFO) {
+        mutating func drain(into output: inout SampleFIFO) {
             guard let input = inputBuffer.floatChannelData?[0] else { return }
             while source.ring.availableToRead > 0 {
                 let count = source.ring.read(into: input, maximumCount: Int(inputBuffer.frameCapacity))
                 inputBuffer.frameLength = AVAudioFrameCount(count)
-                convert(into: &output)
+                if let error = convert(into: &output) {
+                    failedConversion += count
+                    conversionError = error
+                }
             }
         }
 
-        private func convert(into output: inout SampleFIFO) {
+        /// Losses since the last call: samples the audio thread dropped and samples that
+        /// could not be converted.
+        mutating func takeLosses() -> SampleLosses {
+            let losses = SampleLosses(dropped: source.ring.takeDroppedSamples(), failedConversion: failedConversion, conversionError: conversionError)
+            failedConversion = 0
+            conversionError = nil
+            return losses
+        }
+
+        /// - Returns: The error description if the conversion failed; the input is then lost.
+        private func convert(into output: inout SampleFIFO) -> String? {
             outputBuffer.frameLength = 0
             var didProvideInput = false
             var conversionError: NSError?
@@ -107,37 +151,45 @@ public final class AudioCaptureContext: Sendable {
                 inputStatus.pointee = .haveData
                 return inputBuffer
             }
-            guard status != .error, outputBuffer.frameLength > 0, let samples = outputBuffer.floatChannelData?[0] else { return }
+            if status == .error {
+                return conversionError?.localizedDescription ?? "AVAudioConverter status error"
+            }
+            guard outputBuffer.frameLength > 0, let samples = outputBuffer.floatChannelData?[0] else { return nil }
             output.append(UnsafeBufferPointer(start: samples, count: Int(outputBuffer.frameLength)))
+            return nil
         }
     }
 
-    /// The number of written frames, readable without the lock.
+    /// The number of frames on the recording timeline, readable without a lock.
     private final class FrameCounter: Sendable {
         let frames = Atomic<Int>(0)
     }
 
+    /// A mixed block of 16 kHz mono samples, waiting to be written.
+    private struct MixedBlock: Sendable {
+        let samples: [Float]
+        let startFrame: Int64
+    }
+
+    /// Conversion, mixing and metering. Never held while touching the disk.
     private struct State {
-        /// Shared with `recordedTime`; updated after every write.
+        /// Shared with `recordedTime`; updated whenever a block is added to the timeline.
         let counter: FrameCounter
-        var sink: (any RecordingSink)?
-        let outputFormat = AudioFormat.makeProcessingFormat()
-        var writeBuffer: AVAudioPCMBuffer?
         var isPaused = false
         var isFinished = true
-        var framesWritten: Int64 = 0
+        /// Frames on the recording timeline: every block handed to the writer.
+        var framesProduced: Int64 = 0
+        /// Set by the writer after a write error; nothing is produced afterwards.
         var hasFailed = false
-        var chunks: AsyncStream<AudioChunk>.Continuation?
         var levels: AsyncStream<AudioLevel>.Continuation?
         var events: AsyncStream<CaptureEvent>.Continuation?
-        var storageDirectory: URL?
-        var lastDiskCheck = ContinuousClock.now
-        var hasReportedLowDiskSpace = false
 
         var microphone: SourceReader?
         var system: SourceReader?
         var pendingMicrophone = SampleFIFO()
         var pendingSystem = SampleFIFO()
+        /// Blocks in timeline order that the writer has not taken yet.
+        var blocks: [MixedBlock] = []
         /// Samples discarded while paused, for keeping the meter moving at the block rate.
         var pausedSamples = 0
         var hasReceivedSystemAudio = false
@@ -146,12 +198,31 @@ public final class AudioCaptureContext: Sendable {
         var levelInterval = 1
         var blocksSinceLevelUpdate = 0
 
+        /// Losses collected but not logged yet (see `lossReportInterval`).
+        var unreportedMicrophoneLosses = SampleLosses()
+        var unreportedSystemLosses = SampleLosses()
+        var lastLossReport = ContinuousClock.now
+
         var recordsMicrophone: Bool { microphone != nil }
         var recordsSystem: Bool { system != nil }
     }
 
+    /// The file side. Held while encoding and writing; the main thread never takes it.
+    private struct Writer {
+        var sink: (any RecordingSink)?
+        var buffer: AVAudioPCMBuffer?
+        var framesWritten: Int64 = 0
+        var hasFailed = false
+        var storageDirectory: URL?
+        var lastDiskCheck = ContinuousClock.now
+        var hasReportedLowDiskSpace = false
+    }
+
     private let counter = FrameCounter()
     private let state: Mutex<State>
+    private let writer = Mutex(Writer())
+    /// Receives the written audio for live transcription.
+    private let chunks = Mutex<AsyncStream<AudioChunk>.Continuation?>(nil)
     private let queue = DispatchQueue(label: "com.justus.NotifyAI.capture-processing", qos: .userInitiated)
     private let timer = Mutex<(any DispatchSourceTimer)?>(nil)
     private let tickInterval: DispatchTimeInterval
@@ -173,7 +244,8 @@ public final class AudioCaptureContext: Sendable {
 
     // MARK: - Lifecycle
 
-    /// Prepares a new recording.
+    /// Prepares a new recording. Must not overlap with a running one: the previous
+    /// recording's `finish()` has returned, so no processing runs and no lock is contended.
     /// - Parameters:
     ///   - chunks: Receives the recorded audio for live transcription; `nil` if nobody needs it.
     ///   - storageDirectory: Checked periodically for free space.
@@ -185,49 +257,71 @@ public final class AudioCaptureContext: Sendable {
         recordsSourceActivity: Bool,
         storageDirectory: URL? = nil
     ) {
+        writer.withLock { writer in
+            writer = Writer()
+            writer.sink = sink
+            writer.buffer = AVAudioPCMBuffer(pcmFormat: AudioFormat.makeProcessingFormat(), frameCapacity: AVAudioFrameCount(Self.writeCapacity))
+            writer.storageDirectory = storageDirectory
+        }
+        self.chunks.withLock { $0 = chunks }
         state.withLock { state in
             state = State(counter: counter)
             state.isFinished = false
-            state.sink = sink
-            state.writeBuffer = AVAudioPCMBuffer(pcmFormat: state.outputFormat, frameCapacity: AVAudioFrameCount(Self.writeCapacity))
-            state.chunks = chunks
             state.levels = levels
             state.events = events
-            state.storageDirectory = storageDirectory
             state.activity = recordsSourceActivity ? SourceActivityRecorder() : nil
         }
         counter.frames.store(0, ordering: .relaxed)
         startTimer()
     }
 
-    /// Closes the file (which finalizes it) and finishes the streams.
+    /// Writes what is left, closes the file (which finalizes it) and finishes the streams.
+    ///
+    /// Runs on the processing queue, after all writes that are still pending; the caller
+    /// waits without blocking its thread.
     @discardableResult
-    public func finish() -> RecordingResult {
+    public func finish() async -> RecordingResult {
         stopTimer()
-        let result = state.withLock { state -> RecordingResult in
-            guard !state.isFinished else {
-                return RecordingResult(duration: Double(state.framesWritten) / AudioFormat.sampleRate, sourceActivity: nil)
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: self.finishOnQueue())
             }
-            Self.drain(&state)
-            Self.flush(&state, force: true)
-            let activity = state.activity.flatMap { $0.isEmpty ? nil : $0.makeActivity() }
-            state.sink?.close()
-            state.sink = nil
-            state.microphone = nil
-            state.system = nil
-            state.pendingMicrophone.removeAll()
-            state.pendingSystem.removeAll()
-            state.chunks?.finish()
-            state.levels?.finish()
-            state.events?.finish()
-            state.chunks = nil
-            state.levels = nil
-            state.events = nil
-            state.isFinished = true
-            return RecordingResult(duration: Double(state.framesWritten) / AudioFormat.sampleRate, sourceActivity: activity)
         }
-        Self.logDroppedSamples(nil, nil, logger: logger)
-        return result
+    }
+
+    private func finishOnQueue() -> RecordingResult {
+        writer.withLock { writer in
+            let taken = state.withLock { state -> (activity: SourceActivity?, wasFinished: Bool) in
+                guard !state.isFinished else { return (nil, true) }
+                Self.drain(&state)
+                Self.flush(&state, force: true)
+                Self.reportLosses(&state, force: true)
+                let activity = state.activity.flatMap { $0.isEmpty ? nil : $0.makeActivity() }
+                state.isFinished = true
+                state.microphone = nil
+                state.system = nil
+                state.pendingMicrophone.removeAll()
+                state.pendingSystem.removeAll()
+                return (activity, false)
+            }
+            guard !taken.wasFinished else {
+                return RecordingResult(duration: Double(writer.framesWritten) / AudioFormat.sampleRate, sourceActivity: nil)
+            }
+            writeBlocks(&writer)
+            writer.sink?.close()
+            writer.sink = nil
+            chunks.withLock { continuation in
+                continuation?.finish()
+                continuation = nil
+            }
+            state.withLock { state in
+                state.levels?.finish()
+                state.events?.finish()
+                state.levels = nil
+                state.events = nil
+            }
+            return RecordingResult(duration: Double(writer.framesWritten) / AudioFormat.sampleRate, sourceActivity: taken.activity)
+        }
     }
 
     // MARK: - Sources
@@ -237,8 +331,9 @@ public final class AudioCaptureContext: Sendable {
     public func configureMicrophone(format: AVAudioFormat) throws -> MicrophoneCaptureInput {
         let input = MicrophoneCaptureInput(format: format)
         try state.withLock { state in
-            let reader = try SourceReader(source: input.source, outputFormat: state.outputFormat)
+            let reader = try SourceReader(source: input.source)
             Self.drain(&state)
+            Self.reportLosses(&state, force: true)
             state.microphone = reader
             state.system = nil
         }
@@ -255,9 +350,10 @@ public final class AudioCaptureContext: Sendable {
         }
         let input = AggregateCaptureInput(layout: layout)
         try state.withLock { state in
-            let system = try SourceReader(source: input.system, outputFormat: state.outputFormat)
-            let microphone = try input.microphone.map { try SourceReader(source: $0, outputFormat: state.outputFormat) }
+            let system = try SourceReader(source: input.system)
+            let microphone = try input.microphone.map { try SourceReader(source: $0) }
             Self.drain(&state)
+            Self.reportLosses(&state, force: true)
             Self.alignPending(&state)
             state.system = system
             state.microphone = microphone
@@ -268,7 +364,8 @@ public final class AudioCaptureContext: Sendable {
     // MARK: - Control
 
     public func setPaused(_ paused: Bool) {
-        state.withLock { state in
+        let hasBlocks = state.withLock { state -> Bool in
+            guard !state.isFinished else { return false }
             // Everything captured up to now belongs to the time before the change.
             Self.drain(&state)
             if paused, !state.isPaused {
@@ -277,6 +374,11 @@ public final class AudioCaptureContext: Sendable {
             }
             state.isPaused = paused
             state.pausedSamples = 0
+            return !state.blocks.isEmpty
+        }
+        if hasBlocks {
+            // Written on the processing queue; this call never waits for the disk.
+            queue.async { [weak self] in self?.writePendingBlocks() }
         }
     }
 
@@ -291,26 +393,38 @@ public final class AudioCaptureContext: Sendable {
 
     /// Stops streaming audio to live transcription, e.g. when it fell too far behind.
     public func stopStreamingChunks() {
-        state.withLock { state in
-            state.chunks?.finish()
-            state.chunks = nil
+        chunks.withLock { continuation in
+            continuation?.finish()
+            continuation = nil
         }
     }
 
-    /// Processes everything the audio threads have captured so far. Called by the timer;
-    /// tests call it directly.
+    /// Tells the recording controller that a device stopped delivering audio and could not
+    /// be restarted. Called by the device layer (engine, aggregate device).
+    public func reportInputFailure(_ message: String) {
+        state.withLock { state in
+            guard !state.isFinished else { return }
+            state.events?.yield(.inputFailed(message))
+        }
+    }
+
+    /// Processes everything the audio threads have captured so far and writes it. Called by
+    /// the timer on the processing queue; tests call it directly. Safe from any thread, but
+    /// it writes to the disk, so the app never calls it on the main thread.
     public func processPendingAudio() {
         let signpost = CaptureSignposts.processing.beginInterval("Process captured audio")
         defer { CaptureSignposts.processing.endInterval("Process captured audio", signpost) }
-        let dropped = state.withLock { state -> (microphone: Int, system: Int)? in
-            guard !state.isFinished else { return nil }
+        let isRunning = state.withLock { state -> Bool in
+            guard !state.isFinished else { return false }
             Self.drain(&state)
             Self.flush(&state, force: false)
-            Self.checkDiskSpaceIfDue(&state)
-            return (state.microphone?.source.ring.takeDroppedSamples() ?? 0, state.system?.source.ring.takeDroppedSamples() ?? 0)
+            Self.reportLosses(&state, force: false)
+            return true
         }
-        if let dropped {
-            Self.logDroppedSamples(dropped.microphone, dropped.system, logger: logger)
+        guard isRunning else { return }
+        writer.withLock { writer in
+            writeBlocks(&writer)
+            checkDiskSpaceIfDue(&writer)
         }
     }
 
@@ -344,7 +458,72 @@ public final class AudioCaptureContext: Sendable {
         }
     }
 
-    // MARK: - Processing (inside the lock, on the processing queue or a control call)
+    // MARK: - Writing (under the writer lock)
+
+    private func writePendingBlocks() {
+        writer.withLock { writeBlocks(&$0) }
+    }
+
+    /// Writes every block produced so far, in timeline order, and streams it to live
+    /// transcription afterwards, so the stream always matches the file.
+    private func writeBlocks(_ writer: inout Writer) {
+        let blocks = state.withLock { state -> [MixedBlock] in
+            let blocks = state.blocks
+            state.blocks.removeAll(keepingCapacity: true)
+            return blocks
+        }
+        for block in blocks {
+            guard !writer.hasFailed else { return }
+            if let error = Self.write(block, to: &writer) {
+                writer.hasFailed = true
+                // The file ends here; the timeline must not go past it.
+                counter.frames.store(Int(writer.framesWritten), ordering: .relaxed)
+                logger.error("Writing audio failed: \(error, privacy: .public)")
+                state.withLock { state in
+                    state.hasFailed = true
+                    state.blocks.removeAll()
+                    state.events?.yield(.writeFailed(error))
+                }
+                return
+            }
+            chunks.withLock { continuation in
+                _ = continuation?.yield(AudioChunk(samples: block.samples, startFrame: block.startFrame))
+            }
+        }
+    }
+
+    /// - Returns: The error description if writing failed.
+    private static func write(_ block: MixedBlock, to writer: inout Writer) -> String? {
+        guard !block.samples.isEmpty, let buffer = writer.buffer, let channel = buffer.floatChannelData?[0] else { return nil }
+        block.samples.withUnsafeBufferPointer { source in
+            if let base = source.baseAddress {
+                channel.update(from: base, count: source.count)
+            }
+        }
+        buffer.frameLength = AVAudioFrameCount(block.samples.count)
+        do {
+            try writer.sink?.write(from: buffer)
+        } catch {
+            return error.localizedDescription
+        }
+        writer.framesWritten += Int64(block.samples.count)
+        return nil
+    }
+
+    private func checkDiskSpaceIfDue(_ writer: inout Writer) {
+        guard !writer.hasReportedLowDiskSpace, let directory = writer.storageDirectory,
+              ContinuousClock.now - writer.lastDiskCheck >= Self.diskCheckInterval
+        else { return }
+        writer.lastDiskCheck = .now
+        guard let available = DiskSpace.available(at: directory), available < Self.minimumFreeBytes else { return }
+        writer.hasReportedLowDiskSpace = true
+        logger.error("Only \(available, privacy: .public) bytes free, stopping the recording")
+        state.withLock { state in
+            _ = state.events?.yield(.lowDiskSpace(availableBytes: available))
+        }
+    }
+
+    // MARK: - Processing (under the state lock, no file access)
 
     private static func isSupported(_ description: AudioStreamBasicDescription) -> Bool {
         description.mFormatID == kAudioFormatLinearPCM
@@ -371,8 +550,9 @@ public final class AudioCaptureContext: Sendable {
         }
     }
 
-    /// Writes complete blocks, or everything when `force` is set.
+    /// Mixes complete blocks, or everything when `force` is set, and hands them to the writer.
     private static func flush(_ state: inout State, force: Bool) {
+        guard !state.hasFailed else { return }
         if force {
             alignPending(&state)
         }
@@ -392,15 +572,17 @@ public final class AudioCaptureContext: Sendable {
                 // A denied permission delivers digital silence, so this is the only sign of success.
                 state.hasReceivedSystemAudio = true
             }
-            let mixed: ArraySlice<Float> = if let microphone, let system {
-                mix(microphone, system)[...]
+            let mixed: [Float] = if let microphone, let system {
+                mix(microphone, system)
             } else {
-                microphone ?? system ?? []
+                Array(microphone ?? system ?? [])
             }
             if let microphone, let system {
-                state.activity?.append(microphone: microphone, system: system, startFrame: state.framesWritten)
+                state.activity?.append(microphone: microphone, system: system, startFrame: state.framesProduced)
             }
-            write(mixed, to: &state)
+            state.blocks.append(MixedBlock(samples: mixed, startFrame: state.framesProduced))
+            state.framesProduced += Int64(mixed.count)
+            state.counter.frames.store(Int(state.framesProduced), ordering: .relaxed)
             yieldLevel(
                 microphone: microphone.map { rms(of: $0) },
                 system: system.map { rms(of: $0) },
@@ -430,35 +612,13 @@ public final class AudioCaptureContext: Sendable {
         return vDSP.clip(sum, to: -1...1)
     }
 
-    private static func write(_ samples: ArraySlice<Float>, to state: inout State) {
-        guard !samples.isEmpty, !state.hasFailed, let buffer = state.writeBuffer, let channel = buffer.floatChannelData?[0] else { return }
-        samples.withUnsafeBufferPointer { source in
-            if let base = source.baseAddress {
-                channel.update(from: base, count: source.count)
-            }
-        }
-        buffer.frameLength = AVAudioFrameCount(samples.count)
-        do {
-            try state.sink?.write(from: buffer)
-        } catch {
-            // The file is incomplete from here on; the timeline must not advance past it.
-            state.hasFailed = true
-            Logger.capture.error("Writing audio failed: \(error.localizedDescription, privacy: .public)")
-            state.events?.yield(.writeFailed(error.localizedDescription))
-            return
-        }
-        state.chunks?.yield(AudioChunk(samples: Array(samples), startFrame: state.framesWritten))
-        state.framesWritten += Int64(samples.count)
-        state.counter.frames.store(Int(state.framesWritten), ordering: .relaxed)
-    }
-
     /// In the microphone + system mode the main meter shows the microphone and a second
     /// meter the system audio; with system audio only, the main meter shows the system audio.
     private static func yieldLevel(microphone: Float?, system: Float?, state: inout State) {
         state.blocksSinceLevelUpdate += 1
         guard state.blocksSinceLevelUpdate >= state.levelInterval else { return }
         state.blocksSinceLevelUpdate = 0
-        let recordedTime = Double(state.framesWritten) / AudioFormat.sampleRate
+        let recordedTime = Double(state.framesProduced) / AudioFormat.sampleRate
         state.levels?.yield(AudioLevel(
             rms: microphone ?? system ?? 0,
             systemRMS: microphone == nil ? nil : system,
@@ -467,26 +627,36 @@ public final class AudioCaptureContext: Sendable {
         ))
     }
 
-    private static func checkDiskSpaceIfDue(_ state: inout State) {
-        guard !state.hasReportedLowDiskSpace, let directory = state.storageDirectory,
-              ContinuousClock.now - state.lastDiskCheck >= diskCheckInterval
-        else { return }
-        state.lastDiskCheck = .now
-        guard let available = DiskSpace.available(at: directory), available < minimumFreeBytes else { return }
-        state.hasReportedLowDiskSpace = true
-        Logger.capture.error("Only \(available, privacy: .public) bytes free, stopping the recording")
-        state.events?.yield(.lowDiskSpace(availableBytes: available))
-    }
-
     private static func rms(of samples: ArraySlice<Float>) -> Float {
         guard !samples.isEmpty else { return 0 }
         return vDSP.rootMeanSquare(samples)
     }
 
-    private static func logDroppedSamples(_ microphone: Int?, _ system: Int?, logger: Logger) {
-        let microphone = microphone ?? 0
-        let system = system ?? 0
-        guard microphone > 0 || system > 0 else { return }
-        logger.error("Capture processing fell behind; dropped \(microphone, privacy: .public) microphone and \(system, privacy: .public) system samples")
+    /// Collects the audio the sources lost (full rings, failed conversions) and logs it,
+    /// at most every `lossReportInterval` unless `force` is set. Nothing is lost silently,
+    /// and a persistent problem does not flood the log.
+    private static func reportLosses(_ state: inout State, force: Bool) {
+        if let losses = state.microphone?.takeLosses() {
+            state.unreportedMicrophoneLosses.add(losses)
+        }
+        if let losses = state.system?.takeLosses() {
+            state.unreportedSystemLosses.add(losses)
+        }
+        let microphone = state.unreportedMicrophoneLosses
+        let system = state.unreportedSystemLosses
+        guard !microphone.isEmpty || !system.isEmpty,
+              force || ContinuousClock.now - state.lastLossReport >= lossReportInterval
+        else { return }
+        state.lastLossReport = .now
+        state.unreportedMicrophoneLosses = SampleLosses()
+        state.unreportedSystemLosses = SampleLosses()
+
+        if microphone.dropped > 0 || system.dropped > 0 {
+            Logger.capture.error("Capture processing fell behind; dropped \(microphone.dropped, privacy: .public) microphone and \(system.dropped, privacy: .public) system samples")
+        }
+        if microphone.failedConversion > 0 || system.failedConversion > 0 {
+            let reason = microphone.conversionError ?? system.conversionError ?? "unknown"
+            Logger.capture.error("Converting captured audio failed (\(reason, privacy: .public)); lost \(microphone.failedConversion, privacy: .public) microphone and \(system.failedConversion, privacy: .public) system samples")
+        }
     }
 }

@@ -42,8 +42,12 @@ struct RootView: View {
             case .background:
                 appLock.lockIfEnabled()
                 app?.didEnterBackground()
-            case .active where appLock.isLocked:
-                Task { await appLock.unlock() }
+            case .active:
+                // Work stopped when background time ended continues now.
+                app?.didBecomeActive()
+                if appLock.isLocked {
+                    Task { await appLock.unlock() }
+                }
             default:
                 break
             }

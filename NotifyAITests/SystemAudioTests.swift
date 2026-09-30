@@ -238,7 +238,7 @@ struct AggregateCaptureTests {
         ))
 
         feed(input, seconds: 2)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         #expect(abs(result.duration - 2) < 0.05)
         let activity = try #require(result.sourceActivity)
@@ -264,7 +264,7 @@ struct AggregateCaptureTests {
     }
 
     @Test("Paused audio is dropped and does not advance the timeline")
-    func pause() throws {
+    func pause() async throws {
         let capture = AudioCaptureContext()
         let (_, chunkContinuation) = AsyncStream.makeStream(of: AudioChunk.self)
         let (_, levelContinuation) = AsyncStream.makeStream(of: AudioLevel.self)
@@ -276,7 +276,7 @@ struct AggregateCaptureTests {
         feed(input, seconds: 1)
         capture.setPaused(false)
         feed(input, seconds: 0.5)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         #expect(abs(result.duration - 1.5) < 0.05)
         #expect(result.sourceActivity == nil)

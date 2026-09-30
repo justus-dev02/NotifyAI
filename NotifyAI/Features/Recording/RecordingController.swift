@@ -19,9 +19,17 @@ import AppKit
 /// and completes the note. One instance exists per app; the main window, the macOS menu bar
 /// and the Live Activity all show its state.
 ///
+/// This controller is the single owner of the recording's state. Collaborators never
+/// pause or stop on their own; they report (`CaptureEvent`) and the controller decides, so
+/// what the UI shows always matches what is recorded.
+///
 /// Robustness:
 /// - A write error or an almost full disk stops the recording; what was recorded is kept
 ///   and the user is told why (`UserNotices`).
+/// - A device that fails and cannot be restarted (`CaptureEvent.inputFailed`) pauses the
+///   recording with an explanation; resuming retries the device.
+/// - A system interruption (phone call) pauses the recording and resumes it afterwards,
+///   but only if the interruption paused it. A pause the user chose is never lifted.
 /// - On the Mac, App Nap and idle sleep are suspended while recording. When the Mac goes
 ///   to sleep anyway (lid closed), the recording pauses and says so.
 /// - Live transcription that falls too far behind is abandoned; the file is transcribed
@@ -91,6 +99,10 @@ final class RecordingController {
     @ObservationIgnored private var captureTasks: [Task<Void, Never>] = []
     @ObservationIgnored private var eventTask: Task<Void, Never>?
     @ObservationIgnored private var lastMarkerReset: Task<Void, Never>?
+    /// Decides whether the end of an interruption may resume the recording.
+    @ObservationIgnored private var interruptions = InterruptionPolicy()
+    /// A resume is waiting for the devices to restart; further toggles are ignored.
+    @ObservationIgnored private var isResuming = false
     /// Identifiers of the level meters currently on screen.
     @ObservationIgnored private var visibleMeters: Set<String> = []
     @ObservationIgnored private let logger = Logger.audio
@@ -164,9 +176,12 @@ final class RecordingController {
             markers = []
             lastMarker = nil
             phase = .recording
+            interruptions = InterruptionPolicy()
             beginSystemActivity()
             liveActivity.start(title: note.title)
-            processing.isPaused = true
+            // With live transcription the recording needs the Neural Engine now: a running
+            // job stops and continues from its last saved step afterwards.
+            processing.pauseForRecording(interruptingRunningJob: settings.transcription.liveTranscription)
             consume(streams)
             startLiveTranscription(for: note)
         } catch {
@@ -178,21 +193,38 @@ final class RecordingController {
         }
     }
 
-    func togglePause() {
+    /// Pauses or resumes at the user's request. Resuming waits until the devices run again;
+    /// if they cannot be started, the recording stays paused and says why.
+    func togglePause() async {
         switch phase {
         case .recording:
+            // A pause the user chose is not lifted by the end of an interruption.
+            interruptions.userTookOver()
             recorder.pause()
             phase = .paused
+            liveActivity.update(isPaused: true, elapsed: recorder.recordedTime)
         case .paused:
-            do {
-                try recorder.resume()
-                interruptionMessage = nil
-                phase = .recording
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+            interruptions.userTookOver()
+            await resume()
         default:
             return
+        }
+    }
+
+    private func resume() async {
+        guard phase == .paused, !isResuming, let noteID else { return }
+        isResuming = true
+        defer { isResuming = false }
+        do {
+            try await recorder.resume()
+            // The recording may have been stopped or discarded while the devices restarted.
+            guard phase == .paused, self.noteID == noteID else { return }
+            interruptionMessage = nil
+            phase = .recording
+        } catch {
+            guard phase == .paused, self.noteID == noteID else { return }
+            logger.error("Resuming the recording failed: \(error.localizedDescription, privacy: .public)")
+            errorMessage = error.localizedDescription
         }
         liveActivity.update(isPaused: phase == .paused, elapsed: recorder.recordedTime)
     }
@@ -244,7 +276,7 @@ final class RecordingController {
         )
 
         reset()
-        processing.isPaused = false
+        processing.resumeAfterRecording()
         processing.enqueue(.process(noteID))
         return noteID
     }
@@ -266,7 +298,7 @@ final class RecordingController {
             store.deleteReportingErrors(note)
         }
         reset()
-        processing.isPaused = false
+        processing.resumeAfterRecording()
     }
 
     func dismissError() {
@@ -341,20 +373,35 @@ final class RecordingController {
         }
     }
 
-    /// The capture cannot continue: stop and keep what was recorded. The stop runs in its
-    /// own task, because stopping cancels the task that delivers the events.
     private func handle(_ event: CaptureEvent) {
-        Task { await stopAutomatically(after: event) }
+        switch event {
+        case .inputFailed(let reason):
+            inputDidFail(reason: reason)
+        case .writeFailed(let reason):
+            scheduleAutomaticStop(because: event, message: String(localized: "Die Audiodatei konnte nicht weiter geschrieben werden (\(reason)). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert."))
+        case .lowDiskSpace(let available):
+            scheduleAutomaticStop(because: event, message: String(localized: "Auf dem Gerät sind nur noch \(TimeFormatting.byteCount(available)) frei. Die Aufnahme wurde beendet, bevor der Speicher voll ist; alles bisher Aufgenommene ist gespeichert."))
+        }
     }
 
-    private func stopAutomatically(after event: CaptureEvent) async {
+    /// A device stopped delivering and could not be restarted. Nothing is recorded any
+    /// more, so the recording pauses visibly instead of appearing to run.
+    private func inputDidFail(reason: String) {
         guard phase == .recording || phase == .paused else { return }
-        let message = switch event {
-        case .writeFailed(let reason):
-            String(localized: "Die Audiodatei konnte nicht weiter geschrieben werden (\(reason)). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert.")
-        case .lowDiskSpace(let available):
-            String(localized: "Auf dem Gerät sind nur noch \(TimeFormatting.byteCount(available)) frei. Die Aufnahme wurde beendet, bevor der Speicher voll ist; alles bisher Aufgenommene ist gespeichert.")
-        }
+        logger.error("Audio input failed: \(reason, privacy: .public)")
+        // The end of an interruption must not try to resume a failed device on its own.
+        interruptions.userTookOver()
+        pause(because: String(localized: "Die Aufnahme wurde pausiert, weil das Audiogerät nicht mehr verfügbar ist (\(reason)). Alles bis hierhin ist gespeichert. Setze sie fort, sobald das Gerät wieder bereit ist."))
+    }
+
+    /// The capture cannot continue: stop and keep what was recorded. The stop runs in its
+    /// own task, because stopping cancels the task that delivers the events.
+    private func scheduleAutomaticStop(because event: CaptureEvent, message: String) {
+        Task { await stopAutomatically(because: event, message: message) }
+    }
+
+    private func stopAutomatically(because event: CaptureEvent, message: String) async {
+        guard phase == .recording || phase == .paused else { return }
         logger.error("Stopping the recording automatically: \(String(describing: event), privacy: .public)")
         let noteID = await stop()
         automaticallyStoppedNoteID = noteID
@@ -362,14 +409,19 @@ final class RecordingController {
     }
 
     private func handleInterruption(_ interruption: AudioSessionController.Interruption) {
-        guard phase == .recording || phase == .paused else { return }
-        switch interruption {
+        let action = switch interruption {
         case .began:
-            pause(because: String(localized: "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf."))
+            interruptions.interruptionBegan(isRecording: phase == .recording)
         case .ended(let shouldResume):
-            if shouldResume, phase == .paused {
-                togglePause()
-            }
+            interruptions.interruptionEnded(shouldResume: shouldResume, isPaused: phase == .paused)
+        }
+        switch action {
+        case .none:
+            break
+        case .pause:
+            pause(because: String(localized: "Die Aufnahme wurde vom System unterbrochen, z. B. durch einen Anruf."))
+        case .resume:
+            Task { await resume() }
         }
     }
 
@@ -390,6 +442,7 @@ final class RecordingController {
         markers = []
         lastMarker = nil
         interruptionMessage = nil
+        interruptions = InterruptionPolicy()
         audioSource = .microphone
         systemAudioTarget = .allApps
         draft = Draft()
@@ -433,5 +486,39 @@ final class RecordingController {
             },
         ]
         #endif
+    }
+}
+
+/// Decides how system interruptions (a phone call, Siri) affect the recording.
+///
+/// Only an interruption that paused a running recording may resume it when it ends. A pause
+/// the user chose stays a pause: an interruption that begins while paused changes nothing,
+/// and once the user pauses or resumes during an interruption, the recording is theirs again.
+struct InterruptionPolicy {
+    enum Action: Equatable {
+        case none
+        case pause
+        case resume
+    }
+
+    /// Whether the current pause was caused by an interruption.
+    private(set) var isPausedByInterruption = false
+
+    mutating func interruptionBegan(isRecording: Bool) -> Action {
+        guard isRecording else { return .none }
+        isPausedByInterruption = true
+        return .pause
+    }
+
+    mutating func interruptionEnded(shouldResume: Bool, isPaused: Bool) -> Action {
+        guard isPausedByInterruption else { return .none }
+        isPausedByInterruption = false
+        return shouldResume && isPaused ? .resume : .none
+    }
+
+    /// The user paused or resumed, or a failed device paused the recording: the end of the
+    /// interruption must not resume it.
+    mutating func userTookOver() {
+        isPausedByInterruption = false
     }
 }

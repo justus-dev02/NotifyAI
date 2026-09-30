@@ -263,6 +263,9 @@
         }
       }
     },
+    "%lld markierte Stellen passten nicht mehr in die Anfrage und wurden nicht gesondert berücksichtigt." : {
+
+    },
     "%lld Notizen · %lld Abschnitte" : {
       "localizations" : {
         "de" : {
@@ -671,6 +674,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Intelligence is turned off in System Settings."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte %lld von %lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple Intelligence konnte %1$lld von %2$lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen."
           }
         }
       }
@@ -1401,6 +1414,9 @@
         }
       }
     },
+    "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen." : {
+
+    },
     "Diagnosebericht exportieren …" : {
       "localizations" : {
         "en" : {
@@ -1510,6 +1526,9 @@
           }
         }
       }
+    },
+    "Die Aufnahme wurde pausiert, weil das Audiogerät nicht mehr verfügbar ist (%@). Alles bis hierhin ist gespeichert. Setze sie fort, sobald das Gerät wieder bereit ist." : {
+
     },
     "Die Aufnahme wurde pausiert, weil der Mac in den Ruhezustand gewechselt ist. Setze sie fort, sobald das Gespräch weitergeht." : {
       "localizations" : {
@@ -2320,6 +2339,12 @@
           }
         }
       }
+    },
+    "In %lld Kapiteln konnte Apple Intelligence einzelne Abschnitte nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
+
+    },
+    "In %lld Kapiteln waren die Notizen zu umfangreich und wurden gekürzt; dort können Details fehlen." : {
+
     },
     "In den Einstellungen erlauben" : {
       "localizations" : {

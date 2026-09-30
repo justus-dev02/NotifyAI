@@ -3,9 +3,11 @@
 //  NotifyAITests
 //
 
+import AudioCapture
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+import Synchronization
 
 /// Synthetic audio signals at the app's sample rate.
 enum Signal {
@@ -107,4 +109,20 @@ func makeIsolatedSettings() -> AppSettings {
     let defaults = UserDefaults(suiteName: suiteName)!
     defaults.removePersistentDomain(forName: suiteName)
     return AppSettings(defaults: defaults)
+}
+
+extension AudioCaptureContext {
+    /// `finish()` for synchronous test code such as `XCTestCase.measure`. Waits on the
+    /// calling thread; the capture finishes on its own queue, so this cannot deadlock.
+    func finishBlocking() -> RecordingResult {
+        let semaphore = DispatchSemaphore(value: 0)
+        let result = Mutex<RecordingResult?>(nil)
+        Task.detached {
+            let finished = await self.finish()
+            result.withLock { $0 = finished }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return result.withLock { $0! }
+    }
 }

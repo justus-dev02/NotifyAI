@@ -65,8 +65,13 @@ enum AudioRecorderError: LocalizedError {
 ///
 /// Threading: the public API is main-actor isolated. The audio threads only write into the
 /// lock-free rings of a capture input; `AudioCaptureContext` processes them on its own
-/// queue. Time is measured in written samples, so it excludes pauses and matches the audio
+/// queue. Time is measured in recorded samples, so it excludes pauses and matches the audio
 /// file exactly.
+///
+/// Device failures: when a device cannot be restarted after a change (microphone
+/// disconnected, aggregate device could not be rebuilt), the recorder does not pause on its
+/// own. It reports `CaptureEvent.inputFailed` through the event stream, and the recording
+/// controller, which owns the recording's state, pauses and tells the user.
 @MainActor
 final class AudioRecorder {
     /// A recording does not start with less free space: about 14 MB per hour of audio plus
@@ -77,16 +82,19 @@ final class AudioRecorder {
     private let capture = AudioCaptureContext()
     private let logger = Logger.audio
     private var configurationObserver: (any NSObjectProtocol)?
+    /// The input tap could not be rebuilt after a configuration change; `resume()` retries.
+    private var needsInputRebuild = false
     #if os(macOS)
     private var systemAudio: SystemAudioCapture?
     #endif
 
     private(set) var isRunning = false
+    /// Whether writing is paused. Tracked here, so the main actor never waits for the
+    /// capture's lock.
+    private(set) var isPaused = false
 
     /// Recorded time so far, excluding pauses.
     var recordedTime: TimeInterval { capture.recordedTime }
-
-    var isPaused: Bool { capture.isPaused }
 
     /// Whether the running recording uses `AVAudioEngine` (microphone only).
     private var usesEngine: Bool {
@@ -148,7 +156,7 @@ final class AudioRecorder {
                 try engine.start()
             } catch {
                 engine.inputNode.removeTap(onBus: 0)
-                capture.finish()
+                await capture.finish()
                 throw (error as? AudioRecorderError) ?? AudioRecorderError.engineStartFailed(error)
             }
             observeConfigurationChanges()
@@ -164,17 +172,19 @@ final class AudioRecorder {
                 )
                 try await session.start()
             } catch {
-                capture.finish()
+                await capture.finish()
                 throw error
             }
             systemAudio = session
             #else
-            capture.finish()
+            await capture.finish()
             throw AudioRecorderError.systemAudioUnavailable
             #endif
         }
 
         isRunning = true
+        isPaused = false
+        needsInputRebuild = false
         logger.info("Recording started (\(configuration.source.rawValue, privacy: .public))")
         return AudioCaptureStreams(chunks: chunks, levels: levels, events: events)
     }
@@ -196,26 +206,40 @@ final class AudioRecorder {
 
     /// Stops writing audio. The engine keeps running so the level meter stays live.
     func pause() {
+        guard isRunning else { return }
+        isPaused = true
         capture.setPaused(true)
     }
 
-    /// Resumes writing. Restarts the engine if the system stopped it (e.g. after a phone
-    /// call), or the aggregate device if it stopped while the Mac was asleep.
-    func resume() throws {
-        capture.setPaused(false)
-        if isRunning, usesEngine, !engine.isRunning {
+    /// Resumes writing once the devices run again: restarts the engine if the system
+    /// stopped it (e.g. after a phone call) or its input could not be rebuilt, and the
+    /// aggregate device if it stopped while the Mac was asleep or could not be rebuilt.
+    ///
+    /// Writing resumes only after every device is confirmed running. If that fails, the
+    /// recording stays paused and the error is thrown.
+    func resume() async throws {
+        guard isRunning else { return }
+        if usesEngine, needsInputRebuild || !engine.isRunning {
             do {
+                if needsInputRebuild {
+                    try installInputTap()
+                    needsInputRebuild = false
+                }
+                engine.prepare()
                 try engine.start()
             } catch {
-                capture.setPaused(true)
-                throw AudioRecorderError.engineStartFailed(error)
+                throw (error as? AudioRecorderError) ?? AudioRecorderError.engineStartFailed(error)
             }
         }
         #if os(macOS)
         if let systemAudio {
-            Task { await systemAudio.restartIfStopped() }
+            try await systemAudio.restartIfStopped()
         }
         #endif
+        // The recording may have been stopped while the devices were restarted.
+        guard isRunning else { return }
+        capture.setPaused(false)
+        isPaused = false
     }
 
     /// Publishes levels only once per second while no meter is visible.
@@ -248,7 +272,9 @@ final class AudioRecorder {
         }
         configurationObserver = nil
         isRunning = false
-        let result = capture.finish()
+        isPaused = false
+        needsInputRebuild = false
+        let result = await capture.finish()
         logger.info("Recording stopped after \(result.duration, format: .fixed(precision: 1)) s")
         return result
     }
@@ -276,6 +302,7 @@ final class AudioRecorder {
 
     /// The input device or its format changed (headset plugged in, other microphone
     /// selected on the Mac). The engine has stopped; rebuild the tap for the new format.
+    /// While paused, the engine is started by `resume()`.
     private func observeConfigurationChanges() {
         configurationObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange,
@@ -292,13 +319,21 @@ final class AudioRecorder {
         guard isRunning else { return }
         logger.info("Audio configuration changed, rebuilding input tap")
         do {
-            try installInputTap()
-            if !capture.isPaused {
+            do {
+                try installInputTap()
+            } catch {
+                needsInputRebuild = true
+                throw error
+            }
+            if !isPaused {
+                engine.prepare()
                 try engine.start()
             }
         } catch {
+            let reason = ((error as? AudioRecorderError) ?? AudioRecorderError.engineStartFailed(error)).localizedDescription
             logger.error("Restarting after a configuration change failed: \(error.localizedDescription, privacy: .public)")
-            capture.setPaused(true)
+            // The controller owns the recording's state: it pauses and tells the user.
+            capture.reportInputFailure(reason)
         }
     }
 }

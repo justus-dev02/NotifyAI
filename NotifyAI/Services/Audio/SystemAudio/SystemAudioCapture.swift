@@ -40,7 +40,10 @@ enum SystemAudioError: LocalizedError {
 ///    its own queue.
 ///
 /// The aggregate is rebuilt when the default microphone or output device changes, and the
-/// tap when the tapped app starts or ends audio processes (e.g. Zoom joins a call).
+/// tap when the tapped app starts or ends audio processes (e.g. Zoom joins a call). If a
+/// rebuild fails, nothing is recorded any more: the failure is reported through
+/// `AudioCaptureContext.reportInputFailure(_:)`, the recording controller pauses, and
+/// resuming retries the rebuild (`restartIfStopped()`).
 ///
 /// macOS asks for the "Systemaudio aufnehmen" permission when the device starts for the
 /// first time. There is no public API to query it; a denied permission yields silence.
@@ -64,6 +67,8 @@ actor SystemAudioCapture {
     private var ioProcID: AudioDeviceIOProcID?
     private var listeners: [(address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = []
     private var isRunning = false
+    /// Whether the current outage was reported already; cleared when the aggregate runs again.
+    private var hasReportedFailure = false
 
     init(includesMicrophone: Bool, target: Target, capture: AudioCaptureContext) {
         self.includesMicrophone = includesMicrophone
@@ -204,6 +209,7 @@ actor SystemAudioCapture {
         aggregateID = aggregate
         clockDeviceID = clockDevice
         ioProcID = procID
+        hasReportedFailure = false
     }
 
     /// Turns off input streams the recording does not need. Without this, recording only
@@ -308,27 +314,28 @@ actor SystemAudioCapture {
     private func defaultDeviceChanged() {
         guard isRunning else { return }
         let device = try? CoreAudioObject.defaultDevice(clockDirection)
-        guard device != clockDeviceID else { return }
+        // A failed rebuild left no aggregate; a new device gives it another chance.
+        guard device != clockDeviceID || aggregateID == kAudioObjectUnknown else { return }
         logger.info("Default device changed, rebuilding the aggregate device")
         stopAggregate()
         do {
             try startAggregate()
         } catch {
-            // Retried on the next device change, e.g. when a microphone is connected again.
-            logger.error("Rebuilding the aggregate device failed: \(error.localizedDescription, privacy: .public)")
+            reportFailure(error, while: "Rebuilding the aggregate device")
         }
     }
 
-    /// Rebuilds the aggregate device if it is no longer running, e.g. after the Mac slept.
-    /// Called when a paused recording is resumed.
-    func restartIfStopped() {
+    /// Rebuilds the aggregate device (and the tap, if needed) unless it is running, e.g.
+    /// after the Mac slept or a rebuild failed. Called when a paused recording is resumed.
+    /// - Throws: When the devices cannot be started; nothing is recorded then.
+    func restartIfStopped() throws {
         guard isRunning else { return }
-        if aggregateID != kAudioObjectUnknown,
+        if aggregateID != kAudioObjectUnknown, tapID != kAudioObjectUnknown,
            let running = try? CoreAudioObject.read(kAudioDevicePropertyDeviceIsRunning, of: aggregateID, initial: UInt32(0)),
            running != 0 {
             return
         }
-        logger.info("The aggregate device stopped, rebuilding it")
+        logger.info("The aggregate device is not running, rebuilding it")
         stopAggregate()
         do {
             if tapID == kAudioObjectUnknown {
@@ -337,6 +344,7 @@ actor SystemAudioCapture {
             try startAggregate()
         } catch {
             logger.error("Restarting the aggregate device failed: \(error.localizedDescription, privacy: .public)")
+            throw error
         }
     }
 
@@ -344,7 +352,7 @@ actor SystemAudioCapture {
     private func processesChanged() {
         guard isRunning else { return }
         let processes = targetProcesses()
-        guard processes != tappedProcesses else { return }
+        guard processes != tappedProcesses || tapID == kAudioObjectUnknown || aggregateID == kAudioObjectUnknown else { return }
         logger.info("Audio processes of the tapped app changed (\(processes.count, privacy: .public)), rebuilding the tap")
         stopAggregate()
         destroyTap()
@@ -352,8 +360,18 @@ actor SystemAudioCapture {
             try createTap(processes: processes)
             try startAggregate()
         } catch {
-            logger.error("Rebuilding the process tap failed: \(error.localizedDescription, privacy: .public)")
+            reportFailure(error, while: "Rebuilding the process tap")
         }
+    }
+
+    /// A rebuild failed and nothing is recorded any more. The recording controller pauses
+    /// and tells the user; resuming retries. A later device or process change retries too.
+    /// Reported once per outage: listeners keep retrying, but the user is told only once.
+    private func reportFailure(_ error: any Error, while operation: String) {
+        logger.error("\(operation, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+        guard !hasReportedFailure else { return }
+        hasReportedFailure = true
+        capture.reportInputFailure(error.localizedDescription)
     }
 }
 #endif

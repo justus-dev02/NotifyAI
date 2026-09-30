@@ -107,6 +107,50 @@ enum ChapterMerger {
     }
 }
 
+/// What a summary could only process with limitations. Becomes
+/// `NoteSummary.processingNotes`, so the user sees what is missing or simplified.
+struct SummaryLimitations {
+    /// Excerpts of a long text and how many of them the model could not process.
+    var excerptCount = 0
+    var failedExcerpts = 0
+    /// The notes had to be cut to fit into the final request.
+    var isShortened = false
+    /// Marked passages that did not fit into the request.
+    var omittedMarkedPassages = 0
+    /// Chapters of a long recording with excerpts the model could not process.
+    var chaptersWithFailedExcerpts = 0
+    /// Chapters of a long recording whose notes had to be cut.
+    var shortenedChapters = 0
+
+    init() {}
+
+    /// The limitations the chapters of a long recording report.
+    init(chapters: [TimedDigest]) {
+        chaptersWithFailedExcerpts = chapters.count(where: { $0.digest.failedExcerpts > 0 })
+        shortenedChapters = chapters.count(where: { $0.digest.wasShortened })
+    }
+
+    var messages: [String] {
+        var messages: [String] = []
+        if failedExcerpts > 0 {
+            messages.append(String(localized: "Apple Intelligence konnte \(failedExcerpts) von \(excerptCount) Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen."))
+        }
+        if chaptersWithFailedExcerpts > 0 {
+            messages.append(String(localized: "In \(chaptersWithFailedExcerpts) Kapiteln konnte Apple Intelligence einzelne Abschnitte nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen."))
+        }
+        if isShortened {
+            messages.append(String(localized: "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen."))
+        }
+        if shortenedChapters > 0 {
+            messages.append(String(localized: "In \(shortenedChapters) Kapiteln waren die Notizen zu umfangreich und wurden gekürzt; dort können Details fehlen."))
+        }
+        if omittedMarkedPassages > 0 {
+            messages.append(String(localized: "\(omittedMarkedPassages) markierte Stellen passten nicht mehr in die Anfrage und wurden nicht gesondert berücksichtigt."))
+        }
+        return messages
+    }
+}
+
 /// Whether Apple's on-device language model can be used right now.
 enum LanguageModelAvailability: Equatable, Sendable {
     case available
@@ -230,6 +274,7 @@ struct SummarizationService: Sendable {
         summary.chapters = timed.map {
             SummaryChapter(start: $0.start, end: $0.end, title: $0.digest.title, overview: $0.digest.overview)
         }
+        summary.processingNotes += SummaryLimitations(chapters: timed).messages
         progress(1)
         return summary
     }

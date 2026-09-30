@@ -113,6 +113,12 @@ final class AppEnvironment {
         #endif
     }
 
+    /// Called when the app becomes active. Processing that iOS interrupted when the
+    /// background time ended continues from its last saved step.
+    func didBecomeActive() {
+        processing.resumeQueuedWork()
+    }
+
     /// Called when the app moves to the background.
     func didEnterBackground() {
         #if os(iOS)
@@ -177,7 +183,7 @@ final class AppEnvironment {
         RecordingIntentHandler.handler = { [recording] action in
             switch action {
             case .togglePause:
-                recording.togglePause()
+                await recording.togglePause()
             case .stop:
                 await recording.stop()
             }

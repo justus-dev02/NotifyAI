@@ -14,6 +14,15 @@ import OSLog
 /// Engine. What a job does is defined by `NoteProcessingPipeline`; this type owns the
 /// queue, the progress shown in the UI, interruptions and background time. Progress lives
 /// only in memory; it is not written to disk on every update.
+///
+/// Two things stop the worker, and each has its own way back:
+/// - A recording (`pauseForRecording`, `resumeAfterRecording`). With live transcription the
+///   running job is interrupted too, because it would compete for the Neural Engine.
+/// - The end of background time on iOS (`interruptCurrentJob`). The worker stays stopped
+///   until the app is active again or a background task grants new time; both call
+///   `resumeQueuedWork()`.
+/// An interrupted job goes back to the front of the queue and continues from its last
+/// saved step (transcript, chapter digests).
 @MainActor
 @Observable
 final class ProcessingCoordinator {
@@ -52,11 +61,9 @@ final class ProcessingCoordinator {
     private(set) var completedInBatch = 0
 
     /// Set while a recording is running; queued jobs wait so live transcription keeps up.
-    var isPaused = false {
-        didSet {
-            if !isPaused { startWorkerIfNeeded() }
-        }
-    }
+    private(set) var isPaused = false
+    /// Set when the system ended the background time; cleared by `resumeQueuedWork()`.
+    private(set) var isSuspended = false
 
     /// Whether jobs are queued or running.
     var hasPendingWork: Bool { !activities.isEmpty }
@@ -133,8 +140,31 @@ final class ProcessingCoordinator {
         }
     }
 
-    /// Continues queued work, e.g. when a background task starts.
+    /// Continues queued work: when the app becomes active again or a background task
+    /// grants time. Also lifts the suspension after `interruptCurrentJob()`.
     func resumeQueuedWork() {
+        if isSuspended {
+            logger.info("Continuing the interrupted work")
+        }
+        isSuspended = false
+        startWorkerIfNeeded()
+    }
+
+    /// Called when a recording starts: queued jobs wait until it ends.
+    /// - Parameter interruptingRunningJob: Also stop the running job, so live transcription
+    ///   has the Neural Engine to itself. The job continues from its last saved step when
+    ///   the recording ends.
+    func pauseForRecording(interruptingRunningJob: Bool) {
+        isPaused = true
+        if interruptingRunningJob, current != nil {
+            logger.info("A recording started; the running job continues after it")
+            requeueCurrentJob()
+        }
+    }
+
+    /// Called when the recording ended or was discarded.
+    func resumeAfterRecording() {
+        isPaused = false
         startWorkerIfNeeded()
     }
 
@@ -147,16 +177,24 @@ final class ProcessingCoordinator {
         activities[noteID] = nil
     }
 
-    /// Stops the running job, e.g. when the system ends background time. The job is queued
-    /// again and continues later from its last saved step (transcript, chapter digests).
+    /// Stops the running job and the worker because the system ends background time. The
+    /// job is queued again and continues from its last saved step (transcript, chapter
+    /// digests) once `resumeQueuedWork()` is called.
     func interruptCurrentJob() {
+        isSuspended = true
+        guard current != nil else { return }
+        requeueCurrentJob()
+        logger.info("Interrupted the running job; it continues when the app is active again")
+    }
+
+    /// Cancels the running job and puts it back at the front of the queue.
+    private func requeueCurrentJob() {
         guard let current else { return }
         current.task.cancel()
         if !queue.contains(current.job) {
             queue.insert(current.job, at: 0)
         }
         activities[current.job.noteID] = Activity(stage: .queued, progress: nil)
-        logger.info("Interrupted the running job; it continues later")
     }
 
     /// Cancels all queued and running work, e.g. before deleting every note.
@@ -169,15 +207,18 @@ final class ProcessingCoordinator {
     // MARK: - Worker
 
     private func startWorkerIfNeeded() {
-        guard worker == nil, !isPaused, !queue.isEmpty else { return }
+        guard worker == nil, !isPaused, !isSuspended, !queue.isEmpty else { return }
         worker = Task { [weak self] in
             await self?.drainQueue()
             self?.worker = nil
         }
     }
 
+    /// Runs jobs until the queue is empty, a recording pauses the work or background time
+    /// ends. The conditions are checked again after an interrupted job: if the app became
+    /// active while the job was winding down, the worker simply continues.
     private func drainQueue() async {
-        while !isPaused, !queue.isEmpty {
+        while !isPaused, !isSuspended, !queue.isEmpty {
             let job = queue.removeFirst()
             if let note = store.note(id: job.noteID) {
                 onJobStarted?(job.noteID, note.kind.hasAudio ? note.duration : 0)
@@ -190,11 +231,12 @@ final class ProcessingCoordinator {
             }) {
                 await task.value
             }
-            let wasInterrupted = task.isCancelled && queue.first == job
+            let wasRequeued = task.isCancelled && queue.first == job
             current = nil
-            if wasInterrupted {
-                // Interrupted by the system: stop here, the job waits at the front of the queue.
-                break
+            if wasRequeued {
+                // Interrupted by a recording or the end of background time: the job waits
+                // at the front of the queue; the loop condition decides whether to go on.
+                continue
             }
             activities[job.noteID] = nil
             completedInBatch += 1

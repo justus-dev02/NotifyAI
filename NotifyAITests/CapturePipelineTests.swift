@@ -41,6 +41,32 @@ final class MemorySink: RecordingSink, @unchecked Sendable {
     func close() {}
 }
 
+/// A disk that stalls: every write waits until `release()` is called.
+final class StallingSink: RecordingSink, Sendable {
+    private let released = Mutex(false)
+    private let writing = Mutex(false)
+    private let frames = Mutex(0)
+
+    /// Whether a write is currently waiting for the disk.
+    var isWriting: Bool { writing.withLock { $0 } }
+    var writtenFrames: Int { frames.withLock { $0 } }
+
+    func release() {
+        released.withLock { $0 = true }
+    }
+
+    func write(from buffer: AVAudioPCMBuffer) throws {
+        writing.withLock { $0 = true }
+        while !released.withLock({ $0 }) {
+            Thread.sleep(forTimeInterval: 0.005)
+        }
+        writing.withLock { $0 = false }
+        frames.withLock { $0 += Int(buffer.frameLength) }
+    }
+
+    func close() {}
+}
+
 /// Synthetic device input.
 enum DeviceSignal {
     /// A non-interleaved Float32 buffer with a sine in every channel.
@@ -134,7 +160,7 @@ struct CapturePipelineTests {
     }
 
     @Test("Synthesized microphone audio → CAF file: duration, pause and marker position match")
-    func endToEndFile() throws {
+    func endToEndFile() async throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).caf")
         defer { try? FileManager.default.removeItem(at: url) }
         let file = try AVAudioFile(forWriting: url, settings: AudioFormat.recordingFileSettings, commonFormat: .pcmFormatFloat32, interleaved: false)
@@ -153,7 +179,7 @@ struct CapturePipelineTests {
         DeviceSignal.feed(input, frequency: 700, seconds: 0.5, rate: 48_000, channels: 2)
         capture.setPaused(false)
         DeviceSignal.feed(input, frequency: 1_000, seconds: 1, rate: 48_000, channels: 2)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         #expect(abs(result.duration - 2) < 0.02)
         #expect(abs(marker.time - 1) < 0.02)
@@ -185,7 +211,7 @@ struct CapturePipelineTests {
         DeviceSignal.feed(input, frequency: 440, seconds: 1.5, rate: 44_100, channels: 1)
         capture.processPendingAudio()
         DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 44_100, channels: 1)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         var expectedStart: Int64 = 0
         for await chunk in streams.chunks {
@@ -206,7 +232,7 @@ struct CapturePipelineTests {
         DeviceSignal.feed(input, frequency: 440, seconds: 2, rate: 48_000, channels: 1)
         capture.processPendingAudio()
         DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 48_000, channels: 1)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         // Five blocks of 100 ms were written; nothing after the failure counts as recorded.
         #expect(abs(result.duration - 0.5) < 0.001)
@@ -237,7 +263,7 @@ struct CapturePipelineTests {
         // The system audio only (headphones unplugged, microphone off).
         let systemOnly = try capture.configure(AggregateInputLayout(microphone: nil, system: .init(bufferIndex: 1, streamFormat: DeviceSignal.streamFormat(rate: 48_000, channels: 2))))
         DeviceSignal.feed(systemOnly, seconds: 1, rate: 48_000)
-        let result = capture.finish()
+        let result = await capture.finish()
 
         #expect(abs(result.duration - 4) < 0.05)
         var expectedStart: Int64 = 0
@@ -252,7 +278,7 @@ struct CapturePipelineTests {
     }
 
     @Test("A new microphone format continues the timeline (engine path)")
-    func microphoneFormatChange() throws {
+    func microphoneFormatChange() async throws {
         let streams = makeStreams()
         let capture = AudioCaptureContext(tickInterval: .never)
         capture.begin(sink: MemorySink(), chunks: nil, levels: streams.levelContinuation, recordsSourceActivity: false)
@@ -260,19 +286,19 @@ struct CapturePipelineTests {
         DeviceSignal.feed(first, frequency: 440, seconds: 1, rate: 48_000, channels: 2)
         let second = try capture.configureMicrophone(format: AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!)
         DeviceSignal.feed(second, frequency: 440, seconds: 1, rate: 16_000, channels: 1)
-        let result = capture.finish()
+        let result = await capture.finish()
         #expect(abs(result.duration - 2) < 0.02)
     }
 
     @Test("A stalled consumer drops what exceeds the ring and keeps the rest")
-    func stalledConsumer() throws {
+    func stalledConsumer() async throws {
         let streams = makeStreams()
         let capture = AudioCaptureContext(tickInterval: .never)
         capture.begin(sink: MemorySink(), chunks: nil, levels: streams.levelContinuation, recordsSourceActivity: false)
         let input = try capture.configureMicrophone(format: AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!)
         // Nothing is processed while 20 s arrive; the ring holds 15 s.
         DeviceSignal.feed(input, frequency: 440, seconds: 20, rate: 16_000, channels: 1)
-        let result = capture.finish()
+        let result = await capture.finish()
         #expect(abs(result.duration - CaptureSource.bufferedSeconds) < 0.1)
     }
 
@@ -287,12 +313,88 @@ struct CapturePipelineTests {
         capture.setReducedLevelUpdates(true)
         DeviceSignal.feed(input, frequency: 440, seconds: 3, rate: 16_000, channels: 1)
         capture.processPendingAudio()
-        capture.finish()
+        await capture.finish()
 
         var levels: [AudioLevel] = []
         for await level in streams.levels { levels.append(level) }
         #expect(levels.count == 10 + 3)
         #expect(abs((levels.last?.recordedTime ?? 0) - 4) < 0.01)
+    }
+
+    @Test("A stalled disk blocks only the processing queue, never the control calls")
+    func stalledDiskDoesNotBlockControlCalls() async throws {
+        let streams = makeStreams()
+        let sink = StallingSink()
+        let capture = AudioCaptureContext(tickInterval: .never)
+        capture.begin(sink: sink, chunks: streams.chunkContinuation, levels: streams.levelContinuation, recordsSourceActivity: false)
+        let input = try capture.configureMicrophone(format: AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!)
+        DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 16_000, channels: 1)
+
+        // The processing queue's part: it hangs in the first write.
+        let processing = Thread { capture.processPendingAudio() }
+        processing.start()
+        let deadline = ContinuousClock.now + .seconds(2)
+        while !sink.isWriting, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(sink.isWriting)
+
+        // What the main actor does meanwhile: all of it returns while the disk hangs.
+        let clock = ContinuousClock()
+        let elapsed = try clock.measure {
+            DeviceSignal.feed(input, frequency: 440, seconds: 0.5, rate: 16_000, channels: 1)
+            capture.setPaused(true)
+            capture.setReducedLevelUpdates(true)
+            _ = capture.isPaused
+            _ = capture.recordedTime
+            capture.setPaused(false)
+            _ = try capture.configureMicrophone(format: AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!)
+        }
+        #expect(elapsed < .milliseconds(200), "control calls waited \(elapsed) for the disk")
+        #expect(sink.isWriting, "the write must still hang, otherwise the test proves nothing")
+        // The timeline already contains everything captured before the pause.
+        #expect(abs(capture.recordedTime - 1.5) < 0.01)
+
+        sink.release()
+        let result = await capture.finish()
+        #expect(abs(result.duration - 1.5) < 0.01)
+        #expect(sink.writtenFrames == 24_000)
+        var expectedStart: Int64 = 0
+        for await chunk in streams.chunks {
+            #expect(chunk.startFrame == expectedStart)
+            expectedStart = chunk.endFrame
+        }
+        #expect(expectedStart == 24_000)
+    }
+
+    @Test("A failed device is reported as an event, only while recording")
+    func inputFailureEvent() async throws {
+        let streams = makeStreams()
+        let capture = AudioCaptureContext(tickInterval: .never)
+        capture.begin(sink: MemorySink(), chunks: nil, levels: streams.levelContinuation, events: streams.eventContinuation, recordsSourceActivity: false)
+        capture.reportInputFailure("Kein Mikrofon")
+        await capture.finish()
+        capture.reportInputFailure("Nach dem Ende")
+
+        var events: [CaptureEvent] = []
+        for await event in streams.events { events.append(event) }
+        #expect(events == [.inputFailed("Kein Mikrofon")])
+    }
+
+    @Test("Finishing twice returns the same duration and writes nothing more")
+    func finishTwice() async throws {
+        let streams = makeStreams()
+        let sink = MemorySink()
+        let capture = AudioCaptureContext(tickInterval: .never)
+        capture.begin(sink: sink, chunks: nil, levels: streams.levelContinuation, recordsSourceActivity: false)
+        let input = try capture.configureMicrophone(format: AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!)
+        DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 16_000, channels: 1)
+        let first = await capture.finish()
+        DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 16_000, channels: 1)
+        let second = await capture.finish()
+        #expect(abs(first.duration - 1) < 0.01)
+        #expect(second.duration == first.duration)
+        #expect(sink.frames == 16_000)
     }
 
     @Test("Streaming to live transcription can stop while the file is still written")
@@ -306,7 +408,7 @@ struct CapturePipelineTests {
         capture.processPendingAudio()
         capture.stopStreamingChunks()
         DeviceSignal.feed(input, frequency: 440, seconds: 1, rate: 16_000, channels: 1)
-        capture.finish()
+        await capture.finish()
 
         var streamed = 0
         for await chunk in streams.chunks { streamed += chunk.samples.count }

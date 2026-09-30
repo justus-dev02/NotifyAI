@@ -114,7 +114,7 @@ struct RecordingControls: View {
     var body: some View {
         HStack(spacing: isCompact ? Theme.Spacing.large : Theme.Spacing.xLarge) {
             Button {
-                recording.togglePause()
+                Task { await recording.togglePause() }
             } label: {
                 Label(recording.phase == .paused ? String(localized: "Fortsetzen") : String(localized: "Pause"), systemImage: recording.phase == .paused ? "play.fill" : "pause.fill")
                     .frame(width: buttonSize, height: buttonSize)

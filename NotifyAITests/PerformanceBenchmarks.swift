@@ -27,7 +27,7 @@ final class PerformanceBenchmarks: XCTestCase {
 
     /// What the real-time I/O thread does per device cycle (512 frames ≈ 10.7 ms): downmix
     /// microphone and tap into the rings. 10,000 cycles ≈ 107 s of audio.
-    func testRealtimeCallbackCost() throws {
+    func testRealtimeCallbackCost() async throws {
         let capture = AudioCaptureContext(tickInterval: .never)
         let (_, levels) = AsyncStream.makeStream(of: AudioLevel.self)
         capture.begin(sink: MemorySink(), chunks: nil, levels: levels, recordsSourceActivity: true)
@@ -55,7 +55,7 @@ final class PerformanceBenchmarks: XCTestCase {
                 }
             }
         }
-        capture.finish()
+        await capture.finish()
     }
 
     /// The processing queue's work for 60 s of microphone + system audio: resample both
@@ -75,7 +75,7 @@ final class PerformanceBenchmarks: XCTestCase {
                 DeviceSignal.feed(input, seconds: 1, rate: Self.deviceRate)
                 capture.processPendingAudio()
             }
-            let result = capture.finish()
+            let result = capture.finishBlocking()
             // The feed sends whole cycles of 512 frames: 94 per second instead of 93.75.
             let fedSeconds = 60 * (Self.deviceRate / 512).rounded(.up) * 512 / Self.deviceRate
             XCTAssertEqual(result.duration, fedSeconds, accuracy: 0.02)

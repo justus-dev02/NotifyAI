@@ -186,13 +186,13 @@ struct ProcessingCoordinatorTests {
     func pausesWhileRecording() async throws {
         let coordinator = makeCoordinator()
         let note = try makeAudioNote()
-        coordinator.isPaused = true
+        coordinator.pauseForRecording(interruptingRunningJob: true)
         coordinator.enqueue(.process(note.id))
 
         try await Task.sleep(for: .milliseconds(150))
         #expect(note.status == .queued)
 
-        coordinator.isPaused = false
+        coordinator.resumeAfterRecording()
         try await waitUntilIdle(coordinator, noteID: note.id)
         #expect(note.status == .ready)
     }
