@@ -3,8 +3,8 @@
 #   scripts/lint.sh            prüfen (so wie die CI)
 #   scripts/lint.sh --fix      automatisch behebbare Verstöße korrigieren
 #
-# Alte Verstöße stehen in .swiftlint-baseline.json und werden ignoriert. Neuer Code muss
-# sauber sein: In der CI zählt jede Warnung als Fehler (--strict).
+# Der Code ist frei von Verstößen; in der CI zählt jede Warnung als Fehler (--strict).
+# Testordner erlauben `!` und `try!` für Fixtures (eigene .swiftlint.yml dort).
 # Doku aller Regeln: https://realm.github.io/SwiftLint/rule-directory.html
 
 included:
@@ -77,6 +77,9 @@ line_length:
   error: 250
   ignores_urls: true
   ignores_comments: false
+  # Long user-facing texts, prompts and log messages: a localized literal cannot be wrapped
+  # without changing its key in the string catalog.
+  excluded_lines_patterns: ['"[^"]{60,}"']
 
 file_length:
   warning: 500

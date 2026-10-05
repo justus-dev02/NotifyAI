@@ -1,0 +1,6 @@
+# Tests: unwrapping a fixture with `!` or `try!` is allowed. A failed unwrap stops the test
+# with a clear message, which is what a fixture that cannot be built should do. Production
+# code keeps both rules.
+disabled_rules:
+  - force_unwrapping
+  - force_try
