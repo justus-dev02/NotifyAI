@@ -44,9 +44,12 @@ public final class NoteLibrary {
         return true
     }
 
-    /// Adds a marker, e.g. at the playback position.
+    /// Adds a marker, e.g. at the playback position. A marker at the same moment as an
+    /// existing one is ignored.
     public func addMarker(_ marker: Marker, to note: Note) {
-        note.markers += [marker]
+        let markers = note.markers.adding(marker)
+        guard markers.count != note.markers.count else { return }
+        note.markers = markers
         store.saveReportingErrors()
     }
 

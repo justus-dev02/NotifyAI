@@ -100,7 +100,8 @@ public struct MarkdownExporter {
         guard !note.markers.isEmpty else { return [] }
         return ["", String(localized: "## Markierte Stellen", bundle: .module), ""] + note.markers.map { marker in
             let text = Transcript.text(in: marker.highlightRange(duration: note.duration), of: note.segments)
-            return "- **\(TimeFormatting.timestamp(marker.time))** \(text)"
+            let passage = text.isEmpty ? String(localized: "_Keine Sprache an dieser Stelle_", bundle: .module) : text
+            return "- **\(TimeFormatting.timestamp(marker.time))** \(passage)"
         }
     }
 

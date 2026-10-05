@@ -75,6 +75,8 @@ struct PlaybackBar: View {
                     Button("Stelle markieren", systemImage: "star") {
                         onAddMarker()
                     }
+                    // Before playback has started there is no position to mark.
+                    .disabled(!player.isPlaying && player.currentTime == 0)
                     .labelStyle(.iconOnly)
                     .buttonStyle(.plain)
                     .foregroundStyle(Theme.marker)

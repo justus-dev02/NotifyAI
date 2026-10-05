@@ -231,7 +231,10 @@ public final class RecordingController {
     public func addMarker() {
         guard phase == .recording || phase == .paused, let noteID, let note = store.note(id: noteID) else { return }
         let marker = Marker(time: recorder.recordedTime)
-        markers.append(marker)
+        let updated = markers.adding(marker)
+        // A second tap at the same moment adds nothing.
+        guard updated.count != markers.count else { return }
+        markers = updated
         // Persist immediately so the marker survives an unexpected termination.
         note.markers = markers
         store.saveReportingErrors()

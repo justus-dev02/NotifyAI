@@ -137,6 +137,16 @@
         }
       }
     },
+    "_Keine Sprache an dieser Stelle_" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_No speech at this point_"
+          }
+        }
+      }
+    },
     "Aggregate-Gerät anlegen" : {
       "localizations" : {
         "en" : {

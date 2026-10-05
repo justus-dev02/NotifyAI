@@ -3,8 +3,8 @@
 //  NotifyAITests
 //
 //  What keeps made-up content out of notes: transcript text without speech in the audio,
-//  summaries of nearly empty transcripts, tasks and decisions the text does not support and
-//  placeholder owners.
+//  summaries of nearly empty transcripts, tasks and decisions the text does not support,
+//  placeholder owners, and repeated markers.
 //
 
 import Foundation
@@ -136,5 +136,19 @@ private final class CountingSummarizer: Summarizer {
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
         count.withLock { $0 += 1 }
         return NoteSummary(overview: "Erfunden", actionItems: [ActionItem(task: "Erfunden")], source: .appleIntelligence)
+    }
+}
+
+// MARK: - Markers
+
+@Suite("Repeated markers")
+struct RepeatedMarkerTests {
+    @Test("A second marker at the same moment is not added")
+    func duplicates() {
+        let markers = [Marker(time: 0)]
+            .adding(Marker(time: 0))
+            .adding(Marker(time: 0.6))
+            .adding(Marker(time: 12))
+        #expect(markers.map(\.time) == [0, 12])
     }
 }

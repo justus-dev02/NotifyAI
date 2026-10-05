@@ -9,6 +9,8 @@ import Foundation
 public struct Marker: Identifiable, Codable, Hashable, Sendable {
     /// How far before and after the marker the transcript is highlighted.
     public static let highlightPadding: TimeInterval = 5
+    /// Markers closer than this mark the same moment (a double tap, a repeated shortcut).
+    public static let minimumSpacing: TimeInterval = 1
 
     public var id: UUID
     /// Position on the recording timeline in seconds.
@@ -78,5 +80,13 @@ public struct HighlightWindows: Equatable, Sendable {
     public func contains(_ word: TranscriptWord) -> Bool {
         let midpoint = (word.start + max(word.start, word.end)) / 2
         return intersects(midpoint...midpoint)
+    }
+}
+
+extension Array where Element == Marker {
+    /// The markers with `marker` added, unless one already marks the same moment.
+    public func adding(_ marker: Marker) -> [Marker] {
+        guard !contains(where: { abs($0.time - marker.time) < Marker.minimumSpacing }) else { return self }
+        return self + [marker]
     }
 }
