@@ -799,6 +799,16 @@
         }
       }
     },
+    "Frei: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free: %@"
+          }
+        }
+      }
+    },
     "Für diese Filter gibt es keine Notizen." : {
       "localizations" : {
         "en" : {
@@ -1015,6 +1025,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No access to the microphone. Please allow access in System Settings."
+          }
+        }
+      }
+    },
+    "Keine Notiz erwähnt %@. Ich habe ohne diesen Filter gesucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No note mentions %@. I searched without this filter."
           }
         }
       }
@@ -1509,6 +1529,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create tap"
+          }
+        }
+      }
+    },
+    "Teilnehmende: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participants: %@"
           }
         }
       }

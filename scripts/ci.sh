@@ -108,6 +108,9 @@ macos_tests() {
         | python3 -c 'import json,sys; s=json.load(sys.stdin); print("  %d bestanden, %d fehlgeschlagen, %d übersprungen" % (s["passedTests"], s["failedTests"], s["skippedTests"]))' \
         || true
     echo "  Ergebnis: $result"
+
+    step "Übersetzungen: jeder Text im Katalog und ins Englische übersetzt"
+    python3 "$ROOT/scripts/check-localization.py" "$DERIVED" || fail "Texte ohne Katalogeintrag oder Übersetzung (siehe oben)."
 }
 
 ui_tests() {

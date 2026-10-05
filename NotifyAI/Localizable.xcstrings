@@ -259,16 +259,6 @@
         }
       }
     },
-    "Alle Apps" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All Apps"
-          }
-        }
-      }
-    },
     "Alle Aufnahmen, Transkripte und Zusammenfassungen werden endgültig gelöscht." : {
       "localizations" : {
         "en" : {
@@ -535,6 +525,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tasks from your summaries appear here."
+          }
+        }
+      }
+    },
+    "Aufgaben filtern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter Tasks"
           }
         }
       }
@@ -1385,16 +1385,6 @@
         }
       }
     },
-    "Frei: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Free: %@"
-          }
-        }
-      }
-    },
     "Fällig" : {
       "localizations" : {
         "en" : {
@@ -1691,16 +1681,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Note Selected"
-          }
-        }
-      }
-    },
-    "Keine Notiz erwähnt %@. Ich habe ohne diesen Filter gesucht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No note mentions %@. I searched without this filter."
           }
         }
       }
@@ -2295,6 +2275,16 @@
         }
       }
     },
+    "Notizen filtern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter Notes"
+          }
+        }
+      }
+    },
     "Notizen fragen" : {
       "localizations" : {
         "en" : {
@@ -2721,16 +2711,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Participants (comma-separated)"
-          }
-        }
-      }
-    },
-    "Teilnehmende: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Participants: %@"
           }
         }
       }
