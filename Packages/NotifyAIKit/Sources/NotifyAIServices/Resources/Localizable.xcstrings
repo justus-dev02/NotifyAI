@@ -579,6 +579,16 @@
         }
       }
     },
+    "Die Aufnahme enthält zu wenig Inhalt für eine ausführliche Zusammenfassung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording contains too little content for a detailed summary."
+          }
+        }
+      }
+    },
     "Die Aufnahme konnte nicht gestartet werden: %@" : {
       "localizations" : {
         "en" : {

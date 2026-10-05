@@ -92,7 +92,14 @@ struct ExtractiveSummarizerTests {
 
 @Suite("Summarizer selection")
 struct SummarizationServiceTests {
-    private let request = SummaryRequest(text: "Text", language: .german, focus: .general, kind: .document, markedPassages: [])
+    /// Enough content for the language model; a nearly empty text never reaches it.
+    private let request = SummaryRequest(
+        text: "Anna stellt das Budget der Herbstkampagne vor. Ben übernimmt die Abstimmung mit der Agentur bis Freitag.",
+        language: .german,
+        focus: .general,
+        kind: .document,
+        markedPassages: []
+    )
 
     @Test("The language model is used when available")
     func usesLanguageModel() async throws {

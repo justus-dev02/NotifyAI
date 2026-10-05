@@ -361,6 +361,11 @@ struct FoundationModelSummarizer: Summarizer {
         \(request.focus.modelGuidance)
         \(context)
         Only use information that is stated in the text. Never invent names, numbers, dates or facts. \
+        Many recordings are plain minutes, lectures or conversations without tasks, decisions or open \
+        questions: then leave those lists empty. A task is only a concrete action that a person in the \
+        text explicitly committed to or was asked to do; never turn topics, decisions or general \
+        "next steps" into tasks. Leave the owner and deadline of a task empty when they were not said; \
+        never write placeholders such as "not specified". \
         Transcripts can contain recognition errors; interpret them sensibly and do not quote them verbatim.
         Be concrete: keep names, numbers, amounts, dates, deadlines and product or project names. \
         Avoid generic statements such as "various topics were discussed". \

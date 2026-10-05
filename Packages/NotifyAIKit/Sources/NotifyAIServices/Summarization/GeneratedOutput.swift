@@ -15,13 +15,13 @@ struct PartialNotes {
     @Guide(description: "Important facts and statements, each as one short sentence", .maximumCount(8))
     var keyPoints: [String]
 
-    @Guide(description: "Decisions that were explicitly made", .maximumCount(6))
+    @Guide(description: "Decisions that were explicitly made; empty if none were made", .maximumCount(6))
     var decisions: [String]
 
-    @Guide(description: "Concrete tasks someone committed to", .maximumCount(8))
+    @Guide(description: "Tasks a person explicitly committed to or was asked to do; empty if there are none", .maximumCount(8))
     var actionItems: [GeneratedActionItem]
 
-    @Guide(description: "Questions or problems that were left open", .maximumCount(5))
+    @Guide(description: "Questions or problems that were explicitly left open; empty if there are none", .maximumCount(5))
     var openQuestions: [String]
 
     /// Compact text representation used as input for the next reduce step.
@@ -35,15 +35,15 @@ struct PartialNotes {
     }
 }
 
-@Generable(description: "A task that someone committed to")
+@Generable(description: "A concrete action a person explicitly committed to or was asked to do")
 struct GeneratedActionItem {
     @Guide(description: "The task, phrased as a short instruction")
     var task: String
 
-    @Guide(description: "Name of the responsible person if it was mentioned, otherwise an empty string")
+    @Guide(description: "Name of the responsible person as it was said; an empty string if nobody was named")
     var owner: String
 
-    @Guide(description: "The deadline as it was mentioned, otherwise an empty string")
+    @Guide(description: "The deadline as it was said; an empty string if no deadline was mentioned")
     var due: String
 }
 
@@ -67,13 +67,13 @@ struct GeneratedChapterDigest {
     @Guide(description: "The most important points of this chapter", .maximumCount(5))
     var keyPoints: [String]
 
-    @Guide(description: "Decisions that were explicitly made in this chapter", .maximumCount(4))
+    @Guide(description: "Decisions that were explicitly made in this chapter; empty if none were made", .maximumCount(4))
     var decisions: [String]
 
-    @Guide(description: "Concrete tasks someone committed to in this chapter", .maximumCount(6))
+    @Guide(description: "Tasks a person explicitly committed to or was asked to do in this chapter; empty if there are none", .maximumCount(6))
     var actionItems: [GeneratedActionItem]
 
-    @Guide(description: "Questions or problems left open in this chapter", .maximumCount(3))
+    @Guide(description: "Questions or problems explicitly left open in this chapter; empty if there are none", .maximumCount(3))
     var openQuestions: [String]
 
     func chapterDigest() -> ChapterDigest {
@@ -104,13 +104,13 @@ struct GeneratedSummary {
     @Guide(description: "The most important points", .maximumCount(7))
     var keyPoints: [String]
 
-    @Guide(description: "Decisions that were explicitly made", .maximumCount(6))
+    @Guide(description: "Decisions that were explicitly made; empty if none were made", .maximumCount(6))
     var decisions: [String]
 
-    @Guide(description: "Concrete tasks someone committed to", .maximumCount(10))
+    @Guide(description: "Tasks a person explicitly committed to or was asked to do; empty if there are none", .maximumCount(10))
     var actionItems: [GeneratedActionItem]
 
-    @Guide(description: "Questions or problems that were left open", .maximumCount(5))
+    @Guide(description: "Questions or problems that were explicitly left open; empty if there are none", .maximumCount(5))
     var openQuestions: [String]
 
     @Guide(description: "The main topics in the order they came up", .maximumCount(5))

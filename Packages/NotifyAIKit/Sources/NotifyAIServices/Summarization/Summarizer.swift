@@ -199,6 +199,24 @@ struct SummarizationService: Sendable {
         availability(language) == .available
     }
 
+    static func isTooThin(_ request: SummaryRequest) -> Bool {
+        Set(TextAnalysis.terms(in: request.text, languageCode: request.language.languageCode)).count < minimumDistinctTermsForModel
+    }
+
+    /// The text's own sentences instead of a generated summary, marked as such.
+    private func thinSummary(of request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        var summary: NoteSummary
+        do {
+            summary = try await fallback.summarize(request, progress: progress)
+        } catch SummarizationError.emptyInput {
+            let text = request.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            summary = NoteSummary(overview: text, source: .extractive)
+            progress(1)
+        }
+        summary.processingNotes.append(String(localized: "Die Aufnahme enthält zu wenig Inhalt für eine ausführliche Zusammenfassung.", bundle: .module))
+        return summary
+    }
+
     /// Condenses a single chapter, e.g. while the recording is still running.
     func digest(_ chapter: ChapterRequest) async throws -> ChapterDigest {
         guard usesLanguageModel(for: chapter.context.language) else {
@@ -279,7 +297,14 @@ struct SummarizationService: Sendable {
         return summary
     }
 
+    /// Below this many different content words, a text is too thin for a language model:
+    /// it would fill overview, decisions and tasks with statements that were never made.
+    static let minimumDistinctTermsForModel = 8
+
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        if Self.isTooThin(request) {
+            return try await thinSummary(of: request, progress: progress)
+        }
         switch availability(request.language) {
         case .available:
             do {

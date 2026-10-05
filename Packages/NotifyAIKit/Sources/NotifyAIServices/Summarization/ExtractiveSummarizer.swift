@@ -30,9 +30,19 @@ struct ExtractiveSummarizer: Summarizer {
 
         let decisions = sentences.filter { cues.matches($0, in: cues.decision) }
         let questions = sentences.filter { $0.hasSuffix("?") || cues.matches($0, in: cues.openQuestion) }
+        // A commitment ("ich kümmere mich", "Ben übernimmt") is a task on its own. An obligation
+        // ("wir müssen", "das soll") only with a person or a deadline: otherwise "das muss man
+        // sagen" would become a task.
         let actionItems = sentences
-            .filter { cues.matches($0, in: cues.action) && !$0.hasSuffix("?") }
-            .map { ActionItem(task: $0, owner: Self.owner(in: $0)) }
+            .filter { !$0.hasSuffix("?") }
+            .compactMap { sentence -> ActionItem? in
+                let owner = Self.owner(in: sentence)
+                let isCommitment = cues.matches(sentence, in: cues.commitment)
+                let isAssignedObligation = cues.matches(sentence, in: cues.obligation)
+                    && (owner != nil || cues.matches(sentence, in: cues.deadline))
+                guard isCommitment || isAssignedObligation else { return nil }
+                return ActionItem(task: sentence, owner: owner)
+            }
 
         progress(1)
         return NoteSummary(
@@ -146,22 +156,36 @@ struct ExtractiveSummarizer: Summarizer {
 /// Cue words that indicate decisions, tasks and open questions.
 private struct CueWords {
     let decision: [String]
-    let action: [String]
+    /// Someone takes on a task.
+    let commitment: [String]
+    /// Something has to be done; a task only with a person or a deadline.
+    let obligation: [String]
+    let deadline: [String]
     let openQuestion: [String]
 
     init(languageCode: String) {
         if languageCode == "de" {
             decision = ["beschlossen", "entschieden", "vereinbart", "festgelegt", "geeinigt", "abgemacht", "beschluss", "einigen uns"]
-            action = [
-                "muss", "müssen", "soll", "sollen", "werde", "werden wir", "übernimmt", "übernehme",
-                "kümmert sich", "kümmere mich", "erledigt", "aufgabe", "todo", "to-do", "bis zum", "bis nächste",
+            commitment = [
+                "ich werde", "werde ich", "übernimmt", "übernehme", "übernehmen", "kümmert sich", "kümmere mich",
+                "kümmern uns", "mache ich", "erledige ich", "schicke ich", "kläre ich", "aufgabe", "todo", "to-do",
+            ]
+            obligation = ["muss", "müssen", "soll", "sollen", "werden wir", "bitte"]
+            deadline = [
+                "bis", "morgen", "übermorgen", "heute", "nächste woche", "nächsten woche", "montag", "dienstag",
+                "mittwoch", "donnerstag", "freitag", "samstag", "sonntag", "ende der woche", "monatsende",
             ]
             openQuestion = ["unklar", "offen", "klären", "prüfen", "risiko", "problem", "bedenken"]
         } else {
             decision = ["decided", "agreed", "decision", "concluded", "approved", "settled"]
-            action = [
-                "i will", "we will", "i'll", "we'll", "must", "should", "needs to", "need to",
-                "take care of", "follow up", "action item", "todo", "to-do",
+            commitment = [
+                "i will", "i'll", "will take care", "take care of", "takes care of", "follow up", "action item",
+                "todo", "to-do", "is going to", "i am going to", "i'm going to",
+            ]
+            obligation = ["must", "should", "needs to", "need to", "we will", "we'll", "please"]
+            deadline = [
+                "by", "until", "tomorrow", "today", "next week", "monday", "tuesday", "wednesday", "thursday",
+                "friday", "saturday", "sunday", "end of the week", "end of the month",
             ]
             openQuestion = ["unclear", "open question", "not sure", "risk", "issue", "concern", "clarify"]
         }

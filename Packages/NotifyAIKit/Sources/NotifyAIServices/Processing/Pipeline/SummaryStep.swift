@@ -38,6 +38,7 @@ struct SummaryStep {
             SummaryFinishing(summary: summary, input: input, embedder: embedder)
         }
         try Task.checkCancellation()
+        summary = finish.summary
         summary.sourceTimes = finish.sourceTimes
 
         note.summary = summary
@@ -126,10 +127,13 @@ struct SummaryInput: Sendable {
 
 /// Work after summarizing that does not need the main actor: source positions and title keywords.
 private struct SummaryFinishing: Sendable {
+    /// The summary without items the text does not support.
+    let summary: NoteSummary
     let sourceTimes: [String: TimeInterval]
     let titleKeywords: [String]
 
-    init(summary: NoteSummary, input: SummaryInput, embedder: any SentenceEmbedding) {
+    init(summary generated: NoteSummary, input: SummaryInput, embedder: any SentenceEmbedding) {
+        summary = SummaryGrounding(text: input.request.text, languageCode: input.languageCode).apply(to: generated)
         sourceTimes = SummaryEvidenceLinker(embedder: embedder)
             .sourceTimes(for: summary, segments: input.segments, languageCode: input.languageCode)
         titleKeywords = input.isRecording
