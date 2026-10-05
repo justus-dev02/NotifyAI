@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Full-screen (iOS) or sheet (macOS) recording flow: setup, then the live session.
@@ -28,7 +29,10 @@ struct RecordingView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     // Closing does not stop a running recording; it continues in the background.
-                    Button(recording.isActive ? String(localized: "Minimieren") : String(localized: "Abbrechen"), systemImage: recording.isActive ? "chevron.down" : "xmark") {
+                    Button(
+                        recording.isActive ? String(localized: "Minimieren") : String(localized: "Abbrechen"),
+                        systemImage: recording.isActive ? "chevron.down" : "xmark"
+                    ) {
                         dismiss()
                     }
                 }

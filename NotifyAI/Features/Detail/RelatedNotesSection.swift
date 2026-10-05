@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import SwiftUI
 
 /// Notes that belong together with this one: same people, topics, places or similar content.

@@ -5,6 +5,8 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import SwiftUI
 
 /// The structured summary of a note.
@@ -13,9 +15,9 @@ struct SummaryView: View {
     /// The decoded transcript, cached by `NoteDetailModel`.
     let segments: [TranscriptSegment]
     /// Jumps to a position in the transcript (marked passage or source of a summary item).
-    var onOpenTime: (TimeInterval) -> Void
+    let onOpenTime: (TimeInterval) -> Void
 
-    @Environment(\.appEnvironment) private var app
+    @Environment(NoteLibrary.self) private var library
     @Environment(ProcessingCoordinator.self) private var processing
 
     var body: some View {
@@ -173,8 +175,7 @@ struct SummaryView: View {
     }
 
     private func toggle(_ item: ActionItem) {
-        guard note.setActionItem(item.id, isDone: !item.isDone) else { return }
-        app?.store.saveReportingErrors()
+        library.setTask(item.id, isDone: !item.isDone)
     }
 }
 

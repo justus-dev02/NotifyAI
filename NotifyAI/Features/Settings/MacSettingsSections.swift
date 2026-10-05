@@ -4,6 +4,7 @@
 //
 
 #if os(macOS)
+import NotifyAIServices
 import SwiftUI
 
 /// Dock and menu bar presence.

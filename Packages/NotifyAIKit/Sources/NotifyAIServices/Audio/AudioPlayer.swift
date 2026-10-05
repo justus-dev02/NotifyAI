@@ -1,0 +1,162 @@
+//
+//  AudioPlayer.swift
+//  NotifyAIServices
+//
+
+import AVFoundation
+import NotifyAICore
+import Observation
+import OSLog
+
+/// Plays a note's audio and publishes the playback position for transcript syncing.
+@MainActor
+@Observable
+public final class AudioPlayer {
+    public static let playbackRates: [Float] = [0.75, 1, 1.25, 1.5, 2]
+
+    public private(set) var isPlaying = false
+    public private(set) var currentTime: TimeInterval = 0
+    public private(set) var duration: TimeInterval = 0
+    private(set) var errorMessage: String?
+    public var rate: Float = 1 {
+        didSet { player?.rate = rate }
+    }
+
+    @ObservationIgnored private var player: AVAudioPlayer?
+    /// `AVAudioPlayer` holds its delegate weakly, so the player model keeps it alive.
+    @ObservationIgnored private var playbackEvents: PlaybackDelegate?
+    @ObservationIgnored private var ticker: Task<Void, Never>?
+    /// Whether a view shows the position; without one, playback continues but the position
+    /// is not published (no wake-ups ten times per second for nobody).
+    @ObservationIgnored private var isDisplayed = true
+    @ObservationIgnored private let session: AudioSessionController
+
+    public init(session: AudioSessionController) {
+        self.session = session
+    }
+
+    public var isLoaded: Bool { player != nil }
+
+    public func load(url: URL) {
+        stop()
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.enableRate = true
+            player.rate = rate
+            player.prepareToPlay()
+            let playbackEvents = PlaybackDelegate { [weak self] in
+                self?.handlePlaybackFinished()
+            }
+            player.delegate = playbackEvents
+            self.player = player
+            self.playbackEvents = playbackEvents
+            duration = player.duration
+            currentTime = 0
+            errorMessage = nil
+        } catch {
+            errorMessage = String(localized: "Die Audiodatei konnte nicht geöffnet werden.", bundle: .module)
+            Logger.audio.error("Loading audio failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    public func togglePlayback() {
+        if isPlaying {
+            pause()
+        } else {
+            play()
+        }
+    }
+
+    public func play() {
+        guard let player else { return }
+        do {
+            try session.activateForPlayback()
+        } catch {
+            Logger.audio.error("Activating playback failed: \(error.localizedDescription, privacy: .public)")
+        }
+        player.play()
+        isPlaying = true
+        startTicker()
+    }
+
+    func pause() {
+        player?.pause()
+        isPlaying = false
+        stopTicker()
+        syncTime()
+    }
+
+    public func seek(to time: TimeInterval) {
+        guard let player else { return }
+        player.currentTime = min(max(0, time), player.duration)
+        syncTime()
+    }
+
+    public func skip(by seconds: TimeInterval) {
+        seek(to: currentTime + seconds)
+    }
+
+    /// Stops playback and releases the file.
+    public func stop() {
+        player?.stop()
+        player = nil
+        playbackEvents = nil
+        isPlaying = false
+        stopTicker()
+    }
+
+    /// Called when the views showing the position appear on or leave the screen.
+    public func setDisplayed(_ displayed: Bool) {
+        guard displayed != isDisplayed else { return }
+        isDisplayed = displayed
+        if displayed {
+            syncTime()
+            if isPlaying {
+                startTicker()
+            }
+        } else {
+            stopTicker()
+        }
+    }
+
+    private func syncTime() {
+        currentTime = player?.currentTime ?? 0
+    }
+
+    /// Publishes the position ten times per second while playing. That is precise enough
+    /// for word highlighting without re-rendering the transcript on every frame.
+    private func startTicker() {
+        stopTicker()
+        guard isDisplayed else { return }
+        ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                self?.syncTime()
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }
+    }
+
+    private func stopTicker() {
+        ticker?.cancel()
+        ticker = nil
+    }
+
+    private func handlePlaybackFinished() {
+        isPlaying = false
+        stopTicker()
+        currentTime = duration
+    }
+}
+
+/// `AVAudioPlayerDelegate` callbacks arrive on the main thread; forward them to the player.
+private final class PlaybackDelegate: NSObject, AVAudioPlayerDelegate {
+    private let onFinish: @MainActor () -> Void
+
+    init(onFinish: @escaping @MainActor () -> Void) {
+        self.onFinish = onFinish
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        MainActor.assumeIsolated { onFinish() }
+    }
+}

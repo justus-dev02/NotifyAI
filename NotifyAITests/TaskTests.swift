@@ -9,6 +9,8 @@
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Testing
 
 private let calendar: Calendar = {
@@ -64,9 +66,16 @@ struct TaskOverviewTests {
 
     @Test("The board collects tasks of all summaries and ticks them off in the note")
     func board() throws {
-        let store = try NoteStore(locations: try StorageLocations.temporary(), inMemory: true)
+        let services = try ServiceContainer(
+            settings: makeIsolatedSettings(),
+            locations: try StorageLocations.temporary(),
+            inMemory: true,
+            recordingActivity: nil
+        )
+        let store = services.store
+        let resolver = DueDateResolver(calendar: calendar)
         let meeting = Note(title: "Weekly", isTitleUserDefined: true, createdAt: recordedAt, kind: .recording, status: .ready)
-        meeting.summary = NoteSummary(
+        meeting.setSummary(NoteSummary(
             overview: "Planung",
             actionItems: [
                 ActionItem(task: "Präsentation erstellen", owner: "Anna", due: "Freitag"),
@@ -74,15 +83,18 @@ struct TaskOverviewTests {
             ],
             source: .extractive,
             sourceTimes: ["Präsentation erstellen": 42]
-        )
+        ), dueDates: resolver)
         let older = Note(title: "Review", isTitleUserDefined: true, createdAt: recordedAt.addingTimeInterval(-86_400), kind: .document, status: .ready)
-        older.summary = NoteSummary(overview: "Rückblick", actionItems: [ActionItem(task: "Doku schreiben", owner: "Anna", due: "heute")], source: .extractive)
+        older.setSummary(
+            NoteSummary(overview: "Rückblick", actionItems: [ActionItem(task: "Doku schreiben", owner: "Anna", due: "heute")], source: .extractive),
+            dueDates: resolver
+        )
         let withoutSummary = Note(title: "Leer", isTitleUserDefined: true, kind: .document, status: .ready)
         try store.insert(meeting)
         try store.insert(older)
         try store.insert(withoutSummary)
 
-        let board = TaskBoard(store: store, resolver: DueDateResolver(calendar: calendar))
+        let board = services.tasks
         board.refresh()
         #expect(board.entries.count == 3)
         #expect(board.openCount == 3)
@@ -100,7 +112,7 @@ struct TaskOverviewTests {
         #expect(meeting.contentRevision == revision)
 
         // A fresh board reads the stored state.
-        let reloaded = TaskBoard(store: store, resolver: DueDateResolver(calendar: calendar))
+        let reloaded = TaskBoard(store: store, library: services.library)
         reloaded.refresh()
         #expect(reloaded.openCount == 2)
     }

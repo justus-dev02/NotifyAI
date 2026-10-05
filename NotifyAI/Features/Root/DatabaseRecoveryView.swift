@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import SwiftUI
 
 /// Shown instead of the app when the database cannot be opened.

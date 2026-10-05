@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Shows whether the selected Whisper model is available and offers the download.
@@ -116,7 +117,10 @@ struct RecordingControls: View {
             Button {
                 Task { await recording.togglePause() }
             } label: {
-                Label(recording.phase == .paused ? String(localized: "Fortsetzen") : String(localized: "Pause"), systemImage: recording.phase == .paused ? "play.fill" : "pause.fill")
+                Label(
+                    recording.phase == .paused ? String(localized: "Fortsetzen") : String(localized: "Pause"),
+                    systemImage: recording.phase == .paused ? "play.fill" : "pause.fill"
+                )
                     .frame(width: buttonSize, height: buttonSize)
                     .background(.fill.tertiary, in: Circle())
                     .contentShape(Circle())

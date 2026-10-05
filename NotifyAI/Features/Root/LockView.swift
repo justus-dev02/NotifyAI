@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import SwiftUI
 
 /// Covers the interface until the user authenticates.

@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import SwiftUI
 
 /// First-launch introduction: what the app does, permissions and engine status.

@@ -11,6 +11,8 @@ import Foundation
 import FoundationModels
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Synchronization
 import Testing
 
@@ -57,180 +59,6 @@ struct InterruptionPolicyTests {
         policy.userTookOver()
         #expect(!policy.isPausedByInterruption)
         #expect(policy.interruptionEnded(shouldResume: true, isPaused: true) == .none)
-    }
-}
-
-// MARK: - Interrupted processing
-
-/// Transcribes only after `open()`; counts how often a transcription started.
-final class GatedTranscriptionEngine: TranscriptionEngine {
-    let kind: TranscriptionEngineKind = .appleSpeech
-    /// `false` imitates WhisperKit and the language model: cancellation takes effect only
-    /// when the current call returns.
-    let respondsToCancellation: Bool
-    private let state = Mutex<(started: Int, isOpen: Bool)>((0, false))
-
-    init(respondsToCancellation: Bool = true) {
-        self.respondsToCancellation = respondsToCancellation
-    }
-
-    var started: Int { state.withLock { $0.started } }
-
-    func open() {
-        state.withLock { $0.isOpen = true }
-    }
-
-    func startLiveSession(options: TranscriptionOptions) async throws -> any LiveTranscriptionSession {
-        throw TranscriptionError.speechAssetsUnavailable
-    }
-
-    func transcribeFile(at url: URL, options: TranscriptionOptions, progress: @escaping @Sendable (Double) -> Void) async throws -> [TranscriptSegment] {
-        state.withLock { $0.started += 1 }
-        while !state.withLock({ $0.isOpen }) {
-            if respondsToCancellation {
-                try await Task.sleep(for: .milliseconds(5))
-            } else {
-                // Not cancelled together with the job.
-                await Task.detached { try? await Task.sleep(for: .milliseconds(5)) }.value
-            }
-        }
-        return [TranscriptSegment(start: 0, end: 2, text: "Hallo zusammen.")]
-    }
-}
-
-@Suite("Interrupted processing")
-@MainActor
-struct InterruptedProcessingTests {
-    private let store: NoteStore
-    private let settings: AppSettings
-
-    init() throws {
-        store = try NoteStore(locations: try StorageLocations.temporary(), inMemory: true)
-        settings = makeIsolatedSettings()
-    }
-
-    private func makeCoordinator(_ engine: any TranscriptionEngine) -> ProcessingCoordinator {
-        let summarizer = MockSummarizer()
-        return ProcessingCoordinator(
-            store: store,
-            settings: settings,
-            transcription: TranscriptionService(appleSpeech: engine, whisper: engine),
-            summarization: SummarizationService(languageModel: summarizer, fallback: summarizer, availability: { _ in .available }),
-            diarizer: SpeakerDiarizer()
-        )
-    }
-
-    private func makeAudioNote() throws -> Note {
-        let note = Note(title: "Aufnahme", isTitleUserDefined: false, kind: .recording, status: .queued)
-        let fileName = NoteStore.recordingFileName(for: note.id)
-        note.audioFileName = fileName
-        try Data([0]).write(to: store.locations.audioURL(fileName: fileName))
-        try store.insert(note)
-        return note
-    }
-
-    /// Returns as soon as the condition holds. The timeout is generous because the suite runs in
-    /// parallel with CPU-heavy tests (diarization, benchmarks), which can slow processing down a lot.
-    private func waitUntil(_ condition: () -> Bool, timeout: Duration = .seconds(30)) async throws {
-        let deadline = ContinuousClock.now + timeout
-        while !condition() {
-            guard ContinuousClock.now < deadline else {
-                Issue.record("Condition not met in time")
-                return
-            }
-            try await Task.sleep(for: .milliseconds(10))
-        }
-    }
-
-    @Test("A recording with live transcription stops the running job; it continues afterwards")
-    func recordingInterruptsRunningJob() async throws {
-        let engine = GatedTranscriptionEngine()
-        let coordinator = makeCoordinator(engine)
-        let note = try makeAudioNote()
-        coordinator.enqueue(.process(note.id))
-        try await waitUntil { engine.started == 1 }
-
-        coordinator.pauseForRecording(interruptingRunningJob: true)
-        engine.open()
-        try await Task.sleep(for: .milliseconds(200))
-        // The job was stopped and waits; it did not finish during the recording.
-        #expect(note.status != .ready)
-        #expect(coordinator.hasPendingWork)
-        #expect(engine.started == 1)
-
-        coordinator.resumeAfterRecording()
-        try await waitUntil { note.status == .ready }
-        #expect(engine.started == 2)
-        // The note is ready before the worker clears its bookkeeping, so wait for that too.
-        try await waitUntil { !coordinator.hasPendingWork }
-    }
-
-    @Test("Without live transcription the running job finishes, queued jobs wait")
-    func recordingWithoutLiveTranscription() async throws {
-        let engine = GatedTranscriptionEngine()
-        let coordinator = makeCoordinator(engine)
-        let running = try makeAudioNote()
-        let queued = try makeAudioNote()
-        coordinator.enqueue(.process(running.id))
-        try await waitUntil { engine.started == 1 }
-
-        coordinator.pauseForRecording(interruptingRunningJob: false)
-        coordinator.enqueue(.process(queued.id))
-        engine.open()
-        try await waitUntil { running.status == .ready }
-        try await Task.sleep(for: .milliseconds(150))
-        #expect(queued.status == .queued)
-        #expect(engine.started == 1)
-
-        coordinator.resumeAfterRecording()
-        try await waitUntil { queued.status == .ready }
-    }
-
-    @Test("Work stopped when background time ended waits, and continues when the app is active")
-    func suspendedWorkContinues() async throws {
-        let engine = GatedTranscriptionEngine()
-        let coordinator = makeCoordinator(engine)
-        let note = try makeAudioNote()
-        coordinator.enqueue(.process(note.id))
-        try await waitUntil { engine.started == 1 }
-
-        coordinator.interruptCurrentJob()
-        engine.open()
-        try await Task.sleep(for: .milliseconds(200))
-        #expect(coordinator.isSuspended)
-        #expect(note.status != .ready)
-        #expect(engine.started == 1)
-
-        coordinator.resumeQueuedWork()
-        #expect(!coordinator.isSuspended)
-        try await waitUntil { note.status == .ready }
-        #expect(engine.started == 2)
-    }
-
-    @Test("Becoming active while the interrupted job still winds down continues the work")
-    func activeWhileWindingDown() async throws {
-        let engine = GatedTranscriptionEngine(respondsToCancellation: false)
-        let coordinator = makeCoordinator(engine)
-        let note = try makeAudioNote()
-        coordinator.enqueue(.process(note.id))
-        try await waitUntil { engine.started == 1 }
-
-        // The job ignores the cancellation until its current call returns.
-        coordinator.interruptCurrentJob()
-        coordinator.resumeQueuedWork()
-        engine.open()
-        try await waitUntil { note.status == .ready }
-        // The note is ready before the worker clears its bookkeeping, so wait for that too.
-        try await waitUntil { !coordinator.hasPendingWork }
-    }
-
-    @Test("The app resumes suspended processing when it becomes active")
-    func appEnvironmentResumesOnActivation() throws {
-        let environment = try AppEnvironment(settings: makeIsolatedSettings(), locations: try StorageLocations.temporary(), inMemory: true)
-        environment.processing.interruptCurrentJob()
-        #expect(environment.processing.isSuspended)
-        environment.didBecomeActive()
-        #expect(!environment.processing.isSuspended)
     }
 }
 
@@ -396,15 +224,23 @@ struct SummaryLimitationTests {
 
     @Test("Cancellation is not mistaken for a refused excerpt")
     func cancellationPropagates() async throws {
+        let responding = TestGate()
         let responder = ScriptedResponder { _, _ in
-            try await Task.sleep(for: .seconds(10))
-            return Scripted.notes([])
+            responding.signal()
+            // Answers only when cancelled, like a model call that is interrupted.
+            let cancelled = TestGate()
+            await withTaskCancellationHandler {
+                await cancelled.wait()
+            } onCancel: {
+                cancelled.signal()
+            }
+            throw CancellationError()
         }
         let text = Scripted.transcript(tokens: 4_000, topic: "das Budget")
         let task = Task {
             try await FoundationModelSummarizer(responder: responder, measure: TextChunker.estimatedTokens).summarize(Scripted.request(text)) { _ in }
         }
-        try await Task.sleep(for: .milliseconds(50))
+        await responding.wait()
         task.cancel()
         await #expect(throws: CancellationError.self) { try await task.value }
         #expect(responder.recorded.count == 1)
@@ -422,8 +258,18 @@ struct SummaryLimitationTests {
         }
         let summarizer = FoundationModelSummarizer(responder: responder, measure: measure)
         let context = Scripted.request("")
-        let long = ChapterRequest(number: 1, count: 2, start: 0, end: 600, text: Scripted.transcript(tokens: 4_000, topic: "das Budget"), context: context, markedPassages: [])
-        let short = ChapterRequest(number: 2, count: 2, start: 600, end: 1_200, text: Scripted.transcript(tokens: 300, topic: "die Website"), context: context, markedPassages: [])
+        let long = ChapterRequest(
+            number: 1, count: 2, start: 0, end: 600,
+            text: Scripted.transcript(tokens: 4_000, topic: "das Budget"),
+            context: context,
+            markedPassages: []
+        )
+        let short = ChapterRequest(
+            number: 2, count: 2, start: 600, end: 1_200,
+            text: Scripted.transcript(tokens: 300, topic: "die Website"),
+            context: context,
+            markedPassages: []
+        )
 
         let digest = try await summarizer.digest(long)
         #expect(digest.failedExcerpts == 1)
@@ -434,8 +280,7 @@ struct SummaryLimitationTests {
             context,
             chapters: [long, short],
             keys: ["a", "b"],
-            noteID: UUID(),
-            store: ChapterDigestStore(directory: nil)
+            storedIn: NoteDigests(store: ChapterDigestStore(directory: nil), noteID: UUID())
         ) { _ in }
         #expect(summary.chapters.count == 2)
         #expect(summary.processingNotes.contains { $0.contains("In 1 Kapiteln") })

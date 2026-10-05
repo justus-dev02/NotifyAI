@@ -5,6 +5,8 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import SwiftData
 import SwiftUI
 
@@ -14,7 +16,7 @@ struct NoteDetailContainer: View {
     @Query private var notes: [Note]
 
     init(noteID: UUID) {
-        _notes = Query(filter: #Predicate<Note> { $0.id == noteID })
+        _notes = Query(filter: NoteQueries.note(id: noteID))
     }
 
     var body: some View {
@@ -31,8 +33,9 @@ struct NoteDetailView: View {
         case summary, transcript
     }
 
-    @Bindable var note: Note
-    @Environment(\.appEnvironment) private var app
+    let note: Note
+    @Environment(NoteLibrary.self) private var library
+    @Environment(AudioSessionController.self) private var audioSession
     @Environment(ProcessingCoordinator.self) private var processing
     @Environment(AppNavigation.self) private var navigation
 
@@ -92,10 +95,10 @@ struct NoteDetailView: View {
         #endif
         .toolbar { toolbarContent }
         .task(id: updateKey) {
-            if model == nil, let app {
-                model = NoteDetailModel(audioSession: app.audioSession)
+            if model == nil {
+                model = NoteDetailModel(audioSession: audioSession)
             }
-            await model?.update(from: note, audioURL: app?.store.audioURL(for: note))
+            await model?.update(from: note, audioURL: library.audioURL(for: note))
             applyTranscriptFocus()
         }
         .onChange(of: navigation.transcriptFocus) {
@@ -130,9 +133,11 @@ struct NoteDetailView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem {
-            Button(note.isFavorite ? String(localized: "Aus Favoriten entfernen") : String(localized: "Zu Favoriten"), systemImage: note.isFavorite ? "star.fill" : "star") {
-                note.isFavorite.toggle()
-                save()
+            Button(
+                note.isFavorite ? String(localized: "Aus Favoriten entfernen") : String(localized: "Zu Favoriten"),
+                systemImage: note.isFavorite ? "star.fill" : "star"
+            ) {
+                library.setFavorite(!note.isFavorite, for: note)
             }
         }
         ToolbarItem {
@@ -172,17 +177,12 @@ struct NoteDetailView: View {
 
     private func addMarkerAtPlayback() {
         guard let model else { return }
-        note.markers = note.markers + [model.markerAtPlaybackPosition()]
-        save()
+        library.addMarker(model.markerAtPlaybackPosition(), to: note)
     }
 
     private func rename() {
-        let title = draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !title.isEmpty else { return }
-        note.title = title
-        note.isTitleUserDefined = true
-        save()
-        app?.knowledge.scheduleRefresh()
+        // The search index follows the store's saves on its own.
+        library.rename(note, to: draftTitle)
     }
 
     /// Shows the transcript position requested from elsewhere (e.g. a source in the chat).
@@ -195,13 +195,8 @@ struct NoteDetailView: View {
 
     private func delete() {
         model?.stop()
-        processing.cancel(noteID: note.id)
         navigation.selectedNoteID = nil
-        app?.store.deleteReportingErrors(note)
-    }
-
-    private func save() {
-        app?.store.saveReportingErrors()
+        library.delete(note)
     }
 }
 

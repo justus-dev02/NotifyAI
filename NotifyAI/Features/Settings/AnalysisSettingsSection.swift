@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import NotifyAIServices
 import SwiftUI
 
 /// Summaries and speakers.

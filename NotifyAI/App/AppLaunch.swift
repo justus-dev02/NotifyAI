@@ -4,6 +4,9 @@
 //
 
 import Foundation
+import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import Observation
 import OSLog
 
@@ -60,8 +63,8 @@ final class AppLaunch {
         attempt()
         guard let environment else { return }
         do {
-            try await environment.store.recoverOrphanedRecordings()
-            await environment.start()
+            try await OrphanedRecordingRecovery(store: environment.services.store).recover()
+            await environment.lifecycle.start()
         } catch {
             Logger.persistence.error("Recovering recordings failed: \(error.localizedDescription, privacy: .public)")
             environment.notices.post(UserNotice(
@@ -71,3 +74,12 @@ final class AppLaunch {
         }
     }
 }
+
+#if os(macOS)
+extension AppLaunch: UpdateDeferring {
+    /// A running recording postpones background update checks.
+    var defersUpdates: Bool {
+        environment?.services.recording.isActive ?? false
+    }
+}
+#endif

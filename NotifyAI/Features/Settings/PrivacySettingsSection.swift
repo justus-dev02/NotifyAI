@@ -3,13 +3,14 @@
 //  NotifyAI
 //
 
+import NotifyAIServices
 import SwiftUI
 
 /// App lock and backups.
 struct PrivacySettingsSection: View {
     @Environment(AppSettings.self) private var settings
     @Environment(AppLock.self) private var appLock
-    @Environment(\.appEnvironment) private var app
+    @Environment(StorageMaintenance.self) private var storage
 
     var body: some View {
         @Bindable var privacy = settings.privacy
@@ -21,7 +22,7 @@ struct PrivacySettingsSection: View {
                 }
             Toggle("In Geräte-Backups einschließen", isOn: $privacy.includeInBackup)
                 .onChange(of: privacy.includeInBackup) {
-                    app?.applyBackupPreference()
+                    storage.applyBackupPreference()
                 }
         } header: {
             Text("Datenschutz")

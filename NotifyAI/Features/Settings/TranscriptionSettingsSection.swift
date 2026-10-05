@@ -4,6 +4,7 @@
 //
 
 import NotifyAICore
+import NotifyAIServices
 import Speech
 import SwiftUI
 

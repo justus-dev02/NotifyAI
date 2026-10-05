@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import NotifyAIPersistence
 import Observation
 
 /// Filters of the note library.
@@ -30,6 +31,16 @@ enum LibraryFilter: String, CaseIterable, Identifiable {
         case .favorites: "star"
         case .recordings: "waveform"
         case .imports: "square.and.arrow.down"
+        }
+    }
+
+    /// The notes the filter shows, for the store's queries.
+    var listFilter: NoteListFilter {
+        switch self {
+        case .all: NoteListFilter()
+        case .favorites: NoteListFilter(favoritesOnly: true)
+        case .recordings: NoteListFilter(origin: .recordings)
+        case .imports: NoteListFilter(origin: .imports)
         }
     }
 }

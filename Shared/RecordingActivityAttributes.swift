@@ -30,21 +30,24 @@ enum RecordingIntentAction: Sendable {
     case stop
 }
 
-/// Connects the Live Activity intents to the recording controller.
+/// Carries out what the Live Activity's buttons ask for.
 ///
-/// A `LiveActivityIntent` runs in the app's process, so the app sets `handler` at launch.
-/// In the widget extension it stays `nil` and is never called.
-@MainActor
-enum RecordingIntentHandler {
-    static var handler: (@MainActor (RecordingIntentAction) async -> Void)?
+/// A `LiveActivityIntent` runs in the app's process. The app registers its implementation
+/// with `AppDependencyManager` at launch and the intents receive it through `@Dependency`;
+/// no global state is involved. In the widget extension the intents are never performed.
+protocol RecordingIntentPerforming: Sendable {
+    @MainActor
+    func perform(_ action: RecordingIntentAction) async
 }
 
 struct ToggleRecordingPauseIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Aufnahme pausieren oder fortsetzen"
 
+    @Dependency private var performer: any RecordingIntentPerforming
+
     @MainActor
     func perform() async throws -> some IntentResult {
-        await RecordingIntentHandler.handler?(.togglePause)
+        await performer.perform(.togglePause)
         return .result()
     }
 }
@@ -52,9 +55,11 @@ struct ToggleRecordingPauseIntent: LiveActivityIntent {
 struct StopRecordingIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Aufnahme beenden"
 
+    @Dependency private var performer: any RecordingIntentPerforming
+
     @MainActor
     func perform() async throws -> some IntentResult {
-        await RecordingIntentHandler.handler?(.stop)
+        await performer.perform(.stop)
         return .result()
     }
 }

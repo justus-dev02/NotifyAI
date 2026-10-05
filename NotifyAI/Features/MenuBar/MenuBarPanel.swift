@@ -7,6 +7,8 @@
 import AppKit
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import SwiftData
 import SwiftUI
 
@@ -40,7 +42,7 @@ struct MenuBarPanel: View {
     @Environment(AppLock.self) private var appLock
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    @Environment(\.appEnvironment) private var app
+    @Environment(AppLifecycle.self) private var lifecycle
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
@@ -69,7 +71,7 @@ struct MenuBarPanel: View {
         .frame(width: 340)
         .task {
             // The main window may never have been opened (e.g. after a login launch).
-            await app?.start()
+            await lifecycle.start()
         }
     }
 
@@ -94,8 +96,8 @@ struct MenuBarPanel: View {
                     .frame(width: 120, height: 28)
             }
 
-            if let message = recording.interruptionMessage {
-                Text(message)
+            if let reason = recording.pauseReason {
+                Text(reason.message)
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -295,7 +297,7 @@ struct AppCommands: Commands {
                 launch.environment?.navigation.isRecorderPresented = true
             }
             .keyboardShortcut("r", modifiers: [.command, .shift])
-            .disabled(launch.environment?.recording.isActive ?? true)
+            .disabled(launch.environment?.services.recording.isActive ?? true)
         }
     }
 }

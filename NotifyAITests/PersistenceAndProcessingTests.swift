@@ -6,6 +6,8 @@
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Testing
 
 @Suite("Note store")
@@ -86,12 +88,10 @@ struct ProcessingCoordinatorTests {
         return note
     }
 
+    /// Waits until the note is ready or failed.
     private func waitUntilIdle(_ coordinator: ProcessingCoordinator, noteID: UUID) async throws {
-        for _ in 0..<200 {
-            if let note = store.note(id: noteID), note.status == .ready || note.status == .failed { return }
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        Issue.record("Processing did not finish in time")
+        let note = try #require(store.note(id: noteID))
+        await waitUntil { note.status == .ready || note.status == .failed }
     }
 
     @Test("A recording is transcribed, summarized and titled")
@@ -189,7 +189,8 @@ struct ProcessingCoordinatorTests {
         coordinator.pauseForRecording(interruptingRunningJob: true)
         coordinator.enqueue(.process(note.id))
 
-        try await Task.sleep(for: .milliseconds(150))
+        // While paused, enqueueing does not start the worker at all.
+        #expect(coordinator.runningNoteID == nil)
         #expect(note.status == .queued)
 
         coordinator.resumeAfterRecording()

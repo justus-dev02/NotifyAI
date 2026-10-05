@@ -10,6 +10,8 @@
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import SwiftData
 import Synchronization
 import Testing
@@ -17,11 +19,15 @@ import Testing
 // MARK: - Live transcription backlog
 
 /// A live session that reports a fixed backlog for every appended chunk.
+///
+/// After the backlog it reports the chunk's start frame as hypothesis: events arrive in
+/// order, so once the feed shows that text, it has handled the backlog too.
 private actor BackloggedSession: LiveTranscriptionSession {
     nonisolated let events: AsyncStream<LiveTranscriptionEvent>
+    /// Signalled when the feed cancels the session.
+    nonisolated let cancelled = TestGate()
     private let continuation: AsyncStream<LiveTranscriptionEvent>.Continuation
     private let reportedBacklog: TimeInterval
-    private(set) var isCancelled = false
 
     init(reportedBacklog: TimeInterval) {
         (events, continuation) = AsyncStream.makeStream(of: LiveTranscriptionEvent.self)
@@ -30,6 +36,7 @@ private actor BackloggedSession: LiveTranscriptionSession {
 
     func append(_ chunk: AudioChunk) {
         continuation.yield(.backlog(reportedBacklog))
+        continuation.yield(.volatile("chunk \(chunk.startFrame)"))
     }
 
     func finish() async throws -> [TranscriptSegment] {
@@ -38,7 +45,7 @@ private actor BackloggedSession: LiveTranscriptionSession {
     }
 
     func cancel() {
-        isCancelled = true
+        cancelled.signal()
         continuation.finish()
     }
 }
@@ -46,11 +53,19 @@ private actor BackloggedSession: LiveTranscriptionSession {
 private struct SessionEngine: TranscriptionEngine {
     let kind = TranscriptionEngineKind.whisper
     let session: BackloggedSession?
-    /// How long "loading the model" takes.
-    var loadingTime: Duration = .zero
+    /// "Loading the model" never finishes; only cancelling the start ends it.
+    var loadsForever = false
 
     func startLiveSession(options: TranscriptionOptions) async throws -> any LiveTranscriptionSession {
-        try await Task.sleep(for: loadingTime)
+        if loadsForever {
+            let loaded = TestGate()
+            await withTaskCancellationHandler {
+                await loaded.wait()
+            } onCancel: {
+                loaded.signal()
+            }
+            throw CancellationError()
+        }
         return session ?? BackloggedSession(reportedBacklog: 0)
     }
 
@@ -64,18 +79,15 @@ private struct SessionEngine: TranscriptionEngine {
 struct LiveTranscriptBacklogTests {
     private let options = TranscriptionOptions(language: .german, whisperModel: .recommended)
 
-    private func waitUntil(_ condition: () -> Bool) async throws {
-        for _ in 0..<200 where !condition() {
-            try await Task.sleep(for: .milliseconds(10))
-        }
-    }
-
     @Test("Audio buffered while the model loads is limited")
     func bufferedWhileLoading() async throws {
         let feed = LiveTranscriptFeed(maximumBacklog: 1)
         var fellBehind = 0
-        feed.onFellBehind = { fellBehind += 1 }
-        feed.start(engine: SessionEngine(session: nil, loadingTime: .seconds(30)), kind: .whisper, options: options)
+        let subscription = feed.events.subscribe { event in
+            if case .fellBehind = event { fellBehind += 1 }
+        }
+        defer { subscription.cancel() }
+        feed.start(engine: SessionEngine(session: nil, loadsForever: true), kind: .whisper, options: options)
         for chunk in Signal.chunks(of: Signal.silence(seconds: 1.5), size: 1_600) {
             await feed.append(chunk)
         }
@@ -91,23 +103,21 @@ struct LiveTranscriptBacklogTests {
         let session = BackloggedSession(reportedBacklog: 90)
         let feed = LiveTranscriptFeed(maximumBacklog: 60)
         feed.start(engine: SessionEngine(session: session), kind: .whisper, options: options)
-        try await waitUntil { feed.state == .running }
+        await waitUntil { feed.state == .running }
         await feed.append(AudioChunk(samples: Signal.silence(seconds: 0.1), startFrame: 0))
-        try await waitUntil { feed.state == .fellBehind }
-        #expect(feed.state == .fellBehind)
-        for _ in 0..<100 where !(await session.isCancelled) {
-            try await Task.sleep(for: .milliseconds(10))
-        }
-        #expect(await session.isCancelled)
+        await waitUntil { feed.state == .fellBehind }
+        // Returns only once the feed cancelled the abandoned session.
+        await session.cancelled.wait()
     }
 
     @Test("A session within the limit keeps running")
     func withinLimit() async throws {
         let feed = LiveTranscriptFeed(maximumBacklog: 60)
         feed.start(engine: SessionEngine(session: BackloggedSession(reportedBacklog: 5)), kind: .whisper, options: options)
-        try await waitUntil { feed.state == .running }
+        await waitUntil { feed.state == .running }
         await feed.append(AudioChunk(samples: Signal.silence(seconds: 0.1), startFrame: 0))
-        try await Task.sleep(for: .milliseconds(50))
+        // The hypothesis follows the backlog report, so the backlog has been handled.
+        await waitUntil { feed.volatileText == "chunk 0" }
         #expect(feed.state == .running)
         #expect(feed.backlog == 5)
     }
@@ -124,7 +134,8 @@ struct MigrationTests {
         let id = UUID()
         do {
             let schema = Schema(versionedSchema: NotifyAISchemaV1.self)
-            let container = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, url: locations.databaseURL, cloudKitDatabase: .none))
+            let configuration = ModelConfiguration(schema: schema, url: locations.databaseURL, cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: configuration)
             let context = ModelContext(container)
             let note = NotifyAISchemaV1.Note(id: id, title: "Budget", isTitleUserDefined: true, kind: .recording, status: .ready,
                                              participants: ["Anna"], bodyText: "Das Budget liegt bei 12.000 Euro.")
@@ -149,7 +160,8 @@ struct MigrationTests {
         let locations = try StorageLocations.temporary()
         do {
             let schema = Schema(versionedSchema: NotifyAISchemaV2.self)
-            let container = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, url: locations.databaseURL, cloudKitDatabase: .none))
+            let configuration = ModelConfiguration(schema: schema, url: locations.databaseURL, cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: configuration)
             let context = ModelContext(container)
             for index in 0..<120 {
                 let note = NotifyAISchemaV2.Note(title: "Meeting \(index)", isTitleUserDefined: true, kind: .recording, status: .ready,
@@ -170,8 +182,57 @@ struct MigrationTests {
         #expect(all.first { $0.title == "Leer" }?.hasText == false)
         #expect(all.allSatisfy { $0.audioSource == .microphoneAndSystemAudio || $0.title == "Leer" })
 
-        let matches = try store.context.fetch(FetchDescriptor(predicate: NoteQueries.library(filter: .all, searchText: "herbstkampagne")))
+        let matches = try store.context.fetch(FetchDescriptor(predicate: NoteQueries.library(filter: NoteListFilter(), searchText: "herbstkampagne")))
         #expect(matches.map(\.title) == ["Meeting 77"])
+    }
+
+    @Test("V3 → V4 moves the tasks out of the summaries into their own rows")
+    func fromV3() throws {
+        let locations = try StorageLocations.temporary()
+        let doneID = UUID()
+        let withTasks = UUID()
+        let withoutTasks = UUID()
+        let recordedAt = Date(timeIntervalSince1970: 1_790_000_000)
+        do {
+            let schema = Schema(versionedSchema: NotifyAISchemaV3.self)
+            let configuration = ModelConfiguration(schema: schema, url: locations.databaseURL, cloudKitDatabase: .none)
+            let container = try ModelContainer(for: schema, configurations: configuration)
+            let context = ModelContext(container)
+            let summary = NoteSummary(
+                overview: "Planung",
+                actionItems: [
+                    ActionItem(task: "Präsentation erstellen", owner: "Anna", due: "morgen"),
+                    ActionItem(id: doneID, task: "Budget prüfen", isDone: true),
+                ],
+                source: .extractive,
+                sourceTimes: ["Präsentation erstellen": 42]
+            )
+            let note = NotifyAISchemaV3.Note(id: withTasks, title: "Weekly", isTitleUserDefined: true, createdAt: recordedAt, kind: .recording, status: .ready)
+            note.summaryData = try JSONEncoder().encode(summary)
+            note.summaryOverview = summary.overview
+            note.contentRevision = 3
+            context.insert(note)
+            let plain = NotifyAISchemaV3.Note(id: withoutTasks, title: "Ohne Aufgaben", isTitleUserDefined: true, kind: .document, status: .ready)
+            plain.summaryData = try JSONEncoder().encode(NoteSummary(overview: "Nur Text", source: .extractive))
+            context.insert(plain)
+            try context.save()
+        }
+
+        let store = try NoteStore(locations: locations)
+        let note = try #require(store.note(id: withTasks))
+        #expect(try store.context.fetchCount(FetchDescriptor<NoteTask>()) == 2)
+        #expect(note.sortedTasks.map(\.task) == ["Präsentation erstellen", "Budget prüfen"])
+        #expect(note.sortedTasks.first?.sourceTime == 42)
+        #expect(note.sortedTasks.first?.dueDate == DueDateResolver().resolve("morgen", relativeTo: recordedAt))
+        #expect(note.sortedTasks.last?.id == doneID)
+        #expect(note.sortedTasks.last?.isDone == true)
+        // The JSON no longer carries the tasks; the summary still shows them.
+        let stored = try JSONDecoder().decode(NoteSummary.self, from: try #require(note.summaryData))
+        #expect(stored.actionItems.isEmpty)
+        #expect(note.summary?.actionItems.map(\.task) == ["Präsentation erstellen", "Budget prüfen"])
+        // Moving the tasks is no content change: the search index keeps the note.
+        #expect(note.contentRevision == 3)
+        #expect(store.note(id: withoutTasks)?.summary?.overview == "Nur Text")
     }
 }
 
@@ -192,8 +253,8 @@ struct ContentRevisionTests {
         #expect(note.contentRevision == initial + 1)
         let fingerprint = IndexableNote.fingerprint(of: note)
 
-        let item = try #require(note.summary?.actionItems.first)
-        #expect(note.setActionItem(item.id, isDone: true))
+        let task = try #require(note.sortedTasks.first)
+        task.isDone = true
         #expect(note.summary?.actionItems.first?.isDone == true)
         #expect(note.contentRevision == initial + 1)
         #expect(IndexableNote.fingerprint(of: note) == fingerprint)
@@ -257,13 +318,13 @@ struct DatabaseRecoveryTests {
         #expect(FileManager.default.fileExists(atPath: folder.appending(path: "NotifyAI.store").path(percentEncoded: false)))
         #expect(!FileManager.default.fileExists(atPath: locations.databaseURL.path(percentEncoded: false)))
 
-        let restored = try #require(environment.store.note(id: recordingID))
+        let restored = try #require(environment.services.store.note(id: recordingID))
         #expect(restored.kind == .recording)
         #expect(restored.audioFileName == NoteStore.recordingFileName(for: recordingID))
         // Queued for transcription (processing may already have picked it up).
         #expect(restored.status != .ready && restored.status != .recording)
         // A second run finds nothing new.
-        #expect(try await environment.store.recoverOrphanedRecordings().isEmpty)
+        #expect(try await OrphanedRecordingRecovery(store: environment.services.store).recover().isEmpty)
     }
 
     @Test("The same failure is shown once")
@@ -295,7 +356,7 @@ struct EnergyTests {
         #expect(meter.elapsedSeconds == 1)
 
         let levels = meter.levels
-        meter.showsLevels = false
+        meter.setVisible(false, id: "Pegel")
         meter.record(AudioLevel(rms: 0.9, systemRMS: nil, recordedTime: 1.2, hasReceivedSystemAudio: false))
         #expect(meter.levels == levels)
         #expect(meter.elapsed == 1.2)
@@ -326,7 +387,8 @@ struct EnergyTests {
 
     @Test("The Whisper runtime is idle and unloaded without a model")
     func whisperRuntimeUse() async throws {
-        let runtime = WhisperRuntime(modelStore: WhisperModelStore(downloadBase: try StorageLocations.temporary().whisperModelsDirectory), idleDelay: .milliseconds(10))
+        let modelStore = WhisperModelStore(downloadBase: try StorageLocations.temporary().whisperModelsDirectory)
+        let runtime = WhisperRuntime(modelStore: modelStore, idleDelay: .milliseconds(10))
         #expect(await !runtime.isInUse)
         await runtime.beginUse()
         #expect(await runtime.isInUse)

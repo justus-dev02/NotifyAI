@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import PhotosUI
 import SwiftData
 import SwiftUI
@@ -12,7 +13,7 @@ import SwiftUI
 struct LibraryView: View {
     @Environment(AppNavigation.self) private var navigation
     @Environment(RecordingController.self) private var recording
-    @Environment(\.appEnvironment) private var app
+    @Environment(ImportService.self) private var importer
 
     @State private var isImporterPresented = false
     @State private var photoSelection: PhotosPickerItem?
@@ -94,14 +95,20 @@ struct LibraryView: View {
         }
 
         ToolbarItem {
-            Menu("Filter", systemImage: "line.3.horizontal.decrease") {
-                Picker("Filter", selection: $navigation.filter) {
-                    ForEach(LibraryFilter.allCases) { filter in
-                        Label(filter.title, systemImage: filter.symbolName).tag(filter)
+            // One checkable entry per filter. An inline picker in a toolbar menu would cost the
+            // menu its name and action for VoiceOver on the Mac. The task overview's filter has
+            // a different name, as both are on screen together.
+            Menu("Notizen filtern", systemImage: "line.3.horizontal.decrease") {
+                ForEach(LibraryFilter.allCases) { filter in
+                    Toggle(isOn: Binding(
+                        get: { navigation.filter == filter },
+                        set: { isOn in if isOn { navigation.filter = filter } }
+                    )) {
+                        Label(filter.title, systemImage: filter.symbolName)
                     }
                 }
-                .pickerStyle(.inline)
             }
+            .help("Notizen filtern")
         }
 
         ToolbarItem {
@@ -136,12 +143,11 @@ struct LibraryView: View {
     // MARK: Import
 
     private func importFile(at url: URL) {
-        guard let app else { return }
         isImporting = true
         Task {
             defer { isImporting = false }
             do {
-                navigation.selectedNoteID = try await app.importer.importFile(at: url)
+                navigation.selectedNoteID = try await importer.importFile(at: url)
             } catch {
                 importError = error.localizedDescription
             }
@@ -149,7 +155,6 @@ struct LibraryView: View {
     }
 
     private func importPhoto(_ item: PhotosPickerItem) {
-        guard let app else { return }
         isImporting = true
         Task {
             defer {
@@ -160,7 +165,7 @@ struct LibraryView: View {
                 guard let data = try await item.loadTransferable(type: Data.self) else {
                     throw ImportError.unreadableFile
                 }
-                navigation.selectedNoteID = try await app.importer.importImage(data: data)
+                navigation.selectedNoteID = try await importer.importImage(data: data)
             } catch {
                 importError = error.localizedDescription
             }

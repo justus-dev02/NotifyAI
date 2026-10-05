@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Playback controls pinned to the bottom of the detail screen.
@@ -37,7 +38,10 @@ struct PlaybackBar: View {
                     Button("15 Sekunden zurück", systemImage: "gobackward.15") {
                         player.skip(by: -15)
                     }
-                    Button(player.isPlaying ? String(localized: "Pause") : String(localized: "Abspielen"), systemImage: player.isPlaying ? "pause.fill" : "play.fill") {
+                    Button(
+                        player.isPlaying ? String(localized: "Pause") : String(localized: "Abspielen"),
+                        systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+                    ) {
                         player.togglePlayback()
                     }
                     .font(.title2)

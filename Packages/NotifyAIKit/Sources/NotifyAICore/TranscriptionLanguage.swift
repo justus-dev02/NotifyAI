@@ -21,16 +21,16 @@ public struct TranscriptionLanguage: Hashable, Identifiable, Codable, Sendable {
         Locale.current.localizedString(forIdentifier: id) ?? id
     }
 
-    public static let german = TranscriptionLanguage(id: "de-DE")
-    public static let englishUS = TranscriptionLanguage(id: "en-US")
-    public static let englishUK = TranscriptionLanguage(id: "en-GB")
-    public static let french = TranscriptionLanguage(id: "fr-FR")
-    public static let spanish = TranscriptionLanguage(id: "es-ES")
-    public static let italian = TranscriptionLanguage(id: "it-IT")
+    public static let german = Self(id: "de-DE")
+    public static let englishUS = Self(id: "en-US")
+    public static let englishUK = Self(id: "en-GB")
+    public static let french = Self(id: "fr-FR")
+    public static let spanish = Self(id: "es-ES")
+    public static let italian = Self(id: "it-IT")
 
     /// Languages offered in the UI. Both transcription engines and the on-device
     /// language model support all of them.
-    public static let all: [TranscriptionLanguage] = [german, englishUS, englishUK, french, spanish, italian]
+    public static let all: [Self] = [german, englishUS, englishUK, french, spanish, italian]
 
     public init(id: String) {
         self.id = id

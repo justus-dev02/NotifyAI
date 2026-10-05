@@ -1,142 +1,6 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
-    "„%@“" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@”"
-          }
-        }
-      }
-    },
-    "„%@“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” is not open. Open the app or choose “All Apps” as the source."
-          }
-        }
-      }
-    },
-    "„%@“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” is not open. Open the app before starting or choose “All Apps”."
-          }
-        }
-      }
-    },
-    "„%@“ löschen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete “%@”?"
-          }
-        }
-      }
-    },
-    "## Aufgaben" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Tasks"
-          }
-        }
-      }
-    },
-    "## Kapitel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Chapters"
-          }
-        }
-      }
-    },
-    "## Markierte Stellen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Marked Moments"
-          }
-        }
-      }
-    },
-    "## Text" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Text"
-          }
-        }
-      }
-    },
-    "## Themen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Topics"
-          }
-        }
-      }
-    },
-    "## Transkript" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Transcript"
-          }
-        }
-      }
-    },
-    "## Überblick" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Overview"
-          }
-        }
-      }
-    },
-    "%@ · %@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ · %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@ · %3$@"
-          }
-        }
-      }
-    },
-    "%@ · spielt Ton ab" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · playing audio"
-          }
-        }
-      }
-    },
     "%@ (nicht geöffnet)" : {
       "localizations" : {
         "en" : {
@@ -177,16 +41,6 @@
         }
       }
     },
-    "%@ Ohne Apple Intelligence zeige ich die passenden Stellen statt einer formulierten Antwort." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Without Apple Intelligence, I show the matching passages instead of a written answer."
-          }
-        }
-      }
-    },
     "%@ wird geladen" : {
       "localizations" : {
         "en" : {
@@ -207,22 +61,38 @@
         }
       }
     },
-    "%@ wird von der gewählten Spracherkennung nicht unterstützt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ is not supported by the selected speech recognition."
-          }
-        }
-      }
-    },
     "%@ wird vorbereitet" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing %@"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ · spielt Ton ab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · playing audio"
           }
         }
       }
@@ -263,8 +133,15 @@
         }
       }
     },
-    "%lld markierte Stellen passten nicht mehr in die Anfrage und wurden nicht gesondert berücksichtigt." : {
-
+    "%lld Notizen durchsuchbar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes searchable"
+          }
+        }
+      }
     },
     "%lld Notizen · %lld Abschnitte" : {
       "localizations" : {
@@ -278,16 +155,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld notes · %2$lld passages"
-          }
-        }
-      }
-    },
-    "%lld Notizen durchsuchbar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld notes searchable"
           }
         }
       }
@@ -308,16 +175,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 language pack"
-          }
-        }
-      }
-    },
-    "1:1-Gespräch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1:1 Conversation"
           }
         }
       }
@@ -368,26 +225,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Play"
-          }
-        }
-      }
-    },
-    "Aggregate-Gerät anlegen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create aggregate device"
-          }
-        }
-      }
-    },
-    "Ähnlicher Inhalt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Similar Content"
           }
         }
       }
@@ -512,16 +349,6 @@
         }
       }
     },
-    "Allgemein" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General"
-          }
-        }
-      }
-    },
     "Als erledigt markieren" : {
       "localizations" : {
         "en" : {
@@ -548,26 +375,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark as Open"
-          }
-        }
-      }
-    },
-    "Andere" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Others"
-          }
-        }
-      }
-    },
-    "Ändere die Filter, um weitere Aufgaben zu sehen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change the filters to see more tasks."
           }
         }
       }
@@ -622,108 +429,12 @@
         }
       }
     },
-    "App und Gerät" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App and Device"
-          }
-        }
-      }
-    },
-    "App-Sperre: %@, Backup: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "App-Sperre: %1$@, Backup: %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App lock: %1$@, backup: %2$@"
-          }
-        }
-      }
-    },
     "Apple Intelligence" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Intelligence"
-          }
-        }
-      }
-    },
-    "Apple Intelligence ist derzeit nicht verfügbar." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence is currently unavailable."
-          }
-        }
-      }
-    },
-    "Apple Intelligence ist in den Systemeinstellungen deaktiviert." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence is turned off in System Settings."
-          }
-        }
-      }
-    },
-    "Apple Intelligence konnte %lld von %lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Apple Intelligence konnte %1$lld von %2$lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen."
-          }
-        }
-      }
-    },
-    "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence could not merge the chapters; the summary was assembled from the chapters."
-          }
-        }
-      }
-    },
-    "Apple Intelligence konnte diesen Text nicht zusammenfassen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence could not summarize this text."
-          }
-        }
-      }
-    },
-    "Apple Intelligence konnte keine Antwort formulieren." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence could not write an answer."
-          }
-        }
-      }
-    },
-    "Apple Intelligence unterstützt %@ noch nicht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Intelligence does not support %@ yet."
           }
         }
       }
@@ -758,26 +469,6 @@
         }
       }
     },
-    "Audio-Callback anlegen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create audio callback"
-          }
-        }
-      }
-    },
-    "Audiodatei" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio File"
-          }
-        }
-      }
-    },
     "Audiodatei, PDF oder Bild importieren" : {
       "localizations" : {
         "en" : {
@@ -798,42 +489,12 @@
         }
       }
     },
-    "Audioquelle: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio source: %@"
-          }
-        }
-      }
-    },
     "Auf dem Gerät sind nur noch %@ frei. Die Aufnahme wurde beendet, bevor der Speicher voll ist; alles bisher Aufgenommene ist gespeichert." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only %@ of storage is left on this device. The recording was stopped before the storage ran full; everything recorded so far has been saved."
-          }
-        }
-      }
-    },
-    "Auf die Datei konnte nicht zugegriffen werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The file could not be accessed."
-          }
-        }
-      }
-    },
-    "Auf diesem Gerät ist kein Code und keine biometrische Anmeldung eingerichtet." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No passcode or biometric authentication is set up on this device."
           }
         }
       }
@@ -1038,16 +699,6 @@
         }
       }
     },
-    "Aufnahmen: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recordings: %@"
-          }
-        }
-      }
-    },
     "Aufnahmequelle" : {
       "localizations" : {
         "en" : {
@@ -1068,22 +719,22 @@
         }
       }
     },
-    "Ausgabegerät" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Output device"
-          }
-        }
-      }
-    },
     "Ausgewählt" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selected"
+          }
+        }
+      }
+    },
+    "Auswertung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysis"
           }
         }
       }
@@ -1098,12 +749,12 @@
         }
       }
     },
-    "Auswertung" : {
+    "Automatisch nach Updates suchen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Analysis"
+            "value" : "Automatically check for updates"
           }
         }
       }
@@ -1148,16 +799,6 @@
         }
       }
     },
-    "Bild" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Image"
-          }
-        }
-      }
-    },
     "bis %@" : {
       "localizations" : {
         "en" : {
@@ -1194,36 +835,6 @@
         }
       }
     },
-    "ca. 150 MB" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "approx. 150 MB"
-          }
-        }
-      }
-    },
-    "ca. 500 MB" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "approx. 500 MB"
-          }
-        }
-      }
-    },
-    "ca. 630 MB" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "approx. 630 MB"
-          }
-        }
-      }
-    },
     "Darstellung" : {
       "localizations" : {
         "en" : {
@@ -1234,82 +845,12 @@
         }
       }
     },
-    "Darstellung: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance: %@"
-          }
-        }
-      }
-    },
-    "Das Audioformat des Mikrofons wird nicht unterstützt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The microphone’s audio format is not supported."
-          }
-        }
-      }
-    },
-    "Das Audiogerät für den Systemton konnte nicht eingerichtet werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The audio device for system audio could not be set up."
-          }
-        }
-      }
-    },
     "Das Modell „%@“ ist noch nicht geladen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The model “%@” has not been downloaded yet."
-          }
-        }
-      }
-    },
-    "Das Protokoll ist nicht verfügbar." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The log is not available."
-          }
-        }
-      }
-    },
-    "Das sind die passendsten Stellen in deinen Notizen:" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "These are the most relevant passages in your notes:"
-          }
-        }
-      }
-    },
-    "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Apple Intelligence language model is still loading. Please try again later."
-          }
-        }
-      }
-    },
-    "Das Sprachpaket für Apple Speech ist nicht verfügbar. Bitte prüfe die Internetverbindung für den einmaligen Download." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Apple Speech language pack is not available. Please check your internet connection for the one-time download."
           }
         }
       }
@@ -1330,16 +871,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The transcript will be created after the recording."
-          }
-        }
-      }
-    },
-    "Das Whisper-Modell „%@“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Whisper model “%@” has not been downloaded yet. You can download it in Settings."
           }
         }
       }
@@ -1394,16 +925,6 @@
         }
       }
     },
-    "Dazu habe ich in deinen Notizen nichts gefunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I found nothing about that in your notes."
-          }
-        }
-      }
-    },
     "Der Diagnosebericht enthält Versionen, Einstellungen, Speicherbelegung und das technische Protokoll – keine Inhalte deiner Notizen. Er wird nur gespeichert oder geteilt, wenn du es auswählst." : {
       "localizations" : {
         "en" : {
@@ -1414,25 +935,12 @@
         }
       }
     },
-    "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen." : {
-
-    },
     "Diagnosebericht exportieren …" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export Diagnostic Report…"
-          }
-        }
-      }
-    },
-    "Die Änderung konnte nicht gespeichert werden: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The change could not be saved: %@"
           }
         }
       }
@@ -1447,62 +955,12 @@
         }
       }
     },
-    "Die Audiodatei dieser Notiz fehlt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The audio file of this note is missing."
-          }
-        }
-      }
-    },
-    "Die Audiodatei konnte nicht angelegt werden: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The audio file could not be created: %@"
-          }
-        }
-      }
-    },
-    "Die Audiodatei konnte nicht gelesen werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The audio file could not be read."
-          }
-        }
-      }
-    },
-    "Die Audiodatei konnte nicht geöffnet werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The audio file could not be opened."
-          }
-        }
-      }
-    },
     "Die Audiodatei konnte nicht weiter geschrieben werden (%@). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The audio file could not be written anymore (%@). Everything recorded up to this point has been saved."
-          }
-        }
-      }
-    },
-    "Die Aufnahme konnte nicht gestartet werden: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The recording could not be started: %@"
           }
         }
       }
@@ -1528,7 +986,14 @@
       }
     },
     "Die Aufnahme wurde pausiert, weil das Audiogerät nicht mehr verfügbar ist (%@). Alles bis hierhin ist gespeichert. Setze sie fort, sobald das Gerät wieder bereit ist." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording was paused because the audio device is no longer available (%@). Everything up to this point is saved. Resume it as soon as the device is ready again."
+          }
+        }
+      }
     },
     "Die Aufnahme wurde pausiert, weil der Mac in den Ruhezustand gewechselt ist. Setze sie fort, sobald das Gespräch weitergeht." : {
       "localizations" : {
@@ -1580,16 +1045,6 @@
         }
       }
     },
-    "Die Datei konnte nicht gelesen werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The file could not be read."
-          }
-        }
-      }
-    },
     "Die Datenbank konnte nicht verschoben werden: %@" : {
       "localizations" : {
         "en" : {
@@ -1610,32 +1065,12 @@
         }
       }
     },
-    "Die Entsperrung ist fehlgeschlagen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlocking failed."
-          }
-        }
-      }
-    },
     "Die Notiz konnte nicht gelöscht werden: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The note could not be deleted: %@"
-          }
-        }
-      }
-    },
-    "Die Notizen können nicht geöffnet werden" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your Notes Can’t Be Opened"
           }
         }
       }
@@ -1650,12 +1085,12 @@
         }
       }
     },
-    "Die passendsten Notizen findest du unten." : {
+    "Die Notizen können nicht geöffnet werden" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You’ll find the most relevant notes below."
+            "value" : "Your Notes Can’t Be Opened"
           }
         }
       }
@@ -1670,62 +1105,12 @@
         }
       }
     },
-    "Diese Woche" : {
+    "Die Änderung konnte nicht gespeichert werden: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This Week"
-          }
-        }
-      }
-    },
-    "Dieser Dateityp wird nicht unterstützt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This file type is not supported."
-          }
-        }
-      }
-    },
-    "Dieser Monat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Month"
-          }
-        }
-      }
-    },
-    "Dieses Gerät unterstützt Apple Intelligence nicht." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This device does not support Apple Intelligence."
-          }
-        }
-      }
-    },
-    "Dieses Jahr" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Year"
-          }
-        }
-      }
-    },
-    "Download fehlgeschlagen. Bitte prüfe die Internetverbindung und versuche es erneut." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download failed. Please check your internet connection and try again."
+            "value" : "The change could not be saved: %@"
           }
         }
       }
@@ -1820,16 +1205,6 @@
         }
       }
     },
-    "Entsperre NotifyAI, um auf deine Notizen zuzugreifen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlock NotifyAI to access your notes."
-          }
-        }
-      }
-    },
     "Erlauben" : {
       "localizations" : {
         "en" : {
@@ -1890,56 +1265,6 @@
         }
       }
     },
-    "Erstellt: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Created: %@"
-          }
-        }
-      }
-    },
-    "Es gibt noch keine fertigen Notizen, die ich durchsuchen kann. Sobald eine Aufnahme oder ein Import verarbeitet ist, kannst du hier Fragen dazu stellen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There are no processed notes I can search yet. As soon as a recording or import has been processed, you can ask questions about it here."
-          }
-        }
-      }
-    },
-    "Es läuft bereits eine Aufnahme." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A recording is already in progress."
-          }
-        }
-      }
-    },
-    "Es wurde kein Mikrofon gefunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No microphone was found."
-          }
-        }
-      }
-    },
-    "Fällig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due"
-          }
-        }
-      }
-    },
     "Favorit" : {
       "localizations" : {
         "en" : {
@@ -1966,16 +1291,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Favorites"
-          }
-        }
-      }
-    },
-    "Fehlgeschlagen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed"
           }
         }
       }
@@ -2060,6 +1375,16 @@
         }
       }
     },
+    "Fällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due"
+          }
+        }
+      }
+    },
     "Für Aufnahmen" : {
       "localizations" : {
         "en" : {
@@ -2090,16 +1415,6 @@
         }
       }
     },
-    "Für diese Filter gibt es keine Notizen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There are no notes for these filters."
-          }
-        }
-      }
-    },
     "Für diese Notiz wurde noch keine Zusammenfassung erstellt." : {
       "localizations" : {
         "en" : {
@@ -2116,16 +1431,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For online meetings, macOS also asks the first time whether NotifyAI may record system audio."
-          }
-        }
-      }
-    },
-    "Für Online-Meetings: deine Stimme über das Mikrofon, die anderen Teilnehmenden direkt aus der App (z. B. Zoom, Teams, Discord)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For online meetings: your voice through the microphone, the other participants directly from the app (e.g. Zoom, Teams, Discord)."
           }
         }
       }
@@ -2170,26 +1475,6 @@
         }
       }
     },
-    "Gerät: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Device: %@"
-          }
-        }
-      }
-    },
-    "Gerätecode" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Device Passcode"
-          }
-        }
-      }
-    },
     "Geschwindigkeit" : {
       "localizations" : {
         "en" : {
@@ -2220,26 +1505,6 @@
         }
       }
     },
-    "Gleiche Woche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Same Week"
-          }
-        }
-      }
-    },
-    "Guter Kompromiss aus Genauigkeit und Geschwindigkeit auf dem iPhone." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A good balance of accuracy and speed on iPhone."
-          }
-        }
-      }
-    },
     "Heute" : {
       "localizations" : {
         "en" : {
@@ -2250,42 +1515,12 @@
         }
       }
     },
-    "Höchste Genauigkeit. Empfohlen für Mac und neuere iPhones (Pro-Modelle)." : {
+    "Häufigkeit" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Highest accuracy. Recommended for Mac and newer iPhones (Pro models)."
-          }
-        }
-      }
-    },
-    "Ich" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Me"
-          }
-        }
-      }
-    },
-    "Ich habe %lld passende Notizen gefunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I found %lld matching notes."
-          }
-        }
-      }
-    },
-    "Ich habe eine passende Notiz gefunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I found one matching note."
+            "value" : "Frequency"
           }
         }
       }
@@ -2296,16 +1531,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In the Dock for the main window, in the menu bar for quick recordings — even when the window is closed."
-          }
-        }
-      }
-    },
-    "Im Dock und in der Menüleiste" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In the Dock and Menu Bar"
           }
         }
       }
@@ -2340,12 +1565,6 @@
         }
       }
     },
-    "In %lld Kapiteln konnte Apple Intelligence einzelne Abschnitte nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
-
-    },
-    "In %lld Kapiteln waren die Notizen zu umfangreich und wurden gekürzt; dort können Details fehlen." : {
-
-    },
     "In den Einstellungen erlauben" : {
       "localizations" : {
         "en" : {
@@ -2356,22 +1575,12 @@
         }
       }
     },
-    "In der Aufnahme wurde keine Sprache erkannt." : {
+    "In dieser Version sind keine Updates eingerichtet. Neue Versionen findest du auf GitHub." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No speech was detected in the recording."
-          }
-        }
-      }
-    },
-    "In der Datei wurde kein Text gefunden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No text was found in the file."
+            "value" : "Updates are not set up in this build. You can find new versions on GitHub."
           }
         }
       }
@@ -2386,42 +1595,12 @@
         }
       }
     },
-    "In Warteschlange" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queued"
-          }
-        }
-      }
-    },
-    "Inhaltlich passend" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Similar content"
-          }
-        }
-      }
-    },
     "Installiert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installed"
-          }
-        }
-      }
-    },
-    "Interview" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interview"
           }
         }
       }
@@ -2456,6 +1635,16 @@
         }
       }
     },
+    "Jetzt nach Updates suchen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates Now…"
+          }
+        }
+      }
+    },
     "Kapitel" : {
       "localizations" : {
         "en" : {
@@ -2466,32 +1655,12 @@
         }
       }
     },
-    "Kapitel %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chapter %lld"
-          }
-        }
-      }
-    },
     "Kein Transkript" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Transcript"
-          }
-        }
-      }
-    },
-    "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No access to the microphone. Please allow access in System Settings."
           }
         }
       }
@@ -2566,16 +1735,6 @@
         }
       }
     },
-    "Kundengespräch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customer Conversation"
-          }
-        }
-      }
-    },
     "Laden (%@)" : {
       "localizations" : {
         "en" : {
@@ -2596,52 +1755,12 @@
         }
       }
     },
-    "Letzte %lld Tage" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last %lld Days"
-          }
-        }
-      }
-    },
     "Letzte 7 Tage" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last 7 Days"
-          }
-        }
-      }
-    },
-    "Letzte Woche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Week"
-          }
-        }
-      }
-    },
-    "Letzter Monat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Month"
-          }
-        }
-      }
-    },
-    "Letztes Jahr" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Year"
           }
         }
       }
@@ -2672,16 +1791,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Live Transcript While Recording"
-          }
-        }
-      }
-    },
-    "Live-Transkript: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live transcript: %@"
           }
         }
       }
@@ -2756,32 +1865,12 @@
         }
       }
     },
-    "Meeting" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meeting"
-          }
-        }
-      }
-    },
     "Mehr" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "More"
-          }
-        }
-      }
-    },
-    "MetricKit-Berichte (%lld)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetricKit reports (%lld)"
           }
         }
       }
@@ -2802,16 +1891,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Microphone + %@"
-          }
-        }
-      }
-    },
-    "Mikrofon + Systemton" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microphone + System Audio"
           }
         }
       }
@@ -2916,6 +1995,26 @@
         }
       }
     },
+    "Monatlich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly"
+          }
+        }
+      }
+    },
+    "Nach Updates suchen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates…"
+          }
+        }
+      }
+    },
     "Neu transkribieren" : {
       "localizations" : {
         "en" : {
@@ -2946,22 +2045,22 @@
         }
       }
     },
-    "Neue Aufnahme …" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Recording…"
-          }
-        }
-      }
-    },
     "Neue Aufnahme starten (⇧⌘R)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start a new recording (⇧⌘R)"
+          }
+        }
+      }
+    },
+    "Neue Aufnahme …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Recording…"
           }
         }
       }
@@ -2986,38 +2085,12 @@
         }
       }
     },
-    "Nicht genügend freier Speicherplatz (%@ frei). Für eine Aufnahme werden mindestens %@ benötigt." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Nicht genügend freier Speicherplatz (%1$@ frei). Für eine Aufnahme werden mindestens %2$@ benötigt."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not enough free storage (%1$@ free). A recording needs at least %2$@."
-          }
-        }
-      }
-    },
     "Nicht gespeichert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not Saved"
-          }
-        }
-      }
-    },
-    "nicht lesbar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "not readable"
           }
         }
       }
@@ -3042,26 +2115,6 @@
         }
       }
     },
-    "Nimmt auf, was im Raum gesprochen wird." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Records what is said in the room."
-          }
-        }
-      }
-    },
-    "Nimmt nur den Ton von Apps auf, z. B. Webinare oder Videos. Das Mikrofon bleibt aus." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Records only the audio of apps, e.g. webinars or videos. The microphone stays off."
-          }
-        }
-      }
-    },
     "Noch kein Systemton empfangen. Läuft das Meeting schon? Falls ja, erlaube NotifyAI unter „Bildschirm- & Systemaudioaufnahme“ das Aufnehmen von Systemaudio." : {
       "localizations" : {
         "en" : {
@@ -3082,22 +2135,22 @@
         }
       }
     },
+    "Noch nie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never"
+          }
+        }
+      }
+    },
     "NotifyAI" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "NotifyAI"
-          }
-        }
-      }
-    },
-    "NotifyAI – Diagnosebericht" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotifyAI – Diagnostic Report"
           }
         }
       }
@@ -3132,6 +2185,16 @@
         }
       }
     },
+    "NotifyAI fragt nur eine kleine Versionsliste ab und lädt eine neue Version erst, wenn es eine gibt. Jedes Update ist signiert und wird vor der Installation geprüft. Automatisch geladene Updates werden beim nächsten Beenden installiert – nie während einer Aufnahme. Deine Notizen bleiben erhalten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI only fetches a small list of versions and downloads a new version only when one is available. Every update is signed and verified before installation. Automatically downloaded updates are installed the next time you quit – never during a recording. Your notes are kept."
+          }
+        }
+      }
+    },
     "NotifyAI ist gesperrt" : {
       "localizations" : {
         "en" : {
@@ -3158,16 +2221,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open NotifyAI"
-          }
-        }
-      }
-    },
-    "Notiz" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Note"
           }
         }
       }
@@ -3202,22 +2255,22 @@
         }
       }
     },
-    "Notiz öffnen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Note"
-          }
-        }
-      }
-    },
     "Notiz umbenennen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rename Note"
+          }
+        }
+      }
+    },
+    "Notiz öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Note"
           }
         }
       }
@@ -3238,36 +2291,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing notes for search…"
-          }
-        }
-      }
-    },
-    "Nur im Dock" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Only"
-          }
-        }
-      }
-    },
-    "Nur in der Menüleiste" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menu Bar Only"
-          }
-        }
-      }
-    },
-    "Nur Systemton" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System Audio Only"
           }
         }
       }
@@ -3298,56 +2321,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Questions"
-          }
-        }
-      }
-    },
-    "Öffnen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz an der Stelle, an der die Aufgabe genannt wurde" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note where the task was mentioned"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz an dieser Stelle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note at this point"
-          }
-        }
-      }
-    },
-    "Ohne Termin" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Due Date"
           }
         }
       }
@@ -3432,42 +2405,12 @@
         }
       }
     },
-    "PDF" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF"
-          }
-        }
-      }
-    },
     "Person" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Person"
-          }
-        }
-      }
-    },
-    "Person: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Person: %@"
-          }
-        }
-      }
-    },
-    "Protokoll der laufenden Sitzung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Log of the Current Session"
           }
         }
       }
@@ -3512,36 +2455,6 @@
         }
       }
     },
-    "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fast and efficient. Text appears live; the system provides the language pack."
-          }
-        }
-      }
-    },
-    "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Very accurate, even with technical terms. Requires a one-time model download; live text appears in sections."
-          }
-        }
-      }
-    },
-    "Sehr schnell, für klare Sprache in ruhiger Umgebung." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Very fast, for clear speech in a quiet environment."
-          }
-        }
-      }
-    },
     "Senden" : {
       "localizations" : {
         "en" : {
@@ -3572,32 +2485,12 @@
         }
       }
     },
-    "Später" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Later"
-          }
-        }
-      }
-    },
     "Speicher" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Storage"
-          }
-        }
-      }
-    },
-    "Speicher (RAM): %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memory (RAM): %@"
           }
         }
       }
@@ -3662,38 +2555,12 @@
         }
       }
     },
-    "Spracherkennung: %@, Sprache: %@, Whisper-Modell: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Spracherkennung: %1$@, Sprache: %2$@, Whisper-Modell: %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speech recognition: %1$@, language: %2$@, Whisper model: %3$@"
-          }
-        }
-      }
-    },
     "Sprachpaket" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Language Pack"
-          }
-        }
-      }
-    },
-    "Sprecher %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speaker %lld"
           }
         }
       }
@@ -3714,32 +2581,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Separate Speakers by Audio Source"
-          }
-        }
-      }
-    },
-    "Sprecher werden erkannt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identifying Speakers"
-          }
-        }
-      }
-    },
-    "Sprechererkennung: %@, Ich/Andere aus Quelle: %@, Kapitel während der Aufnahme: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Sprechererkennung: %1$@, Ich/Andere aus Quelle: %2$@, Kapitel während der Aufnahme: %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speaker detection: %1$@, Me/Others from source: %2$@, chapters while recording: %3$@"
           }
         }
       }
@@ -3814,26 +2655,6 @@
         }
       }
     },
-    "Stromsparmodus: an" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Low Power Mode: on"
-          }
-        }
-      }
-    },
-    "Stromsparmodus: aus" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Low Power Mode: off"
-          }
-        }
-      }
-    },
     "Suchindex" : {
       "localizations" : {
         "en" : {
@@ -3854,78 +2675,12 @@
         }
       }
     },
-    "Suchindex: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search index: %@"
-          }
-        }
-      }
-    },
-    "System: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System: %@"
-          }
-        }
-      }
-    },
-    "Systemton · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System Audio · %@"
-          }
-        }
-      }
-    },
-    "Systemton kann auf diesem Gerät nicht aufgenommen werden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System audio cannot be recorded on this device."
-          }
-        }
-      }
-    },
-    "Systemton konnte nicht aufgenommen werden (%@, Fehler %d)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Systemton konnte nicht aufgenommen werden (%1$@, Fehler %2$d)."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System audio could not be recorded (%1$@, error %2$d)."
-          }
-        }
-      }
-    },
     "Systemton von %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "System audio of %@"
-          }
-        }
-      }
-    },
-    "Tap anlegen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create tap"
           }
         }
       }
@@ -3980,32 +2735,12 @@
         }
       }
     },
-    "Thema: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Topic: %@"
-          }
-        }
-      }
-    },
     "Themen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Topics"
-          }
-        }
-      }
-    },
-    "Thermischer Zustand: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Thermal state: %lld"
           }
         }
       }
@@ -4130,22 +2865,12 @@
         }
       }
     },
-    "Überblick" : {
+    "Täglich" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overview"
-          }
-        }
-      }
-    },
-    "Überfällig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overdue"
+            "value" : "Daily"
           }
         }
       }
@@ -4170,22 +2895,32 @@
         }
       }
     },
+    "Updates" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        }
+      }
+    },
+    "Updates automatisch laden und installieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically download and install updates"
+          }
+        }
+      }
+    },
     "Version" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version"
-          }
-        }
-      }
-    },
-    "Version: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version: %@"
           }
         }
       }
@@ -4210,46 +2945,6 @@
         }
       }
     },
-    "Vorgestern" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day Before Yesterday"
-          }
-        }
-      }
-    },
-    "Vorlesung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lecture"
-          }
-        }
-      }
-    },
-    "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a note or start a new recording."
-          }
-        }
-      }
-    },
-    "Was wurde zuletzt entschieden?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What was decided most recently?"
-          }
-        }
-      }
-    },
     "Weiter" : {
       "localizations" : {
         "en" : {
@@ -4270,26 +2965,6 @@
         }
       }
     },
-    "Welche Aufgaben habe ich diese Woche übernommen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Which tasks did I take on this week?"
-          }
-        }
-      }
-    },
-    "Welche Fragen sind noch offen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Which questions are still open?"
-          }
-        }
-      }
-    },
     "Whisper %@" : {
       "localizations" : {
         "en" : {
@@ -4306,16 +2981,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Whisper transcribes in sections — the first text appears after a pause in speech."
-          }
-        }
-      }
-    },
-    "Whisper wird gerade für eine Aufnahme oder Transkription verwendet. Lösche das Modell, sobald sie abgeschlossen ist." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Whisper is currently being used for a recording or transcription. Delete the model once it has finished."
           }
         }
       }
@@ -4346,16 +3011,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Whisper Models"
-          }
-        }
-      }
-    },
-    "Whisper-Modelle: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Whisper models: %@"
           }
         }
       }
@@ -4440,32 +3095,22 @@
         }
       }
     },
-    "Wird transkribiert" : {
+    "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Transcribing"
+            "value" : "Select a note or start a new recording."
           }
         }
       }
     },
-    "Wird zusammengefasst" : {
+    "Wöchentlich" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Summarizing"
-          }
-        }
-      }
-    },
-    "Zeig mir alle Aufnahmen von letzter Woche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show me all recordings from last week"
+            "value" : "Weekly"
           }
         }
       }
@@ -4496,6 +3141,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recent"
+          }
+        }
+      }
+    },
+    "Zuletzt gesucht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last checked"
           }
         }
       }
@@ -4560,132 +3215,92 @@
         }
       }
     },
-    "Automatisch nach Updates suchen" : {
+    "Ändere die Filter, um weitere Aufgaben zu sehen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically check for updates"
+            "value" : "Change the filters to see more tasks."
           }
         }
       }
     },
-    "Häufigkeit" : {
+    "Öffnen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Frequency"
+            "value" : "Open"
           }
         }
       }
     },
-    "Updates automatisch laden und installieren" : {
+    "Öffnet die Notiz" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically download and install updates"
+            "value" : "Opens the note"
           }
         }
       }
     },
-    "Zuletzt gesucht" : {
+    "Öffnet die Notiz an der Stelle, an der die Aufgabe genannt wurde" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last checked"
+            "value" : "Opens the note where the task was mentioned"
           }
         }
       }
     },
-    "Noch nie" : {
+    "Öffnet die Notiz an dieser Stelle" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Never"
+            "value" : "Opens the note at this point"
           }
         }
       }
     },
-    "Jetzt nach Updates suchen …" : {
+    "Überblick" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Check for Updates Now…"
+            "value" : "Overview"
           }
         }
       }
     },
-    "In dieser Version sind keine Updates eingerichtet. Neue Versionen findest du auf GitHub." : {
+    "„%@“" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updates are not set up in this build. You can find new versions on GitHub."
+            "value" : "“%@”"
           }
         }
       }
     },
-    "Updates" : {
+    "„%@“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updates"
+            "value" : "“%@” is not open. Open the app before starting or choose “All Apps”."
           }
         }
       }
     },
-    "NotifyAI fragt nur eine kleine Versionsliste ab und lädt eine neue Version erst, wenn es eine gibt. Jedes Update ist signiert und wird vor der Installation geprüft. Automatisch geladene Updates werden beim nächsten Beenden installiert – nie während einer Aufnahme. Deine Notizen bleiben erhalten." : {
+    "„%@“ löschen?" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NotifyAI only fetches a small list of versions and downloads a new version only when one is available. Every update is signed and verified before installation. Automatically downloaded updates are installed the next time you quit – never during a recording. Your notes are kept."
-          }
-        }
-      }
-    },
-    "Nach Updates suchen …" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check for Updates…"
-          }
-        }
-      }
-    },
-    "Täglich" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daily"
-          }
-        }
-      }
-    },
-    "Wöchentlich" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weekly"
-          }
-        }
-      }
-    },
-    "Monatlich" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monthly"
+            "value" : "Delete “%@”?"
           }
         }
       }

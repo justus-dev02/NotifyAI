@@ -4,6 +4,7 @@
 //
 
 import DesignSystem
+import NotifyAIServices
 import SwiftUI
 
 /// Library on the left, note on the right. On iPhone the split view collapses into a stack.

@@ -7,6 +7,7 @@ import AudioCapture
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIServices
 import Synchronization
 
 /// Synthetic audio signals at the app's sample rate.
@@ -90,7 +91,7 @@ struct MockTranscriptionEngine: TranscriptionEngine {
 }
 
 struct MockSummarizer: Summarizer {
-    var result: NoteSummary = NoteSummary(suggestedTitle: "Projekt-Update", overview: "Überblick", source: .appleIntelligence, keywords: ["Projekt-Update"])
+    var result = NoteSummary(suggestedTitle: "Projekt-Update", overview: "Überblick", source: .appleIntelligence, keywords: ["Projekt-Update"])
     var error: (any Error)?
 
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {

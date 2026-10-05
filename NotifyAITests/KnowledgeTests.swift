@@ -6,6 +6,8 @@
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Testing
 
 // MARK: - Fixtures

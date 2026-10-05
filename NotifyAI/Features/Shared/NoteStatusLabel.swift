@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Status line for a note, with progress while it is processed.

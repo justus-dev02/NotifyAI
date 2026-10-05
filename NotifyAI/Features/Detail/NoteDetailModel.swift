@@ -5,6 +5,8 @@
 
 import Foundation
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import Observation
 
 /// View state of the detail screen: decoded transcript, highlight windows and playback.
@@ -53,13 +55,16 @@ final class NoteDetailModel {
         if revision != loadedRevision {
             loadedRevision = revision
             if let transcriptData = note.transcriptData {
-                segments = await Task.detached(priority: .userInitiated) {
-                    (try? Transcript.decode(transcriptData)) ?? []
-                }.value
+                segments = await Self.decode(transcriptData)
             } else {
                 segments = []
             }
         }
+    }
+
+    @concurrent
+    private static func decode(_ transcriptData: Data) async -> [TranscriptSegment] {
+        (try? Transcript.decode(transcriptData)) ?? []
     }
 
     /// The segment that contains the playback position, if playback has started.

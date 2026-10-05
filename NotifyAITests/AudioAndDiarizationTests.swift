@@ -6,6 +6,8 @@
 import AVFoundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Testing
 
 @Suite("Recording file format")

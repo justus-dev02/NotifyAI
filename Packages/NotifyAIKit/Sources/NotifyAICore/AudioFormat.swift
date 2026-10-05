@@ -16,8 +16,10 @@ public enum AudioFormat {
 
     /// Float32, mono, non-interleaved, 16 kHz.
     public static func makeProcessingFormat() -> AVAudioFormat {
-        // Creating a standard PCM format with valid parameters cannot fail.
-        AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false)!
+        guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false) else {
+            preconditionFailure("A standard PCM format with valid parameters cannot fail")
+        }
+        return format
     }
 
     public static var recordingFileSettings: [String: Any] {

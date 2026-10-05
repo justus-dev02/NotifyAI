@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Disk usage, downloaded models, the search index and deleting all notes.
@@ -12,7 +13,10 @@ struct StorageSettingsSection: View {
     @Environment(WhisperModelManager.self) private var whisperModels
     @Environment(RecordingController.self) private var recording
     @Environment(KnowledgeIndexService.self) private var knowledge
-    @Environment(\.appEnvironment) private var app
+    @Environment(NoteLibrary.self) private var library
+    @Environment(StorageMaintenance.self) private var storage
+    @Environment(UserNotices.self) private var notices
+    @Environment(AppNavigation.self) private var navigation
     @State private var recordingsSize: Int64?
     @State private var reservedSpeechPacks: Int?
     @State private var isConfirmingDeleteAll = false
@@ -103,22 +107,18 @@ struct StorageSettingsSection: View {
     }
 
     private func deleteAll() {
-        app?.processing.cancelAll()
         do {
-            try app?.store.deleteAll()
+            try library.deleteAll()
         } catch {
-            app?.notices.post(UserNotice(title: String(localized: "Nicht gelöscht"), message: String(localized: "Die Notizen konnten nicht gelöscht werden: \(error.localizedDescription)")))
+            notices.post(UserNotice(title: String(localized: "Nicht gelöscht"), message: String(localized: "Die Notizen konnten nicht gelöscht werden: \(error.localizedDescription)")))
         }
-        app?.navigation.selectedNoteID = nil
+        navigation.selectedNoteID = nil
         Task { await refreshStorage() }
     }
 
     private func refreshStorage() async {
         await whisperModels.refresh()
         reservedSpeechPacks = await AppleSpeechEngine.reservedLocales.count
-        guard let directory = app?.store.locations.recordingsDirectory else { return }
-        recordingsSize = await Task.detached(priority: .utility) {
-            StorageLocations.allocatedSize(of: directory)
-        }.value
+        recordingsSize = await storage.recordingsDiskUsage()
     }
 }

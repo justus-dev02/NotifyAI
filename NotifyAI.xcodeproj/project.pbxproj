@@ -7,11 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2727B5553034A5DC00EDD2C1 /* WhisperKit */; };
 		27AA00012F00000000000002 /* NotifyAIWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27AA00012F00000000000001 /* NotifyAIWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		27BB00012F00000000000011 /* NotifyAICore in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000021 /* NotifyAICore */; };
 		27BB00012F00000000000012 /* AudioCapture in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000022 /* AudioCapture */; };
 		27BB00012F00000000000013 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000023 /* DesignSystem */; };
+		27BB00012F00000000000014 /* NotifyAIPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000024 /* NotifyAIPersistence */; };
+		27BB00012F00000000000015 /* NotifyAIServices in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000025 /* NotifyAIServices */; };
 		27CC00012F00000000000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 27CC00012F00000000000002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
@@ -94,10 +95,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2727B5563034A5DC00EDD2C2 /* WhisperKit in Frameworks */,
 				27BB00012F00000000000011 /* NotifyAICore in Frameworks */,
 				27BB00012F00000000000012 /* AudioCapture in Frameworks */,
 				27BB00012F00000000000013 /* DesignSystem in Frameworks */,
+				27BB00012F00000000000014 /* NotifyAIPersistence in Frameworks */,
+				27BB00012F00000000000015 /* NotifyAIServices in Frameworks */,
 				27CC00012F00000000000003 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -173,10 +175,11 @@
 			);
 			name = NotifyAI;
 			packageProductDependencies = (
-				2727B5553034A5DC00EDD2C1 /* WhisperKit */,
 				27BB00012F00000000000021 /* NotifyAICore */,
 				27BB00012F00000000000022 /* AudioCapture */,
 				27BB00012F00000000000023 /* DesignSystem */,
+				27BB00012F00000000000024 /* NotifyAIPersistence */,
+				27BB00012F00000000000025 /* NotifyAIServices */,
 				27CC00012F00000000000002 /* Sparkle */,
 			);
 			productName = NotifyAI;
@@ -289,7 +292,6 @@
 			mainGroup = 275D60502E6F188200EB7BA5;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 				27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */,
 				27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
@@ -823,14 +825,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
-			requirement = {
-				kind = revision;
-				revision = f31370fbb39818e32722426eb9878665dfcfae3c;
-			};
-		};
 		27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sparkle-project/Sparkle";
@@ -842,11 +836,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2727B5553034A5DC00EDD2C1 /* WhisperKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */;
-			productName = WhisperKit;
-		};
 		27BB00012F00000000000021 /* NotifyAICore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
@@ -861,6 +850,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
 			productName = DesignSystem;
+		};
+		27BB00012F00000000000024 /* NotifyAIPersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
+			productName = NotifyAIPersistence;
+		};
+		27BB00012F00000000000025 /* NotifyAIServices */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
+			productName = NotifyAIServices;
 		};
 		27CC00012F00000000000002 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;

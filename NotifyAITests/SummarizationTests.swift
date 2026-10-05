@@ -6,6 +6,7 @@
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIServices
 import Testing
 
 @Suite("Text chunking")

@@ -5,6 +5,8 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import SwiftData
 import SwiftUI
 
@@ -14,8 +16,7 @@ import SwiftUI
 struct NoteList: View {
     @Binding var selection: LibrarySelection?
     @Query private var notes: [Note]
-    @Environment(\.appEnvironment) private var app
-    @Environment(ProcessingCoordinator.self) private var processing
+    @Environment(NoteLibrary.self) private var library
     @Environment(AppNavigation.self) private var navigation
     @Environment(TaskBoard.self) private var tasks
     /// Identifier of the note awaiting delete confirmation.
@@ -25,7 +26,7 @@ struct NoteList: View {
 
     init(filter: LibraryFilter, searchText: String, selection: Binding<LibrarySelection?>) {
         _selection = selection
-        _notes = Query(filter: NoteQueries.library(filter: filter, searchText: searchText), sort: \Note.createdAt, order: .reverse)
+        _notes = Query(filter: NoteQueries.library(filter: filter.listFilter, searchText: searchText), sort: \Note.createdAt, order: .reverse)
         isSearching = !searchText.trimmingCharacters(in: .whitespaces).isEmpty
         showsTaskRow = filter == .all && !isSearching
     }
@@ -47,7 +48,10 @@ struct NoteList: View {
                             .tag(LibrarySelection.note(note.id))
                             .contextMenu { contextMenu(for: note) }
                             .swipeActions(edge: .leading) {
-                                Button(note.isFavorite ? String(localized: "Favorit entfernen") : String(localized: "Favorit"), systemImage: note.isFavorite ? "star.slash" : "star") {
+                                Button(
+                                    note.isFavorite ? String(localized: "Favorit entfernen") : String(localized: "Favorit"),
+                                    systemImage: note.isFavorite ? "star.slash" : "star"
+                                ) {
                                     toggleFavorite(note)
                                 }
                                 .tint(.yellow)
@@ -104,8 +108,7 @@ struct NoteList: View {
     }
 
     private func toggleFavorite(_ note: Note) {
-        note.isFavorite.toggle()
-        app?.store.saveReportingErrors()
+        library.setFavorite(!note.isFavorite, for: note)
     }
 
     private func delete(noteID: UUID) {
@@ -113,9 +116,8 @@ struct NoteList: View {
         if selection == .note(noteID) {
             selection = nil
         }
-        processing.cancel(noteID: noteID)
         if let note = notes.first(where: { $0.id == noteID }) {
-            app?.store.deleteReportingErrors(note)
+            library.delete(note)
         }
     }
 

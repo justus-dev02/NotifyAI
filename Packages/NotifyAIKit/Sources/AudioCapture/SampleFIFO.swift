@@ -17,6 +17,8 @@ public struct SampleFIFO {
     }
 
     public var count: Int { storage.count - head }
+    // `isEmpty` is defined here, so it cannot use itself.
+    // swiftlint:disable:next empty_count
     public var isEmpty: Bool { count == 0 }
 
     public mutating func append(_ samples: UnsafeBufferPointer<Float>) {

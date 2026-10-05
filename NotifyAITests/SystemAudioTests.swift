@@ -8,6 +8,8 @@ import AVFoundation
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import SwiftData
 import Testing
 
@@ -385,9 +387,7 @@ struct SourceProcessingTests {
         try store.insert(note)
 
         coordinator.enqueue(.process(note.id))
-        for _ in 0..<200 where note.status != .ready && note.status != .failed {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        await waitUntil { note.status == .ready || note.status == .failed }
 
         #expect(note.status == .ready)
         #expect(note.decodedTranscript().map(\.speaker) == ["Ich", "Ben"])

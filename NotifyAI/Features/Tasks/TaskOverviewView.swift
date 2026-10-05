@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// The entry in the library that opens the task overview.
@@ -56,6 +57,7 @@ struct TaskOverviewView: View {
                 }
             }
         }
+        .accessibilityLabel("Aufgaben")
         #if os(macOS)
         .listStyle(.inset)
         #else
@@ -114,16 +116,19 @@ struct TaskOverviewView: View {
                 }
                 Text("Ohne Zuständige").tag(TaskFilter.Owner.unassigned)
             }
+            .pickerStyle(.menu)
             Picker("Fällig", selection: $filter.due) {
                 Text("Jederzeit").tag(TaskDueBucket?.none)
                 ForEach(TaskDueBucket.allCases) { bucket in
                     Text(bucket.title).tag(TaskDueBucket?.some(bucket))
                 }
             }
+            .pickerStyle(.menu)
             Divider()
             Toggle("Erledigte anzeigen", isOn: $filter.showsDone)
         } label: {
-            Label("Filter", systemImage: filter.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+            // Named differently from the library's filter, which is on screen at the same time.
+            Label("Aufgaben filtern", systemImage: filter.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
         .help("Aufgaben nach Person und Fälligkeit filtern")
     }

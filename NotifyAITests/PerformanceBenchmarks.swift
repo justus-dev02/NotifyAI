@@ -12,6 +12,8 @@
 import AVFoundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import SwiftData
 import XCTest
 
@@ -64,7 +66,12 @@ final class PerformanceBenchmarks: XCTestCase {
         measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {
             let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).caf")
             defer { try? FileManager.default.removeItem(at: url) }
-            guard let file = try? AVAudioFile(forWriting: url, settings: AudioFormat.recordingFileSettings, commonFormat: .pcmFormatFloat32, interleaved: false) else {
+            guard let file = try? AVAudioFile(
+                forWriting: url,
+                settings: AudioFormat.recordingFileSettings,
+                commonFormat: .pcmFormatFloat32,
+                interleaved: false
+            ) else {
                 return XCTFail("Could not create the file")
             }
             let capture = AudioCaptureContext(tickInterval: .never)
@@ -129,11 +136,17 @@ final class PerformanceBenchmarks: XCTestCase {
         }
     }
 
-    /// Refreshing the task overview over 500 summaries when nothing changed (the common case
-    /// after every save).
+    /// Refreshing the task overview over 500 summaries with 2 000 tasks: one query over the
+    /// task rows, no summary is decoded.
     @MainActor
     func testTaskBoardRefreshOf500Summaries() throws {
-        let store = try NoteStore(locations: try StorageLocations.temporary(), inMemory: true)
+        let services = try ServiceContainer(
+            settings: makeIsolatedSettings(),
+            locations: try StorageLocations.temporary(),
+            inMemory: true,
+            recordingActivity: nil
+        )
+        let store = services.store
         for index in 0..<500 {
             let note = Note(title: "Meeting \(index)", isTitleUserDefined: true, kind: .recording, status: .ready)
             note.summary = NoteSummary(
@@ -144,7 +157,7 @@ final class PerformanceBenchmarks: XCTestCase {
             store.context.insert(note)
         }
         try store.save()
-        let board = TaskBoard(store: store)
+        let board = services.tasks
         board.refresh()
         XCTAssertEqual(board.entries.count, 2_000)
 

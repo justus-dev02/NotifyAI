@@ -5,6 +5,7 @@
 
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIServices
 import Testing
 
 @Suite("Whisper chunking")

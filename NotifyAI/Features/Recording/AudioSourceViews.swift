@@ -5,6 +5,8 @@
 
 #if os(macOS)
 import DesignSystem
+import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// Source selection rows: microphone and/or system audio, the app to record and hints.

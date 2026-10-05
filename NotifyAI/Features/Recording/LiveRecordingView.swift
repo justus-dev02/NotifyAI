@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIServices
 import SwiftUI
 
 /// The running recording: time, levels, live transcript and controls.
@@ -32,7 +33,7 @@ struct LiveRecordingView: View {
                 .padding(.horizontal, Theme.Spacing.large)
             #endif
 
-            if let message = recording.interruptionMessage {
+            if let message = recording.pauseReason?.message {
                 Label(message, systemImage: "phone.arrow.down.left")
                     .font(.callout)
                     .foregroundStyle(.orange)

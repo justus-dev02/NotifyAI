@@ -4,6 +4,8 @@
 //
 
 import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
 import SwiftUI
 
 /// Exports a note as Markdown. Sharing is always an explicit user action; nothing leaves
@@ -28,17 +30,7 @@ struct ShareMenu: View {
     }
 
     private func document(redacted: Bool, includesTranscript: Bool = true) -> MarkdownDocument {
-        let snapshot = MarkdownExporter.NoteSnapshot(
-            title: note.title,
-            createdAt: note.createdAt,
-            duration: note.duration,
-            participants: note.participants,
-            summary: note.summary,
-            markers: note.markers,
-            segments: segments,
-            bodyText: note.bodyText,
-            audioSource: note.audioSourceDescription
-        )
+        let snapshot = MarkdownExporter.NoteSnapshot(note: note, segments: segments)
         let options = MarkdownExporter.Options(includesTranscript: includesTranscript, redactsPersonalData: redacted)
         return MarkdownDocument(snapshot: snapshot, options: options)
     }

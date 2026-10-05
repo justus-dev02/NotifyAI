@@ -7,6 +7,8 @@ import AVFoundation
 import Foundation
 @testable import NotifyAI
 import NotifyAICore
+@testable import NotifyAIPersistence
+@testable import NotifyAIServices
 import Testing
 
 // MARK: - Fixtures
@@ -103,7 +105,15 @@ struct ChapterSummaryTests {
         let context = SummaryRequest(text: "", language: .german, focus: .meeting, kind: .recording, markedPassages: [])
         let chapters = ChapterSegmenter().chapters(in: LongFixture.segments(), isComplete: true, languageCode: "de")
         let requests = chapters.enumerated().map { index, chapter in
-            ChapterRequest(number: index + 1, count: chapters.count, start: chapter.start, end: chapter.end, text: chapter.text, context: context, markedPassages: [])
+            ChapterRequest(
+                number: index + 1,
+                count: chapters.count,
+                start: chapter.start,
+                end: chapter.end,
+                text: chapter.text,
+                context: context,
+                markedPassages: []
+            )
         }
         return (requests, chapters.map(\.key))
     }
@@ -120,7 +130,7 @@ struct ChapterSummaryTests {
         let failing = CountingSummarizer(counter: firstCounter, failOnCall: 3)
         let failingService = SummarizationService(languageModel: failing, fallback: failing, availability: { _ in .available })
         await #expect(throws: CancellationError.self) {
-            _ = try await failingService.summarize(request, chapters: requests, keys: keys, noteID: noteID, store: store) { _ in }
+            _ = try await failingService.summarize(request, chapters: requests, keys: keys, storedIn: NoteDigests(store: store, noteID: noteID)) { _ in }
         }
         #expect(await store.count(noteID: noteID) == 2)
 
@@ -128,7 +138,7 @@ struct ChapterSummaryTests {
         let secondCounter = CallCounter()
         let working = CountingSummarizer(counter: secondCounter)
         let service = SummarizationService(languageModel: working, fallback: working, availability: { _ in .available })
-        let summary = try await service.summarize(request, chapters: requests, keys: keys, noteID: noteID, store: store) { _ in }
+        let summary = try await service.summarize(request, chapters: requests, keys: keys, storedIn: NoteDigests(store: store, noteID: noteID)) { _ in }
         #expect(await secondCounter.count == requests.count - 2)
         #expect(summary.chapters.count == requests.count)
         #expect(summary.chapters.map(\.start) == requests.map(\.start))
@@ -190,9 +200,7 @@ struct LongRecordingProcessingTests {
         try store.insert(note)
 
         coordinator.enqueue(.process(note.id))
-        for _ in 0..<300 where note.status != .ready && note.status != .failed {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        await waitUntil { note.status == .ready || note.status == .failed }
 
         #expect(note.status == .ready)
         #expect(note.summary?.chapters.count == 4)

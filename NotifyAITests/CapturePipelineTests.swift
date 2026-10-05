@@ -43,25 +43,39 @@ final class MemorySink: RecordingSink, @unchecked Sendable {
 
 /// A disk that stalls: every write waits until `release()` is called.
 final class StallingSink: RecordingSink, Sendable {
-    private let released = Mutex(false)
-    private let writing = Mutex(false)
-    private let frames = Mutex(0)
+    /// Signalled when the first write starts waiting for the "disk".
+    let writeStarted = TestGate()
+    private let gate = DispatchSemaphore(value: 0)
+    private let state = Mutex((released: false, writing: false, frames: 0))
 
     /// Whether a write is currently waiting for the disk.
-    var isWriting: Bool { writing.withLock { $0 } }
-    var writtenFrames: Int { frames.withLock { $0 } }
+    var isWriting: Bool { state.withLock { $0.writing } }
+    var writtenFrames: Int { state.withLock { $0.frames } }
 
     func release() {
-        released.withLock { $0 = true }
+        let wasReleased = state.withLock { state in
+            defer { state.released = true }
+            return state.released
+        }
+        if !wasReleased {
+            gate.signal()
+        }
     }
 
+    /// Blocks the writing thread, like a stalled disk, until `release()`.
     func write(from buffer: AVAudioPCMBuffer) throws {
-        writing.withLock { $0 = true }
-        while !released.withLock({ $0 }) {
-            Thread.sleep(forTimeInterval: 0.005)
+        let mustWait = state.withLock { state in
+            state.writing = true
+            return !state.released
         }
-        writing.withLock { $0 = false }
-        frames.withLock { $0 += Int(buffer.frameLength) }
+        if mustWait {
+            writeStarted.signal()
+            gate.wait()
+        }
+        state.withLock { state in
+            state.writing = false
+            state.frames += Int(buffer.frameLength)
+        }
     }
 
     func close() {}
@@ -261,7 +275,10 @@ struct CapturePipelineTests {
             capture.processPendingAudio()
         }
         // The system audio only (headphones unplugged, microphone off).
-        let systemOnly = try capture.configure(AggregateInputLayout(microphone: nil, system: .init(bufferIndex: 1, streamFormat: DeviceSignal.streamFormat(rate: 48_000, channels: 2))))
+        let systemOnly = try capture.configure(AggregateInputLayout(
+            microphone: nil,
+            system: .init(bufferIndex: 1, streamFormat: DeviceSignal.streamFormat(rate: 48_000, channels: 2))
+        ))
         DeviceSignal.feed(systemOnly, seconds: 1, rate: 48_000)
         let result = await capture.finish()
 
@@ -333,10 +350,7 @@ struct CapturePipelineTests {
         // The processing queue's part: it hangs in the first write.
         let processing = Thread { capture.processPendingAudio() }
         processing.start()
-        let deadline = ContinuousClock.now + .seconds(2)
-        while !sink.isWriting, ContinuousClock.now < deadline {
-            try await Task.sleep(for: .milliseconds(5))
-        }
+        await sink.writeStarted.wait()
         #expect(sink.isWriting)
 
         // What the main actor does meanwhile: all of it returns while the disk hangs.

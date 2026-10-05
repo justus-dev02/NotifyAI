@@ -5,6 +5,7 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
 import SwiftUI
 
 /// The transcript with marker highlighting and playback synchronisation.

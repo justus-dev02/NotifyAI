@@ -3,6 +3,7 @@
 //  NotifyAI
 //
 
+import NotifyAIServices
 import SwiftUI
 
 /// Chooses between onboarding and the main interface and applies the app lock.
@@ -11,7 +12,7 @@ struct RootView: View {
     @Environment(AppLock.self) private var appLock
     @Environment(AppNavigation.self) private var navigation
     @Environment(RecordingController.self) private var recording
-    @Environment(\.appEnvironment) private var app
+    @Environment(AppLifecycle.self) private var lifecycle
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -32,7 +33,7 @@ struct RootView: View {
         // While the recorder covers the window (iOS), it presents the notices itself.
         .userNoticeAlert(isActive: !navigation.isRecorderPresented && !appLock.isLocked)
         .task {
-            await app?.start()
+            await lifecycle.start()
             if appLock.isLocked {
                 await appLock.unlock()
             }
@@ -41,10 +42,10 @@ struct RootView: View {
             switch phase {
             case .background:
                 appLock.lockIfEnabled()
-                app?.didEnterBackground()
+                lifecycle.didEnterBackground()
             case .active:
                 // Work stopped when background time ended continues now.
-                app?.didBecomeActive()
+                lifecycle.didBecomeActive()
                 if appLock.isLocked {
                     Task { await appLock.unlock() }
                 }

@@ -3,13 +3,14 @@
 //  NotifyAI
 //
 
+import NotifyAIServices
 import SwiftUI
 import UniformTypeIdentifiers
 
 /// Creates a diagnosis report and lets the user save or share it. Nothing is sent
 /// anywhere automatically.
 struct DiagnosticsExportButton: View {
-    @Environment(\.appEnvironment) private var app
+    @Environment(StorageMaintenance.self) private var storage
     @State private var document: DiagnosticsDocument?
     @State private var isCreating = false
 
@@ -36,13 +37,8 @@ struct DiagnosticsExportButton: View {
 
     private func createReport() {
         isCreating = true
-        let context = DiagnosticsReport.Context(
-            appVersion: Bundle.main.versionDescription,
-            settingsSummary: app?.settings.diagnosticsSummary ?? [],
-            locations: app?.store.locations ?? (try? StorageLocations.applicationSupport())
-        )
         Task {
-            let report = await DiagnosticsReport.make(context: context)
+            let report = await storage.makeDiagnosticsReport(appVersion: Bundle.main.versionDescription)
             document = DiagnosticsDocument(text: report)
             isCreating = false
         }
@@ -59,7 +55,7 @@ struct DiagnosticsDocument: FileDocument {
     }
 
     init(configuration: ReadConfiguration) throws {
-        text = configuration.file.regularFileContents.map { String(decoding: $0, as: UTF8.self) } ?? ""
+        text = configuration.file.regularFileContents.flatMap { String(bytes: $0, encoding: .utf8) } ?? ""
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
