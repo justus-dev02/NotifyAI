@@ -46,9 +46,19 @@ struct RecordingNoteWriter {
         noteID: UUID,
         result: RecordingResult,
         markers: [Marker],
-        transcript: [TranscriptSegment],
+        transcript liveTranscript: [TranscriptSegment],
         engine: TranscriptionEngineKind
     ) async {
+        guard let note = store.note(id: noteID) else { return }
+        // The live transcript is checked against the finished file like a file transcript:
+        // text without speech in the audio (silence, background noise) is dropped. If nothing
+        // remains, the processing transcribes the file and reports a recording without speech.
+        let audioURL = store.audioURL(for: note)
+        let transcript = if let audioURL {
+            (try? await TranscriptVerifier().verify(liveTranscript, audioAt: audioURL)) ?? liveTranscript
+        } else {
+            liveTranscript
+        }
         guard let note = store.note(id: noteID) else { return }
         let needsTitle = !note.isTitleUserDefined && !transcript.isEmpty
         let languageCode = note.language.languageCode

@@ -23,11 +23,13 @@ struct TranscriptionStep {
         context.setStage(.transcribing, 0)
         let engineKind = settings.engine
         let options = TranscriptionOptions(language: note.language, whisperModel: settings.whisperModel)
-        let segments = try await transcription.engine(for: engineKind).transcribeFile(
+        let recognized = try await transcription.engine(for: engineKind).transcribeFile(
             at: audioURL,
             options: options,
             progress: context.progress
         )
+        // Text the audio does not support (recognizers invent phrases in silence) is removed.
+        let segments = try await TranscriptVerifier().verify(recognized, audioAt: audioURL)
         try Task.checkCancellation()
         // A new transcript invalidates the summary made from the old one. Cleared before the
         // transcript is saved, so both are written together: a job interrupted right after
