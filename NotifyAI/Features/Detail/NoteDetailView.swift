@@ -44,6 +44,8 @@ struct NoteDetailView: View {
     @State private var isRenaming = false
     @State private var draftTitle = ""
     @State private var isConfirmingDelete = false
+    /// The Markdown file the user is saving, while the save panel is open.
+    @State private var fileToSave: MarkdownFile?
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -116,6 +118,14 @@ struct NoteDetailView: View {
             Button("Abbrechen", role: .cancel) {}
             Button("Sichern") { rename() }
         }
+        .fileExporter(
+            isPresented: Binding(get: { fileToSave != nil }, set: { if !$0 { fileToSave = nil } }),
+            document: fileToSave,
+            contentType: .markdownText,
+            defaultFilename: fileToSave?.fileName
+        ) { _ in
+            fileToSave = nil
+        }
         .confirmationDialog("Notiz löschen?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Löschen", role: .destructive) { delete() }
         } message: {
@@ -141,7 +151,9 @@ struct NoteDetailView: View {
             }
         }
         ToolbarItem {
-            ShareMenu(note: note, segments: model?.segments ?? [])
+            ShareMenu(note: note, segments: model?.segments ?? []) { document in
+                fileToSave = MarkdownFile(document: document)
+            }
         }
         ToolbarItem {
             Menu("Mehr", systemImage: "ellipsis.circle") {

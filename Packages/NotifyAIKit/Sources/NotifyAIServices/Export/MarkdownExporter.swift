@@ -134,23 +134,27 @@ public struct MarkdownDocument: Transferable, Sendable {
         self.options = options
     }
 
-    var text: String {
+    /// The note as Markdown text.
+    public var text: String {
         MarkdownExporter().markdown(for: snapshot, options: options)
     }
 
+    /// The content comes first: Mail, Messages, Notes and "Copy" take the text itself.
+    /// Offering the file first made them insert a reference to a temporary file of the app
+    /// instead of the note. Receivers that only accept files (Files, some AirDrop targets)
+    /// still get a Markdown file.
     public static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation(exporting: \.text)
         FileRepresentation(exportedContentType: .markdownText) { document in
             let url = FileManager.default.temporaryDirectory
                 .appending(path: document.fileName, directoryHint: .notDirectory)
             try document.text.write(to: url, atomically: true, encoding: .utf8)
             return SentTransferredFile(url)
         }
-        DataRepresentation(exportedContentType: .plainText) { document in
-            Data(document.text.utf8)
-        }
     }
 
-    private var fileName: String {
+    /// The file name for saving: the note's title without characters file systems reject.
+    public var fileName: String {
         let invalid = CharacterSet(charactersIn: "/\\:?%*|\"<>")
         let base = snapshot.title.components(separatedBy: invalid).joined(separator: "-")
             .trimmingCharacters(in: .whitespaces)
@@ -160,7 +164,7 @@ public struct MarkdownDocument: Transferable, Sendable {
 
 extension UTType {
     /// Markdown as declared by the system (`net.daringfireball.markdown`).
-    static let markdownText = UTType("net.daringfireball.markdown") ?? .plainText
+    public static let markdownText = UTType("net.daringfireball.markdown") ?? .plainText
 }
 
 extension MarkdownExporter.NoteSnapshot {

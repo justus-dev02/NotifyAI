@@ -349,12 +349,32 @@
         }
       }
     },
+    "Als Datei sichern …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as File…"
+          }
+        }
+      }
+    },
     "Als erledigt markieren" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark as Done"
+          }
+        }
+      }
+    },
+    "Als Markdown kopieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy as Markdown"
           }
         }
       }
