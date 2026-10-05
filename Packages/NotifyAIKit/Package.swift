@@ -55,6 +55,9 @@ let package = Package(
         ),
         .testTarget(name: "NotifyAICoreTests", dependencies: ["NotifyAICore"]),
         .testTarget(name: "AudioCaptureTests", dependencies: ["AudioCapture", "NotifyAICore"]),
+        /// The dependency rules of all layers, checked on the source code of the whole
+        /// repository (see the test file for the list).
+        .testTarget(name: "ArchitectureTests"),
     ],
     swiftLanguageModes: [.v6]
 )
