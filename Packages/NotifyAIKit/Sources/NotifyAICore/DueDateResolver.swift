@@ -16,7 +16,8 @@ import Foundation
 /// Supported (German and English): ISO dates, `3.10.2026`, `3.10.`, `3. Oktober 2026`,
 /// `October 3`, heute/today, morgen/tomorrow, übermorgen, weekdays (the next such day after
 /// the recording), Ende der Woche/end of the week, nächste Woche/next week, Ende des
-/// Monats/end of the month, in N Tagen/Wochen/Monaten, in N days/weeks/months.
+/// Monats/end of the month, in N Tagen/Wochen/Monaten, in N days/weeks/months (N also as a
+/// word from two to twelve).
 public struct DueDateResolver {
     public var calendar: Calendar
 
@@ -119,12 +120,20 @@ public struct DueDateResolver {
         ([" samstag", " sonnabend", " saturday"], 7),
     ]
 
+    /// Spelled-out counts in "in zwei Wochen". "ein"/"einem" are left out on purpose: "in
+    /// einem Monat" is usually meant vaguely and stays unresolved.
+    private static let numberWords: [String: Int] = [
+        "zwei": 2, "drei": 3, "vier": 4, "funf": 5, "fuenf": 5, "sechs": 6, "sieben": 7, "acht": 8,
+        "neun": 9, "zehn": 10, "elf": 11, "zwolf": 12, "zwoelf": 12,
+        "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    ]
+
     private func relativeDate(in text: String, reference: Date) -> Date? {
         func contains(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
         func days(_ count: Int) -> Date? { calendar.date(byAdding: .day, value: count, to: reference) }
 
-        if let match = text.firstMatch(of: /\bin\s+(\d{1,3})\s+(tag|tagen|day|days|woche|wochen|week|weeks|monat|monaten|month|months)\b/),
-           let count = Int(match.1) {
+        if let match = text.firstMatch(of: /\bin\s+([a-z]+|\d{1,3})\s+(tag|tagen|day|days|woche|wochen|week|weeks|monat|monaten|month|months)\b/),
+           let count = Int(match.1) ?? Self.numberWords[String(match.1)] {
             let unit = String(match.2)
             if unit.hasPrefix("tag") || unit.hasPrefix("day") { return days(count) }
             if unit.hasPrefix("woche") || unit.hasPrefix("week") { return days(count * 7) }

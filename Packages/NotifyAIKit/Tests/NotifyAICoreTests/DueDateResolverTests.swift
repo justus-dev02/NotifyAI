@@ -42,6 +42,8 @@ struct DueDateResolverTests {
         ("Ende des Monats", day(2026, 9, 30)),
         ("in 3 Tagen", day(2026, 10, 3)),
         ("in 2 weeks", day(2026, 10, 14)),
+        ("in zwei Wochen", day(2026, 10, 14)),
+        ("in drei Tagen", day(2026, 10, 3)),
         ("in einem Monat", nil),
     ])
     func relative(text: String, expected: Date?) {
