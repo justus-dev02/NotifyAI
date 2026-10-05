@@ -28,6 +28,33 @@ final class NotifyAIUITests: XCTestCase {
         #endif
     }
 
+    /// An element whose label starts with `text`, whatever its kind. Note rows combine title
+    /// and subtitle into one element, and selectable texts are text views on the Mac.
+    @MainActor
+    private func element(_ text: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@ OR value BEGINSWITH %@", text, text)).firstMatch
+    }
+
+    /// A button of the confirmation dialog on screen (on the Mac not the Touch Bar's copy).
+    @MainActor
+    private func dialogButton(_ title: String, in app: XCUIApplication) -> XCUIElement {
+        #if os(iOS)
+        app.buttons[title].firstMatch
+        #else
+        app.sheets.buttons[title].exists ? app.sheets.buttons[title].firstMatch : app.dialogs.buttons[title].firstMatch
+        #endif
+    }
+
+    /// A toolbar menu: a menu button on the Mac, a button on iOS.
+    @MainActor
+    private func toolbarMenu(_ title: String, in app: XCUIApplication) -> XCUIElement {
+        #if os(iOS)
+        app.buttons[title].firstMatch
+        #else
+        app.menuButtons[title].firstMatch
+        #endif
+    }
+
     // MARK: - Library and recording
 
     @MainActor
@@ -70,8 +97,16 @@ final class NotifyAIUITests: XCTestCase {
         XCTAssertTrue(task("Dokumentation aktualisieren", in: app).exists)
 
         // Filter by person.
-        tap(app.buttons["Filter"].firstMatch)
-        let anna = app.menuItems["Anna (1)"].firstMatch.exists ? app.menuItems["Anna (1)"].firstMatch : app.buttons["Anna (1)"].firstMatch
+        tap(toolbarMenu("Aufgaben filtern", in: app))
+        #if os(macOS)
+        // On the Mac the person picker is a submenu of the filter menu.
+        let person = app.menuItems["Person"].firstMatch
+        XCTAssertTrue(person.waitForExistence(timeout: 5))
+        tap(person)
+        let anna = app.menuItems["Anna (1)"].firstMatch
+        #else
+        let anna = app.buttons["Anna (1)"].firstMatch
+        #endif
         XCTAssertTrue(anna.waitForExistence(timeout: 5))
         tap(anna)
         XCTAssertTrue(task("Präsentation erstellen", in: app).waitForExistence(timeout: 5))
@@ -113,8 +148,14 @@ final class NotifyAIUITests: XCTestCase {
             #endif
         }
         XCTAssertTrue(button.exists)
-        // Nothing is downloaded in the test environment.
-        XCTAssertFalse(button.isEnabled)
+        // Whisper models live in the test's own folder, but Apple Speech reserves its language
+        // packs for the app system-wide. Whatever is there, the button offers the deletion
+        // with a confirmation, which is cancelled here.
+        guard button.isEnabled else { return }
+        tap(button)
+        let cancel = dialogButton("Abbrechen", in: app)
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        tap(cancel)
     }
 
     // MARK: - Accessibility
@@ -123,12 +164,13 @@ final class NotifyAIUITests: XCTestCase {
     func testAccessibilityOfLibraryAndNote() throws {
         let app = makeApp(sampleData: true)
         app.launch()
-        XCTAssertTrue(app.staticTexts["Weekly Marketing"].firstMatch.waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit(for: auditTypes)
+        let row = element("Weekly Marketing", in: app)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        try audit(app)
 
-        tap(app.staticTexts["Weekly Marketing"].firstMatch)
-        XCTAssertTrue(app.staticTexts["Planung der Herbstkampagne."].waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit(for: auditTypes)
+        tap(row)
+        XCTAssertTrue(element("Planung der Herbstkampagne.", in: app).waitForExistence(timeout: 5))
+        try audit(app)
     }
 
     @MainActor
@@ -139,7 +181,7 @@ final class NotifyAIUITests: XCTestCase {
         XCTAssertTrue(entry.waitForExistence(timeout: 5))
         tap(entry)
         XCTAssertTrue(task("Präsentation erstellen", in: app).waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit(for: auditTypes)
+        try audit(app)
     }
 
     @MainActor
@@ -152,7 +194,32 @@ final class NotifyAIUITests: XCTestCase {
         tap(app.buttons["Aufnahme"].firstMatch)
         #endif
         XCTAssertTrue(app.buttons["Aufnahme starten"].firstMatch.waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit(for: auditTypes)
+        try audit(app)
+    }
+
+    /// Audits the visible screen. Every issue of the app's own views fails the test. Issues of
+    /// what AppKit draws and exposes itself are ignored (all of them were checked by hand):
+    /// - Elements outside the app's window: the menu bar and its status items.
+    /// - SwiftUI's hosting groups on the Mac (the window's content area, a toolbar row): they
+    ///   have neither label nor identifier and are not part of the app's views.
+    /// - "Action is missing" on pop-up and menu buttons: AppKit opens pickers and toolbar menus
+    ///   with "show menu", which VoiceOver uses, instead of "press".
+    /// - The toolbar's overflow button ("Weitere Objekte in der Symbolleiste"): AppKit's own
+    ///   pop-up without an identifier; every control the app puts into the toolbar has one.
+    @MainActor
+    private func audit(_ app: XCUIApplication) throws {
+        let window = app.windows.firstMatch.frame
+        let toolbar = app.toolbars.firstMatch
+        let toolbarFrame = toolbar.exists ? toolbar.frame : .zero
+        try app.performAccessibilityAudit(for: auditTypes) { issue in
+            guard let element = issue.element else { return true }
+            let isOutsideWindow = !window.contains(element.frame)
+            let isHostingGroup = element.elementType == .group && element.label.isEmpty && element.identifier.isEmpty
+            let isMenuOpener = issue.auditType == .action && [.popUpButton, .menuButton].contains(element.elementType)
+            let isToolbarOverflow = element.elementType == .popUpButton && element.identifier.isEmpty
+                && toolbarFrame.contains(element.frame)
+            return isOutsideWindow || isHostingGroup || isMenuOpener || isToolbarOverflow
+        }
     }
 
     /// Everything except checks that concern system-drawn controls outside the app's

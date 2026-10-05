@@ -52,6 +52,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: scripts/ci.sh macos
 
+      # Steuert die App über die Bedienungshilfen: Der Runner braucht dafür die Freigabe unter
+      # Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen (siehe docs/CI.md).
+      - name: UI-Tests – macOS
+        if: ${{ !cancelled() }}
+        run: scripts/ci.sh ui
+
       - name: Build – iOS-Simulator
         if: ${{ !cancelled() }}
         run: scripts/ci.sh ios

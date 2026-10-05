@@ -7,7 +7,7 @@ import XCTest
 
 /// Captures a screenshot of the launch state for every UI configuration (light/dark, sizes).
 final class NotifyAIUITestsLaunchTests: XCTestCase {
-    override class var runsForEachTargetApplicationUIConfiguration: Bool {
+    override static var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }
 

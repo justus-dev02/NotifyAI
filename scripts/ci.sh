@@ -9,6 +9,7 @@
 #   lint      SwiftLint (neue Verstöße sind Fehler, siehe .swiftlint.yml)
 #   package   Tests des lokalen Pakets Packages/NotifyAIKit (swift test)
 #   macos     App bauen und NotifyAITests auf dem Mac ausführen
+#   ui        NotifyAIUITests auf dem Mac ausführen (Abläufe und Barrierefreiheits-Audits)
 #   ios       App für den iOS-Simulator bauen (ohne Tests)
 #
 # Umgebungsvariablen:
@@ -35,11 +36,11 @@ DERIVED="${CI_DERIVED_DATA:-$OUT/DerivedData}"
 mkdir -p "$OUT"
 
 STEPS=("$@")
-[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint package macos ios)
+[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint package macos ui ios)
 for s in "${STEPS[@]}"; do
     case "$s" in
-        lint|package|macos|ios) ;;
-        *) sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
+        lint|package|macos|ui|ios) ;;
+        *) sed -n '3,14p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
     esac
 done
 
@@ -109,6 +110,20 @@ macos_tests() {
     echo "  Ergebnis: $result"
 }
 
+ui_tests() {
+    step "Tests: NotifyAIUITests auf macOS"
+    local result="$OUT/NotifyAIUITests-macOS.xcresult"
+    rm -rf "$result"
+    run_xcodebuild macos-ui-test test \
+        "${XCODEBUILD_COMMON[@]}" \
+        -testPlan NotifyAI \
+        -destination 'platform=macOS' \
+        -only-testing:NotifyAIUITests \
+        -resultBundlePath "$result" \
+        CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
+    echo "  Ergebnis: $result"
+}
+
 ios_build() {
     step "Build: iOS-Simulator"
     run_xcodebuild ios-build build \
@@ -124,6 +139,7 @@ for s in "${STEPS[@]}"; do
         lint) lint ;;
         package) package_tests ;;
         macos) macos_tests ;;
+        ui) ui_tests ;;
         ios) ios_build ;;
     esac
 done
