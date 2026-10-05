@@ -12,6 +12,9 @@ struct NotifyAIApp: App {
     @State private var launch: AppLaunch
     #if os(macOS)
     @NSApplicationDelegateAdaptor(NotifyAIAppDelegate.self) private var appDelegate
+    /// Created with the app, independent of the database, so updates keep working even
+    /// when the recovery screen is shown.
+    @State private var updater: AppUpdater
     #endif
 
     init() {
@@ -19,6 +22,9 @@ struct NotifyAIApp: App {
         _launch = State(initialValue: launch)
         #if os(macOS)
         NotifyAIAppDelegate.launch = launch
+        _updater = State(initialValue: AppUpdater {
+            launch.environment?.recording.isActive ?? false
+        })
         #endif
     }
 
@@ -30,6 +36,7 @@ struct NotifyAIApp: App {
             if let app = launch.environment {
                 SettingsView()
                     .appEnvironment(app)
+                    .environment(updater)
                     .frame(width: 560, height: 640)
             } else {
                 DatabaseRecoveryView(launch: launch)
@@ -86,7 +93,7 @@ struct NotifyAIApp: App {
         }
         .defaultSize(width: 1_120, height: 740)
         .commands {
-            AppCommands(launch: launch)
+            AppCommands(launch: launch, updater: updater)
         }
     }
     #else

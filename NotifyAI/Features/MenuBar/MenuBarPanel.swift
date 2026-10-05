@@ -279,9 +279,16 @@ private struct RecentNotesSection: View {
 /// Menu bar commands of the main window.
 struct AppCommands: Commands {
     let launch: AppLaunch
+    let updater: AppUpdater
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Nach Updates suchen …") {
+                updater.checkForUpdates()
+            }
+            .disabled(!updater.canCheckForUpdates)
+        }
         CommandGroup(after: .newItem) {
             Button("Neue Aufnahme …") {
                 openWindow(id: SceneID.main)

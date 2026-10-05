@@ -1,0 +1,70 @@
+# Veröffentlicht eine neue macOS-Version über Sparkle. Wird von Hand gestartet:
+# GitHub → Actions → Release → Run workflow → Version eingeben.
+#
+# Voraussetzungen (siehe docs/CI.md):
+#   - release-notes/<version>.md ist auf main committet
+#   - SUPublicEDKey steht in NotifyAI-macOS-Info.plist
+#   - Secret SPARKLE_ED_PRIVATE_KEY ist im Repository hinterlegt
+#   - GitHub CLI (gh) ist auf dem Runner-Mac installiert
+#
+# Ablauf: komplette CI → scripts/release.sh --publish (Tag, GitHub-Release mit ZIP, appcast.xml auf main).
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version im Format 1.2.3'
+        required: true
+        type: string
+
+permissions:
+  contents: write   # Tag, GitHub-Release und den appcast.xml-Commit erstellen
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release ${{ inputs.version }}
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 60
+    # Releases nur von main, damit appcast.xml dort landet, wo die App sie liest (SUFeedURL).
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # release.sh nimmt die Anzahl der Commits als Build-Nummer. Ohne volle Historie wäre sie 1
+          # und Sparkle würde neue Versionen nie als Update erkennen.
+          fetch-depth: 0
+
+      - name: Umgebung
+        run: |
+          echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+          echo "CI_DERIVED_DATA=$HOME/Library/Developer/Xcode/DerivedData/NotifyAI-CI" >> "$GITHUB_ENV"
+          xcodebuild -version
+          /opt/homebrew/bin/gh --version | head -1
+
+      - name: Prüfen (Lint, Tests, Builds)
+        run: scripts/ci.sh
+
+      - name: Bauen und veröffentlichen
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$SPARKLE_ED_PRIVATE_KEY" ]]; then
+              echo "::error::Secret SPARKLE_ED_PRIVATE_KEY fehlt (siehe docs/CI.md)."
+              exit 1
+          fi
+          KEY_FILE="$RUNNER_TEMP/sparkle_ed_key"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          (umask 077 && printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$KEY_FILE")
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          scripts/release.sh "$VERSION" --publish --ed-key-file "$KEY_FILE"

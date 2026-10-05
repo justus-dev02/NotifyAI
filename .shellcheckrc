@@ -1,0 +1,3 @@
+# ShellCheck für scripts/ und .githooks/ (läuft in scripts/ci.sh lint).
+# SC1111: Die Meldungen verwenden bewusst deutsche Anführungszeichen („…“).
+disable=SC1111

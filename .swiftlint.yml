@@ -1,0 +1,105 @@
+# SwiftLint – Regeln für NotifyAI
+#
+#   scripts/lint.sh            prüfen (so wie die CI)
+#   scripts/lint.sh --fix      automatisch behebbare Verstöße korrigieren
+#
+# Alte Verstöße stehen in .swiftlint-baseline.json und werden ignoriert. Neuer Code muss
+# sauber sein: In der CI zählt jede Warnung als Fehler (--strict).
+# Doku aller Regeln: https://realm.github.io/SwiftLint/rule-directory.html
+
+included:
+  - NotifyAI
+  - NotifyAIWidgets
+  - Shared
+  - NotifyAITests
+  - NotifyAIUITests
+  - Packages/NotifyAIKit/Sources
+  - Packages/NotifyAIKit/Tests
+
+excluded:
+  - build
+  - Packages/NotifyAIKit/.build
+
+# --- Standardregeln, die nicht zum Stil des Projekts passen -------------------
+
+disabled_rules:
+  # Mehrzeilige Listen enden hier mit Komma (kleinere Diffs, seit Swift 6.1 überall erlaubt).
+  - trailing_comma
+  # Mehrere Typen auf einer Zeile in Tupeln sind in den Audio-/Retrieval-Hilfen gewollt.
+  - large_tuple
+
+# --- Zusätzliche Regeln für mehr Codequalität ----------------------------------
+
+opt_in_rules:
+  # Korrektheit
+  - empty_count                       # isEmpty statt count == 0
+  - empty_string                      # isEmpty statt == ""
+  - fatal_error_message               # fatalError() braucht eine Begründung
+  - force_unwrapping                  # ! nur mit gutem Grund (sonst Absturz)
+  - discarded_notification_center_observer
+  - unowned_variable_capture          # unowned stürzt ab, weak nicht
+  - weak_delegate
+  - private_swiftui_state             # @State/@StateObject immer private
+  - unhandled_throwing_task           # Fehler in Task { try … } nicht verschlucken
+  - discouraged_assert                # assert(false) → assertionFailure()
+  # Lesbarkeit und Performance von Collections
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - first_where
+  - last_where
+  - flatmap_over_map_reduce
+  - reduce_into
+  - sorted_first_last
+  - empty_collection_literal
+  # Stil
+  - closure_spacing
+  - collection_alignment
+  - implicit_return
+  - modifier_order
+  - operator_usage_whitespace
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_parameter_alignment_on_call
+  - yoda_condition
+  - prefer_self_in_static_references
+  - comma_inheritance
+  - literal_expression_end_indentation
+  - multiline_parameters
+
+# --- Grenzwerte ----------------------------------------------------------------
+
+line_length:
+  warning: 160
+  error: 250
+  ignores_urls: true
+  ignores_comments: false
+
+file_length:
+  warning: 500
+  error: 1000
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 60
+  error: 120
+
+cyclomatic_complexity:
+  warning: 12
+  error: 20
+  ignores_case_statements: true
+
+identifier_name:
+  # Kurze Namen sind in Geometrie, Statistik und Signalverarbeitung üblich.
+  excluded: [id, x, y, z, a, b, i, j, k, n, dx, dy, df, tf, k1, to, at, db, ok]
+
+force_unwrapping:
+  severity: warning
+
+reporter: xcode

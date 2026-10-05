@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Update-Feed für NotifyAI (macOS), gelesen von Sparkle über SUFeedURL.
+  Nicht von Hand bearbeiten: scripts/release.sh fügt jede neue Version oben ein.
+-->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>NotifyAI</title>
+    <link>https://github.com/justus-dev02/NotifyAI</link>
+    <description>Neue Versionen von NotifyAI für macOS</description>
+    <language>de</language>
+    <!-- NEW-RELEASES -->
+  </channel>
+</rss>

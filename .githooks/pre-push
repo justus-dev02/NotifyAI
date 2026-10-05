@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#
+# Schnelle Prüfung vor jedem Push: SwiftLint und die Tests von Packages/NotifyAIKit (ca. 15 s).
+# Die App-Tests und den iOS-Build übernimmt die CI auf dem Runner.
+# Im Notfall überspringen: git push --no-verify
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/scripts/ci.sh" lint package

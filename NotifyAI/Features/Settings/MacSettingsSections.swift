@@ -57,4 +57,47 @@ struct RecordingSourceSettingsSection: View {
         }
     }
 }
+
+/// Automatic and manual updates through Sparkle.
+struct UpdateSettingsSection: View {
+    @Environment(AppUpdater.self) private var updater
+
+    var body: some View {
+        @Bindable var updater = updater
+
+        Section {
+            if updater.isConfigured {
+                Toggle("Automatisch nach Updates suchen", isOn: $updater.automaticallyChecksForUpdates)
+                Picker("Häufigkeit", selection: $updater.checkInterval) {
+                    ForEach(UpdateCheckInterval.allCases) { interval in
+                        Text(interval.title).tag(interval)
+                    }
+                }
+                .disabled(!updater.automaticallyChecksForUpdates)
+                Toggle("Updates automatisch laden und installieren", isOn: $updater.automaticallyDownloadsUpdates)
+                    .disabled(!updater.automaticallyChecksForUpdates)
+                LabeledContent("Zuletzt gesucht") {
+                    if let date = updater.lastUpdateCheckDate {
+                        Text(date, format: .relative(presentation: .named))
+                    } else {
+                        Text("Noch nie")
+                    }
+                }
+                Button("Jetzt nach Updates suchen …") {
+                    updater.checkForUpdates()
+                }
+                .disabled(!updater.canCheckForUpdates)
+            } else {
+                Text("In dieser Version sind keine Updates eingerichtet. Neue Versionen findest du auf GitHub.")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Updates")
+        } footer: {
+            if updater.isConfigured {
+                Text("NotifyAI fragt nur eine kleine Versionsliste ab und lädt eine neue Version erst, wenn es eine gibt. Jedes Update ist signiert und wird vor der Installation geprüft. Automatisch geladene Updates werden beim nächsten Beenden installiert – nie während einer Aufnahme. Deine Notizen bleiben erhalten.")
+            }
+        }
+    }
+}
 #endif

@@ -12,6 +12,7 @@
 		27BB00012F00000000000011 /* NotifyAICore in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000021 /* NotifyAICore */; };
 		27BB00012F00000000000012 /* AudioCapture in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000022 /* AudioCapture */; };
 		27BB00012F00000000000013 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 27BB00012F00000000000023 /* DesignSystem */; };
+		27CC00012F00000000000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 27CC00012F00000000000002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +98,7 @@
 				27BB00012F00000000000011 /* NotifyAICore in Frameworks */,
 				27BB00012F00000000000012 /* AudioCapture in Frameworks */,
 				27BB00012F00000000000013 /* DesignSystem in Frameworks */,
+				27CC00012F00000000000003 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,6 +177,7 @@
 				27BB00012F00000000000021 /* NotifyAICore */,
 				27BB00012F00000000000022 /* AudioCapture */,
 				27BB00012F00000000000023 /* DesignSystem */,
+				27CC00012F00000000000002 /* Sparkle */,
 			);
 			productName = NotifyAI;
 			productReference = 275D60592E6F188200EB7BA5 /* NotifyAI.app */;
@@ -288,6 +291,7 @@
 			packageReferences = (
 				2727B5543034A5DC00EDD2C0 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 				27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */,
+				27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 275D605A2E6F188200EB7BA5 /* Products */;
@@ -512,6 +516,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "$(NOTIFYAI_MACOS_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 36B9A7K3RP;
@@ -548,6 +553,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
+				NOTIFYAI_MACOS_ENTITLEMENTS = "NotifyAI-macOS.entitlements";
 				PRODUCT_BUNDLE_IDENTIFIER = com.justus.NotifyAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -566,6 +572,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "$(NOTIFYAI_MACOS_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 36B9A7K3RP;
@@ -602,6 +609,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
+				NOTIFYAI_MACOS_ENTITLEMENTS = "NotifyAI-macOS.entitlements";
 				PRODUCT_BUNDLE_IDENTIFIER = com.justus.NotifyAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -823,6 +831,14 @@
 				revision = f31370fbb39818e32722426eb9878665dfcfae3c;
 			};
 		};
+		27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -845,6 +861,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */;
 			productName = DesignSystem;
+		};
+		27CC00012F00000000000002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

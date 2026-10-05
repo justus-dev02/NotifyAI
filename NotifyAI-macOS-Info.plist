@@ -4,5 +4,13 @@
 <dict>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>NotifyAI nimmt den Ton von Apps wie Zoom, Teams oder Discord auf, damit Online-Meetings transkribiert und zusammengefasst werden können. Die Aufnahmen bleiben auf diesem Mac.</string>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/justus-dev02/NotifyAI/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string></string>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
 </dict>
 </plist>

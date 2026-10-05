@@ -1,0 +1,57 @@
+# CI für NotifyAI. Läuft ausschließlich auf dem eigenen Mac (self-hosted Runner), nie auf
+# GitHub-Maschinen. Self-hosted Runner verbrauchen keine Actions-Minuten.
+# Einrichtung des Runners: docs/CI.md
+#
+# Alle Schritte stehen in scripts/ci.sh und lassen sich lokal genauso ausführen.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**']
+  pull_request:
+    paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Ein neuer Push auf denselben Branch bricht den alten Lauf ab.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint, Tests, Builds
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Umgebung
+        run: |
+          # Der Runner-Dienst startet ohne Homebrew im PATH.
+          echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+          # DerivedData außerhalb des Checkouts: Der Build-Cache bleibt zwischen Läufen erhalten.
+          echo "CI_DERIVED_DATA=$HOME/Library/Developer/Xcode/DerivedData/NotifyAI-CI" >> "$GITHUB_ENV"
+          xcodebuild -version
+          /opt/homebrew/bin/swiftlint version
+
+      - name: SwiftLint
+        run: scripts/ci.sh lint
+
+      # Die weiteren Schritte laufen auch, wenn ein vorheriger fehlschlägt, damit alle Fehler auf
+      # einmal sichtbar sind.
+      - name: Tests – NotifyAIKit
+        if: ${{ !cancelled() }}
+        run: scripts/ci.sh package
+
+      - name: Tests – App auf macOS
+        if: ${{ !cancelled() }}
+        run: scripts/ci.sh macos
+
+      - name: Build – iOS-Simulator
+        if: ${{ !cancelled() }}
+        run: scripts/ci.sh ios

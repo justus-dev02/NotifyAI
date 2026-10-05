@@ -19,6 +19,9 @@ struct SettingsView: View {
             AnalysisSettingsSection()
             PrivacySettingsSection()
             StorageSettingsSection()
+            #if os(macOS)
+            UpdateSettingsSection()
+            #endif
             Section {
                 LabeledContent("Version", value: Bundle.main.versionDescription)
                 DiagnosticsExportButton()

@@ -129,7 +129,9 @@ struct InterruptedProcessingTests {
         return note
     }
 
-    private func waitUntil(_ condition: () -> Bool, timeout: Duration = .seconds(5)) async throws {
+    /// Returns as soon as the condition holds. The timeout is generous because the suite runs in
+    /// parallel with CPU-heavy tests (diarization, benchmarks), which can slow processing down a lot.
+    private func waitUntil(_ condition: () -> Bool, timeout: Duration = .seconds(30)) async throws {
         let deadline = ContinuousClock.now + timeout
         while !condition() {
             guard ContinuousClock.now < deadline else {
@@ -159,7 +161,8 @@ struct InterruptedProcessingTests {
         coordinator.resumeAfterRecording()
         try await waitUntil { note.status == .ready }
         #expect(engine.started == 2)
-        #expect(!coordinator.hasPendingWork)
+        // The note is ready before the worker clears its bookkeeping, so wait for that too.
+        try await waitUntil { !coordinator.hasPendingWork }
     }
 
     @Test("Without live transcription the running job finishes, queued jobs wait")
@@ -217,7 +220,8 @@ struct InterruptedProcessingTests {
         coordinator.resumeQueuedWork()
         engine.open()
         try await waitUntil { note.status == .ready }
-        #expect(!coordinator.hasPendingWork)
+        // The note is ready before the worker clears its bookkeeping, so wait for that too.
+        try await waitUntil { !coordinator.hasPendingWork }
     }
 
     @Test("The app resumes suspended processing when it becomes active")

@@ -35,12 +35,68 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 - **Diagnosebericht** zum Teilen mit dem Support: Versionen, Einstellungen, Speicher, Protokoll der Sitzung und
   MetricKit-Berichte, ohne Inhalte der Notizen. Nichts wird automatisch hochgeladen.
 - Optionale App-Sperre (Face ID / Touch ID / Code), Ausschluss aus Geräte-Backups.
+- **Updates in der App (macOS):** Einstellungen → Updates oder NotifyAI → „Nach Updates suchen …“. Wahlweise automatisch
+  suchen (täglich / wöchentlich / monatlich) und automatisch laden und beim Beenden installieren – nie während einer Aufnahme.
 
 ## Voraussetzungen
 
 - Xcode 27, Swift 6 (Strict Concurrency)
 - iOS / iPadOS 26 oder macOS 26
 - Zusammenfassung mit Apple Intelligence: ein Gerät mit aktivierter Apple Intelligence
+
+## Updates und Releases (macOS)
+
+Die Mac-App wird außerhalb des App Stores über GitHub Releases verteilt und aktualisiert sich mit
+[Sparkle](https://sparkle-project.org) selbst:
+
+```
+App ──(täglich, wenige KB)──▶ appcast.xml (dieses Repo, Branch main)
+                               │ neueste Version, Build-Nummer, Release-Notes, EdDSA-Signatur
+                               ▼ nur wenn neuer:
+                              NotifyAI-x.y.z.zip (Anhang am GitHub-Release)
+```
+
+- Die App lädt nur dann ein Archiv herunter, wenn `appcast.xml` eine höhere Build-Nummer nennt. Nutzer müssen
+  nicht selbst auf GitHub nach neuen Versionen suchen.
+- Jedes Archiv ist mit einem privaten EdDSA-Schlüssel signiert; die App prüft es gegen `SUPublicEDKey`
+  (`NotifyAI-macOS-Info.plist`) vor dem Entpacken. Manipulierte Downloads werden verworfen.
+- Die App ist sandboxed: Sparkle installiert über seinen Installer-Dienst (`SUEnableInstallerLauncherService`,
+  Mach-Lookup-Ausnahmen in `NotifyAI-macOS.entitlements`). Notizen und Einstellungen bleiben erhalten.
+- Hintergrund-Prüfungen werden während einer Aufnahme übersprungen (`AppUpdater`).
+- Builds ohne `SUPublicEDKey` (z. B. selbst aus dem Quellcode gebaut) starten Sparkle nicht und zeigen das in den Einstellungen.
+
+### Einmalig: Signaturschlüssel erzeugen
+
+```bash
+# nach dem ersten Build liegen die Sparkle-Werkzeuge in den SourcePackages, z. B.:
+build/release/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys
+```
+
+`generate_keys` legt den privaten Schlüssel im Schlüsselbund an und gibt den öffentlichen aus. Diesen in
+`NotifyAI-macOS-Info.plist` bei `SUPublicEDKey` eintragen und committen. Den privaten Schlüssel sichern
+(`generate_keys -x datei`) – geht er verloren, können bestehende Installationen keine Updates mehr annehmen.
+
+### Release veröffentlichen
+
+1. `release-notes/<version>.md` schreiben (siehe `release-notes/README.md`) und alles committen.
+2. `scripts/release.sh 0.2.0` – baut ad-hoc signiert, packt `build/release/NotifyAI-0.2.0.zip`, signiert es für
+   Sparkle und trägt die Version in `appcast.xml` ein. Die Build-Nummer ist die Anzahl der Commits.
+3. Veröffentlichen – entweder mit `scripts/release.sh 0.2.0 --publish` (GitHub CLI `gh`) oder von Hand:
+   Tag pushen, GitHub-Release mit dem ZIP anlegen, **danach** `appcast.xml` committen und pushen.
+
+Ad-hoc signierte Releases (ohne Developer ID) brauchen `NotifyAI-macOS-AdHoc.entitlements`
+(`disable-library-validation`), sonst blockiert die Hardened Runtime `Sparkle.framework`. Mit einer Developer ID
+entfällt diese Datei, und macOS behält Mikrofon- und Systemaudio-Freigaben auch über Updates hinweg.
+
+### Installation für Nutzer
+
+1. `NotifyAI-x.y.z.zip` unter Releases laden, entpacken, `NotifyAI.app` nach *Programme* ziehen.
+2. Beim ersten Öffnen meldet macOS, dass die App nicht überprüft werden kann → *Fertig*.
+3. *Systemeinstellungen → Datenschutz & Sicherheit* → bei NotifyAI *Dennoch öffnen*.
+   Alternativ: `xattr -dr com.apple.quarantine /Applications/NotifyAI.app`
+
+Spätere Updates installiert die App selbst, ohne diese Schritte. Weil die App nicht mit einer Developer ID signiert
+ist, fragt macOS nach einem Update eventuell erneut nach Mikrofon- und Systemaudio-Zugriff.
 
 ## Architektur
 

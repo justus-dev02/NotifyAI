@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# Prüft die Swift-Dateien des Commits mit SwiftLint. Gibt es neue Verstöße, entsteht kein Commit.
+# Geprüft wird der Stand der Dateien im Arbeitsverzeichnis.
+# Im Notfall überspringen: git commit --no-verify
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+FILES=()
+while IFS= read -r -d '' file; do
+    FILES+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.swift')
+
+[[ ${#FILES[@]} -gt 0 ]] || exit 0
+exec "$ROOT/scripts/lint.sh" "${FILES[@]}"
