@@ -100,34 +100,33 @@ ist, fragt macOS nach einem Update eventuell erneut nach Mikrofon- und Systemaud
 
 ## Architektur
 
+Ausführlich in [docs/Architecture.md](docs/Architecture.md).
+
 ```
 Packages/NotifyAIKit/     Lokales Swift Package, vom Compiler erzwungene Schichten
-├── NotifyAICore          Werte und Regeln: Transkript, Marker, Zusammenfassung, Fälligkeiten, Audioformat
-├── AudioCapture          Echtzeit-Aufnahmepfad: lock-freie Ringpuffer, Verarbeitungs-Queue  (→ Core)
+├── NotifyAICore          Werte und Regeln, Logging, EventChannel, BackgroundWork
+├── AudioCapture          Echtzeit-Aufnahmepfad: lock-freie Ringpuffer, Mischen, Schreiben     (→ Core)
+├── NotifyAIPersistence   SwiftData-Schema V1–V4 mit Migrationen, NoteStore, Abfragen, Ablage (→ Core)
+├── NotifyAIServices      Aufnahme, Verarbeitung, Transkription, Zusammenfassung, Suche, Aufgaben,
+│                         Import/Export, Einstellungen, Use Cases, ServiceContainer   (→ Persistence, AudioCapture, WhisperKit)
 └── DesignSystem          Theme, Komponenten, Sichtbarkeits-Modifier                        (→ Core)
 NotifyAI/
-├── App/            Einstieg, AppLaunch (Datenbank-Wiederherstellung), Composition Root, Einstellungen, Hinweise
-├── Domain/         Note (SwiftData, Schema V1–V3), Audioquellen, Darstellungstexte der Core-Typen
-├── Services/
-│   ├── Audio/          AudioRecorder (AVAudioEngine), Wiedergabe, Audio-Session
-│   │   └── SystemAudio/    Process Tap + Aggregate Device (macOS), App-/Geräte-Monitor
-│   ├── Transcription/  TranscriptionEngine-Protokoll, Apple Speech, Whisper, Modellverwaltung
-│   ├── Summarization/  Foundation-Models-Summarizer (Map-Reduce), extraktiver Fallback, Quellen-Verknüpfung
-│   ├── Knowledge/      Suchindex, hybride Suche (BM25 + Embeddings), verwandte Notizen, Frage-Verständnis, RAG
-│   ├── Diarization/    Experimentelle Sprechererkennung (Log-Mel, Average-Linkage-Clustering)
-│   ├── Processing/     Serielle, fortsetzbare Pipeline nach der Aufnahme
-│   ├── Persistence/    NoteStore, Abfragen, Speicherorte
-│   ├── Diagnostics/    MetricKit-Sammlung, Diagnosebericht
-│   └── Import/Export/Security
-└── Features/       SwiftUI-Screens: Library, Detail, Tasks, Recording, MenuBar (macOS), Settings, Onboarding
+├── App/            Einstieg, AppLaunch (Datenbank-Wiederherstellung), Composition Root, Lebenszyklus, Hinweise
+│   ├── Platform/   Live Activity, Hintergrundaufgaben (iOS), Audio-Umgebung (macOS)
+│   └── Updates/    Sparkle (macOS)
+└── Features/       SwiftUI-Screens und View-Models: Library, Detail, Chat, Tasks, Recording, MenuBar, Settings, Onboarding
 Shared/             Live-Activity-Attribute und -Intents (App + Widget-Extension)
 NotifyAIWidgets/    Widget-Extension (nur iOS): Live Activity der Aufnahme
-docs/Performance.md Messmethode, Messwerte und Energie-Maßnahmen
+docs/               Architecture.md, Quality.md, Performance.md, CI.md
 ```
 
-Abhängigkeiten werden einmal in `AppEnvironment` erzeugt und über das SwiftUI-Environment verteilt.
-Services hängen von Protokollen ab (`TranscriptionEngine`, `Summarizer`, `RecordingSink`), damit sie in Tests ersetzt werden können.
-Das Package kennt weder die App noch SwiftData: Aufnahme-Pipeline und Domänenlogik lassen sich isoliert bauen und testen.
+- **Lesen ja, schreiben nein:** Modelle und Store sind für die App lesbar, alle Schreibzugriffe sind `package`.
+  Die App ändert Notizen nur über Use Cases wie `NoteLibrary`.
+- **Abhängigkeiten werden übergeben:** `ServiceContainer` baut die Services, `AppEnvironment` injiziert jedes Objekt
+  einzeln über seinen Typ. Kein Service Locator, kein globaler veränderlicher Zustand.
+- **Ereignisse statt Callbacks:** Services melden über `EventChannel` (beliebig viele Empfänger).
+- **Ports:** Hardware, Modelle, Dateien und System liegen hinter Protokollen und werden in Tests ersetzt.
+- Die Regeln prüfen Architekturtests (`Packages/NotifyAIKit/Tests/ArchitectureTests`) bei jedem CI-Lauf.
 
 ### Aufnahme-Pipeline
 
@@ -198,6 +197,7 @@ Stopp ─► Note (Transkript, Marker) ─► ProcessingCoordinator
 | Relative Audio-Dateinamen | Absolute Container-Pfade ändern sich bei Neuinstallation und Updates. |
 | Ringpuffer statt Arbeit im Audio-Callback | Der Callback braucht 0,86 µs statt ≈ 107 µs pro Zyklus und blockiert nie; eine stockende Platte verzögert nur die Verarbeitungs-Queue (siehe `docs/Performance.md`). |
 | Volltext in eigener Entität (`NoteContent`, Schema V3) | Die Bibliothek lädt keine Transkripte mehr; die Suche folgt der Relation in der Datenbank. |
+| Aufgaben als eigene Entität (`NoteTask`, Schema V4) | Die Aufgabenübersicht ist eine Abfrage statt alle Zusammenfassungen zu dekodieren; Abhaken ändert nur eine Zeile. |
 | `contentRevision` statt Text-Hash | Der Suchindex prüft 500 Notizen, ohne einen einzigen Text zu laden. |
 | Fälligkeiten per Regeln, nicht per Sprachmodell | Fristen bleiben als gesagter Text erhalten; das Datum wird deterministisch relativ zum Aufnahmetag berechnet. |
 | Datenbank verschieben statt löschen | Bei einer beschädigten Datenbank startet die App mit einer Wiederherstellung; die alte Datei bleibt erhalten, Aufnahmen werden als neue Notizen angelegt. |
@@ -205,12 +205,10 @@ Stopp ─► Note (Transkript, Marker) ─► ProcessingCoordinator
 ## Tests
 
 ```sh
-# App (Unit- und Integrationstests, Testplan mit Sprache Deutsch)
-xcodebuild -scheme NotifyAI -destination 'platform=macOS' test -only-testing:NotifyAITests
-# Package (schnell, ohne App)
-cd Packages/NotifyAIKit && swift test
-# UI-Tests inkl. Accessibility-Audits (iOS-Simulator)
-xcodebuild -scheme NotifyAI -destination 'platform=iOS Simulator,name=iPhone 18 Pro' test -only-testing:NotifyAIUITests
+scripts/ci.sh                 # alles, wie die CI: Lint, Paket- und Architekturtests, App-Tests, UI-Tests, iOS-Build
+scripts/ci.sh package         # Paket: Core, Echtzeit-Aufnahme, Architekturregeln
+scripts/ci.sh macos           # App-Tests (Swift Testing) auf dem Mac, inkl. Qualitätsmessungen
+scripts/ci.sh ui              # UI-Tests inkl. Accessibility-Audits auf dem Mac
 # Benchmarks (siehe docs/Performance.md)
 xcodebuild -scheme NotifyAI -destination 'platform=macOS' test -only-testing:NotifyAITests/PerformanceBenchmarks
 ```
@@ -219,13 +217,18 @@ Unit-Tests (Swift Testing) decken Marker/Highlighting, Chunking, Zusammenfassung
 Markdown-Export, Persistenz, die Verarbeitungspipeline (mit Mocks), das Aufnahmeformat und die Sprechererkennung ab,
 außerdem:
 
+- **Aufnahme-Steuerung:** der Zustandsautomat des `RecordingController` mit Fakes für Mikrofon, Recorder, System und
+  Live Activity (Pause, Unterbrechung, Ruhezustand, Geräteausfall, volle Platte, Stopp, Verwerfen).
 - **Aufnahme-Pipeline:** synthetisches Audio → CAF-Datei → Dauer, Pause und Marker-Position stimmen; lückenlose Chunks;
   Schreibfehler (volle Platte); Gerätewechsel mitten in der Aufnahme (48 → 24 → 44,1 kHz, Mikrofon ab/an);
   überlaufender Ringpuffer; reduzierte Pegel; Nebenläufigkeit von Produzent und Konsument.
-- **Migrationen** V1 → V3 und V2 → V3 auf echten Store-Dateien, Suche über die Relation.
+- **Migrationen** V1 → V4 auf echten Store-Dateien, Suche über die Relation, Aufgaben als Zeilen.
+- **Schreibweg und Ereignisse:** `NoteLibrary`, Store-Ereignisse, Suchindex und Verarbeitung folgen Löschungen.
 - **Wiederherstellung** einer nicht zu öffnenden Datenbank inkl. verwaister Aufnahmen.
-- **Aufgaben:** Fälligkeiten (25 Fälle), Gruppierung, Filter, Abhaken ohne Neuindexierung.
-- **Energie:** Zeitanzeige nur einmal pro Sekunde, Float16-Vektoren, Whisper-Entladen, Rückstandsgrenze.
+- **Qualität** (siehe [docs/Quality.md](docs/Quality.md)): Trefferquote der Suche, Fehlerrate der Sprechererkennung auf
+  synthetisierten Stimmen, Fristen, Fragenverständnis, Kapitelgrenzen – mit Untergrenzen gegen Rückschritte.
+
+Tests warten auf Ereignisse, nie auf feste Zeiten (`NotifyAITests/Waiting.swift`).
 
 UI-Tests prüfen Einwilligung, Aufgabenübersicht (Filtern, Abhaken), das Löschen geladener Modelle und führen
 Accessibility-Audits (`performAccessibilityAudit`) für Bibliothek, Notiz, Aufgaben und Aufnahme aus.
@@ -240,17 +243,17 @@ Process Tap (Zoom/Teams/…) ┘                                                
 
 ## Bekannte Grenzen
 
-- Die Sprechererkennung ist experimentell und nicht an echten Aufnahmen kalibriert.
-- Es gibt noch keinen Evaluationsdatensatz (WER/DER) zum Vergleich der Engines.
+- Die Sprechererkennung ist experimentell. Gemessen wird sie an synthetisierten Stimmen (5,9 % DER), nicht an echten
+  Aufnahmen; für die Transkription (WER) gibt es noch keinen Datensatz.
+- Ohne Apple Intelligence findet die Suche umformulierte Fragen kaum (Recall@3 = 0,2, siehe docs/Quality.md).
 - Geräte ohne Apple Intelligence erhalten nur die einfache, extraktive Zusammenfassung.
 - Für die Systemaudio-Berechtigung gibt es keine öffentliche Abfrage-API. Eine verweigerte Berechtigung liefert Stille;
   die App erkennt das nur indirekt und zeigt nach 10 Sekunden ohne Systemton einen Hinweis.
 - Über Lautsprecher nimmt das Mikrofon die Gegenseite zusätzlich auf (Echo). Die Beschriftung bleibt korrekt, für die beste
   Tonqualität empfiehlt die App Kopfhörer.
-- Die UI-Tests laufen im iOS-Simulator. Auf dem Mac braucht der UI-Test-Runner die Bedienungshilfen-Berechtigung
+- Auf dem Mac braucht der UI-Test-Runner die Bedienungshilfen-Berechtigung
   (Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen), sonst startet er nicht.
 - Apple Speech hat keine Rückstandsmeldung; der Analyzer ist für Echtzeit ausgelegt. Die 60-Sekunden-Grenze greift für
   Whisper und für Audio, das beim Laden eines Modells gepuffert wird.
 - Der Suchindex liegt vollständig im Speicher (Vektoren im Speicher als Float32, auf der Platte als Float16). Für sehr
   große Bibliotheken wäre ein Index mit Lazy Loading (z. B. SQLite FTS5) der nächste Schritt.
-- Die Module `Knowledge` und `Summarization` hängen noch am SwiftData-Modell `Note` und liegen deshalb in der App.

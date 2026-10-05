@@ -8,7 +8,7 @@ GitHub-Maschinen.
 |---|---|---|
 | `git commit` | SwiftLint für die Swift-Dateien des Commits | Hook `.githooks/pre-commit` |
 | `git push` | SwiftLint, ShellCheck, actionlint, Paket-Tests (~15 s) | Hook `.githooks/pre-push` |
-| Push auf `main`, Pull Request | Lint, Paket-Tests, App-Tests auf macOS, iOS-Simulator-Build | `.github/workflows/ci.yml` |
+| Push auf `main`, Pull Request | Lint, Paket- und Architekturtests, App-Tests auf macOS, UI-Tests auf macOS, iOS-Simulator-Build | `.github/workflows/ci.yml` |
 | Von Hand: Actions → Release | komplette CI, danach `scripts/release.sh --publish` | `.github/workflows/release.yml` |
 
 Alle Prüfungen stehen in `scripts/ci.sh`. Lokal laufen sie genau wie auf dem Runner:
@@ -58,6 +58,10 @@ Pro Klon des Repos einmal ausführen. Im Notfall kannst du die Hooks umgehen mit
    angemeldet bist**. Das ist so gewollt: Die App-Tests starten NotifyAI als Test-Host und brauchen
    eine Benutzersitzung.
 4. Auf GitHub sollte der Runner jetzt als **Idle** erscheinen.
+5. **UI-Tests:** Sie steuern die App über die Bedienungshilfen. Beim ersten Lauf fragt macOS, ob
+   `xcodebuild` bzw. der Test-Runner die Bedienungshilfen nutzen darf. Erlaube es unter
+   **Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen**. Am einfachsten startest
+   du dafür einmal `scripts/ci.sh ui` von Hand im Terminal.
 
 Wichtig zu wissen:
 
@@ -136,12 +140,12 @@ Lokal geht es weiterhin ohne GitHub Actions: `scripts/release.sh 0.2.0 --publish
 Die Regeln stehen in `.swiftlint.yml`: Standardregeln plus zusätzliche Regeln für Korrektheit
 (`force_unwrapping`, `unhandled_throwing_task`, `private_swiftui_state` …) und Lesbarkeit.
 
-- **Baseline:** Die 168 Verstöße, die es beim Einführen schon gab, stehen in
-  `.swiftlint-baseline.json` und werden ignoriert. **Neue Verstöße sind Fehler**, auch Warnungen
-  (`--strict`).
-- **Alte Verstöße abbauen:** Lösch die Baseline-Datei probehalber, dann zeigt `scripts/lint.sh`
-  alle Verstöße an. Behebe einige und schreib die Baseline mit `scripts/lint.sh --update-baseline`
-  neu. Bitte nicht benutzen, um neue Verstöße „wegzuschreiben“.
+- **Keine Altlasten:** Der Code hat keine Verstöße, eine Baseline gibt es nicht. **Jeder Verstoß ist
+  ein Fehler**, auch Warnungen (`--strict`).
+- **Tests:** In `NotifyAITests`, `NotifyAIUITests` und `Packages/NotifyAIKit/Tests` sind `!` und
+  `try!` für Fixtures erlaubt (eigene `.swiftlint.yml`); ein gescheitertes Fixture beendet den Test.
+- **Lange Texte:** Zeilen mit einem Stringliteral ab 60 Zeichen sind von der Längenregel
+  ausgenommen. Lokalisierte Texte lassen sich nicht umbrechen, ohne ihren Schlüssel zu ändern.
 - **Automatisch korrigieren:** `scripts/lint.sh --fix`. Den Diff danach prüfen.
 - **Begründete Ausnahme im Code:** `// swiftlint:disable:next force_unwrapping`
 
