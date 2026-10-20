@@ -235,7 +235,7 @@ struct TemplateEditorSheet: View {
         Binding(
             get: { draft.sections.contains(section) },
             set: { isOn in
-                if isOn { draft.sections.insert(section) } else { draft.sections.remove(section) }
+                if isOn { draft.sections.formUnion([section]) } else { draft.sections.remove(section) }
             }
         )
     }
