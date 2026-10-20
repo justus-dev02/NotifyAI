@@ -1206,12 +1206,18 @@
         }
       }
     },
-    "Live-Transkript: %@" : {
+    "Live-Transkript: %@, Füllwörter entfernen: %@, Vokabular: %lld Begriffe" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Live-Transkript: %1$@, Füllwörter entfernen: %2$@, Vokabular: %3$lld Begriffe"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Live transcript: %@"
+            "value" : "Live transcript: %1$@, remove filler words: %2$@, vocabulary: %3$lld terms"
           }
         }
       }

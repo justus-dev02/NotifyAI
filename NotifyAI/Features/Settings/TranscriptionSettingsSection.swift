@@ -27,6 +27,19 @@ struct TranscriptionSettingsSection: View {
                 }
             }
             Toggle("Live-Transkript während der Aufnahme", isOn: $transcription.liveTranscription)
+            Toggle(isOn: $transcription.removesFillerWords) {
+                SettingLabel(
+                    "Füllwörter entfernen",
+                    detail: "Entfernt „äh“, „ähm“ und ähnliche Laute aus neuen Transkripten. Bestehende Transkripte bereinigst du in der Notiz über „Mehr“."
+                )
+            }
+            NavigationLink {
+                VocabularySettingsView()
+            } label: {
+                LabeledContent("Eigenes Vokabular") {
+                    Text(vocabularySummary(transcription.vocabulary.count))
+                }
+            }
         } header: {
             Text("Transkription")
         } footer: {
@@ -59,6 +72,14 @@ struct TranscriptionSettingsSection: View {
                 Text("Modelle werden einmalig von Hugging Face geladen und danach ausschließlich lokal ausgeführt. Deine Aufnahmen werden nie hochgeladen.")
             }
         }
+    }
+}
+
+private func vocabularySummary(_ count: Int) -> String {
+    switch count {
+    case 0: String(localized: "Keine Begriffe")
+    case 1: String(localized: "1 Begriff")
+    default: String(localized: "\(count) Begriffe")
     }
 }
 

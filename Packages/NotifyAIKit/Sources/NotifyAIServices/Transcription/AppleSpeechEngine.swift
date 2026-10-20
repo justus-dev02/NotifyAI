@@ -18,7 +18,7 @@ public final class AppleSpeechEngine: TranscriptionEngine {
 
     func startLiveSession(options: TranscriptionOptions) async throws -> any LiveTranscriptionSession {
         let locale = try await Self.prepare(language: options.language)
-        return try await AppleSpeechLiveSession.start(locale: locale)
+        return try await AppleSpeechLiveSession.start(locale: locale, vocabulary: options.vocabulary)
     }
 
     func transcribeFile(
@@ -56,6 +56,7 @@ public final class AppleSpeechEngine: TranscriptionEngine {
         }
 
         let analyzer = SpeechAnalyzer(modules: [transcriber])
+        try await Self.apply(options.vocabulary, to: analyzer)
         do {
             try await withTaskCancellationHandler {
                 if let lastSampleTime = try await analyzer.analyzeSequence(from: audioFile) {
@@ -76,6 +77,14 @@ public final class AppleSpeechEngine: TranscriptionEngine {
     // MARK: - Shared helpers
 
     /// Resolves the locale and makes sure the on-device speech model is installed.
+    /// The user's terms as contextual strings: the recognizer prefers these spellings.
+    static func apply(_ vocabulary: CustomVocabulary, to analyzer: SpeechAnalyzer) async throws {
+        guard !vocabulary.isEmpty else { return }
+        let context = AnalysisContext()
+        context.contextualStrings[.general] = vocabulary.terms
+        try await analyzer.setContext(context)
+    }
+
     static func prepare(language: TranscriptionLanguage) async throws -> Locale {
         // SpeechAnalyzer itself runs on device; asking once keeps behaviour identical on
         // systems that still gate it behind the speech-recognition permission.
@@ -184,7 +193,7 @@ private actor AppleSpeechLiveSession: LiveTranscriptionSession {
     private let resultsTask: Task<[TranscriptSegment], any Error>
     private var isFinished = false
 
-    static func start(locale: Locale) async throws -> AppleSpeechLiveSession {
+    static func start(locale: Locale, vocabulary: CustomVocabulary) async throws -> AppleSpeechLiveSession {
         let transcriber = SpeechTranscriber(
             locale: locale,
             transcriptionOptions: [],
@@ -192,6 +201,7 @@ private actor AppleSpeechLiveSession: LiveTranscriptionSession {
             attributeOptions: [.audioTimeRange]
         )
         let analyzer = SpeechAnalyzer(modules: [transcriber])
+        try await AppleSpeechEngine.apply(vocabulary, to: analyzer)
         let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
             ?? AudioFormat.makeProcessingFormat()
         try await analyzer.prepareToAnalyze(in: analyzerFormat)

@@ -28,6 +28,10 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
   Zeiträume, Personen und Arten werden als Filter erkannt; Antworten nennen ihre Quellen.
 - **Verwandte Notizen:** gleiche Personen, Orte, Organisationen, seltene gemeinsame Themen, ähnlicher Inhalt – mit Begründung.
 - **Wiedergabe** mit Timeline inkl. Markern, Mitlesen im Transkript, Sprung per Tipp.
+- **Transkript korrigieren:** Text direkt im Transkript bearbeiten (Wortzeiten bleiben erhalten, wo die Wörter gleich
+  sind), Abschnitte entfernen, Füllwörter („äh“, „ähm“) je Sprache entfernen – auf Wunsch automatisch für neue
+  Transkripte. Ein eigenes Vokabular (Namen, Produkte, Fachbegriffe) geht als Prompt an Whisper und als Kontext an
+  Apple Speech; bei Parakeet werden fast gleiche Wörter danach korrigiert.
 - **Import** von Audiodateien, PDFs und Fotos (Texterkennung mit Vision).
 - **Aufnahme im Hintergrund (iOS)** mit Live Activity auf dem Sperrbildschirm und in der Dynamic Island (Pause / Beenden).
 - **Online-Meetings mitschneiden (macOS):** Systemton von Zoom, Teams, Discord, Browsern & Co. über Core Audio Process Taps –

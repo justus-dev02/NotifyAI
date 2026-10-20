@@ -38,12 +38,15 @@ struct NoteDetailView: View {
     @Environment(AudioSessionController.self) private var audioSession
     @Environment(ProcessingCoordinator.self) private var processing
     @Environment(AppNavigation.self) private var navigation
+    @Environment(TranscriptEditor.self) private var editor
+    @Environment(UserNotices.self) private var notices
 
     @State private var model: NoteDetailModel?
     @State private var tab: Tab = .summary
     @State private var isRenaming = false
     @State private var draftTitle = ""
     @State private var isConfirmingDelete = false
+    @State private var isConfirmingRetranscription = false
     /// The Markdown file the user is saving, while the save panel is open.
     @State private var fileToSave: MarkdownFile?
 
@@ -126,6 +129,13 @@ struct NoteDetailView: View {
         ) { _ in
             fileToSave = nil
         }
+        .confirmationDialog("Neu transkribieren?", isPresented: $isConfirmingRetranscription, titleVisibility: .visible) {
+            Button("Neu transkribieren", role: .destructive) {
+                processing.enqueue(.retranscribe(note.id))
+            }
+        } message: {
+            Text("Du hast dieses Transkript korrigiert. Beim neuen Transkribieren gehen deine Korrekturen und benannten Sprecher verloren; gemerkte Stimmen werden wieder erkannt.")
+        }
         .confirmationDialog("Notiz löschen?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Löschen", role: .destructive) { delete() }
         } message: {
@@ -171,8 +181,16 @@ struct NoteDetailView: View {
                 }
                 .disabled(note.status.isProcessing || !note.hasText)
                 if note.kind.hasAudio {
+                    Button("Füllwörter entfernen", systemImage: "text.badge.minus") {
+                        removeFillerWords()
+                    }
+                    .disabled(!note.hasTranscript || !note.isEditable)
                     Button("Neu transkribieren", systemImage: "waveform") {
-                        processing.enqueue(.retranscribe(note.id))
+                        if note.transcriptEditedAt != nil {
+                            isConfirmingRetranscription = true
+                        } else {
+                            processing.enqueue(.retranscribe(note.id))
+                        }
                     }
                     .disabled(note.status.isProcessing || note.status == .recording)
                 }
@@ -203,6 +221,18 @@ struct NoteDetailView: View {
         navigation.transcriptFocus = nil
         tab = .transcript
         model.play(from: max(0, focus.time - 1))
+    }
+
+    private func removeFillerWords() {
+        Task {
+            do {
+                if try await !editor.removeFillerWords(in: note) {
+                    notices.post(UserNotice(title: String(localized: "Keine Füllwörter"), message: String(localized: "Das Transkript enthält keine Füllwörter wie „äh“ oder „ähm“.")))
+                }
+            } catch {
+                notices.post(UserNotice(title: String(localized: "Nicht geändert"), message: error.localizedDescription))
+            }
+        }
     }
 
     private func delete() {

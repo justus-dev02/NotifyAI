@@ -36,7 +36,7 @@ extension AppSettings {
     var diagnosticsSummary: [String] {
         [
             String(localized: "Spracherkennung: \(transcription.engine.rawValue), Sprache: \(transcription.language.id), Whisper-Modell: \(transcription.whisperModel.id)", bundle: .module),
-            String(localized: "Live-Transkript: \(String(describing: transcription.liveTranscription))", bundle: .module),
+            String(localized: "Live-Transkript: \(String(describing: transcription.liveTranscription)), Füllwörter entfernen: \(String(describing: transcription.removesFillerWords)), Vokabular: \(transcription.vocabulary.count) Begriffe", bundle: .module),
             String(localized: "Audioquelle: \(recording.audioSource.rawValue), Echo-Unterdrückung: \(String(describing: recording.echoCancellation))", bundle: .module),
             String(localized: "Sprechererkennung: \(String(describing: analysis.speakerDetection)), Ich/Andere aus Quelle: \(String(describing: analysis.speakersFromAudioSource)), Kapitel während der Aufnahme: \(String(describing: analysis.summarizeWhileRecording))", bundle: .module),
             String(localized: "App-Sperre: \(String(describing: privacy.appLockEnabled)), Backup: \(String(describing: privacy.includeInBackup))", bundle: .module),

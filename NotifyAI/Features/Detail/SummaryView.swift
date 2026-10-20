@@ -23,6 +23,9 @@ struct SummaryView: View {
     var body: some View {
         if let summary = note.summary {
             VStack(alignment: .leading, spacing: Theme.Spacing.large) {
+                if let editedAt = note.transcriptEditedAt, editedAt > summary.createdAt {
+                    OutdatedSummaryBanner(note: note)
+                }
                 overview(summary)
 
                 if !summary.chapters.isEmpty {
@@ -307,5 +310,32 @@ private struct SourceTimeButton: View {
         .buttonStyle(.borderless)
         .help("Stelle im Transkript anhören")
         .accessibilityLabel("Quelle bei \(TimeFormatting.timestamp(time)) anhören")
+    }
+}
+
+/// The transcript was corrected after the summary was made.
+private struct OutdatedSummaryBanner: View {
+    let note: Note
+    @Environment(ProcessingCoordinator.self) private var processing
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Spacing.medium) {
+            Image(systemName: "pencil.and.list.clipboard")
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+                Text("Das Transkript wurde nach dieser Zusammenfassung korrigiert.")
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Neu zusammenfassen", systemImage: "sparkles") {
+                    processing.enqueue(.resummarize(note.id))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(note.status.isProcessing)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.Spacing.medium)
+        .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
     }
 }

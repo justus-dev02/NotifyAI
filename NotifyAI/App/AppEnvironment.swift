@@ -76,6 +76,7 @@ extension View {
             .environment(services.whisperModels)
             .environment(services.neuralModels)
             .environment(services.speakers)
+            .environment(services.transcriptEditor)
             .environment(services.appLock)
             .environment(services.knowledge)
             .environment(services.tasks)

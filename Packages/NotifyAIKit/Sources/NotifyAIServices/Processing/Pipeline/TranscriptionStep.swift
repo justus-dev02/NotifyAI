@@ -22,7 +22,7 @@ struct TranscriptionStep {
         }
         context.setStage(.transcribing, 0)
         let engineKind = settings.engine
-        let options = TranscriptionOptions(language: note.language, whisperModel: settings.whisperModel)
+        let options = settings.options(for: note.language)
         let recognized = try await transcription.engine(for: engineKind).transcribeFile(
             at: audioURL,
             options: options,

@@ -10,6 +10,8 @@ import NotifyAICore
 struct TranscriptionOptions: Sendable {
     var language: TranscriptionLanguage
     var whisperModel: WhisperModel
+    /// Names and terms the recognizer should prefer.
+    var vocabulary = CustomVocabulary([])
 }
 
 /// An update from a live transcription session.

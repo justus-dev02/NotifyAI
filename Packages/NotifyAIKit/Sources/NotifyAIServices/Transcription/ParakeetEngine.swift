@@ -47,10 +47,11 @@ final class ParakeetEngine: TranscriptionEngine, NeuralModelUsage {
         _ = try await recognizer.use { _ in true }
         let recognizer = recognizer
         let language = Self.language(for: options.language)
+        let vocabulary = options.vocabulary
         return ChunkedLiveSession(
             speechDetector: speechDetector,
             keepingModelLoaded: { work in try await recognizer.use { _ in try await work() } },
-            transcribe: { chunks in try await Self.transcribe(chunks, with: recognizer, language: language) }
+            transcribe: { chunks in vocabulary.corrected(try await Self.transcribe(chunks, with: recognizer, language: language)) }
         )
     }
 
@@ -63,9 +64,11 @@ final class ParakeetEngine: TranscriptionEngine, NeuralModelUsage {
         let recognizer = recognizer
         let speechDetector = speechDetector
         let language = Self.language(for: options.language)
+        let vocabulary = options.vocabulary
         return try await recognizer.use { _ in
             try await ChunkedTranscription.transcribeFile(at: url, speechDetector: speechDetector, progress: progress) { chunks in
-                try await Self.transcribe(chunks, with: recognizer, language: language)
+                // Parakeet takes no vocabulary; near-misses of the terms are corrected instead.
+                vocabulary.corrected(try await Self.transcribe(chunks, with: recognizer, language: language))
             }
         }
     }

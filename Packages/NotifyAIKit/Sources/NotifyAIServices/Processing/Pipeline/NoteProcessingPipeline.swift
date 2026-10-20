@@ -8,13 +8,14 @@ import NotifyAICore
 import NotifyAIPersistence
 
 /// The steps a note goes through after recording or import:
-/// transcription → speakers → summary.
+/// transcription → cleanup → speakers → summary.
 ///
 /// Every step saves its result before the next one starts, so an interrupted job continues
 /// with the first missing step. Each step decides itself whether it has to run.
 @MainActor
 struct NoteProcessingPipeline {
     let transcription: TranscriptionStep
+    let cleanup: CleanupStep
     let speakers: SpeakerStep
     let summary: SummaryStep
 
@@ -28,6 +29,10 @@ struct NoteProcessingPipeline {
 
         guard note.kind.hasAudio ? note.hasTranscript : note.hasText else {
             throw ProcessingError.noSpeechDetected
+        }
+
+        if cleanup.needsToRun(for: note) {
+            try await cleanup.run(note, context: context)
         }
 
         if speakers.needsToRun(for: note, options: options) {

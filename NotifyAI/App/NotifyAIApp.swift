@@ -52,7 +52,10 @@ struct NotifyAIApp: App {
     private var settingsWindow: some Scene {
         Settings {
             if let app = launch.environment {
-                SettingsView()
+                // A navigation stack for detail pages such as the custom vocabulary.
+                NavigationStack {
+                    SettingsView()
+                }
                     .appEnvironment(app)
                     .environment(appDelegate.updater)
                     .frame(width: 560, height: 640)

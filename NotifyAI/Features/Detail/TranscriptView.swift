@@ -6,6 +6,7 @@
 import DesignSystem
 import NotifyAICore
 import NotifyAIPersistence
+import NotifyAIServices
 import SwiftUI
 
 /// The transcript with marker highlighting and playback synchronisation.
@@ -18,6 +19,11 @@ struct TranscriptView: View {
     @Bindable var model: NoteDetailModel
     let scrollProxy: ScrollViewProxy
     @State private var naming: SpeakerNamingRequest?
+    /// The corrected texts while correcting, by segment; `nil` otherwise.
+    @State private var drafts: [TranscriptSegment.ID: String]?
+    @State private var isSaving = false
+    @Environment(TranscriptEditor.self) private var editor
+    @Environment(UserNotices.self) private var notices
 
     var body: some View {
         if !note.kind.hasAudio {
@@ -38,7 +44,8 @@ struct TranscriptView: View {
                             highlights: model.showsHighlights ? model.highlights : nil,
                             markers: markers(in: segment),
                             currentTime: isCurrent ? model.player.currentTime : nil,
-                            speakerMenu: hasSpeakers ? SegmentSpeakerMenu(note: note, segment: segment) { naming = $0 } : nil
+                            speakerMenu: hasSpeakers ? SegmentSpeakerMenu(note: note, segment: segment) { naming = $0 } : nil,
+                            draft: draftBinding(for: segment)
                         ) {
                             model.play(from: segment.start)
                         }
@@ -69,6 +76,9 @@ struct TranscriptView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
+            if drafts != nil {
+                correctionBar
+            }
             HStack(spacing: Theme.Spacing.large) {
                 Toggle(isOn: $model.showsHighlights) {
                     Label("Markierungen hervorheben", systemImage: "highlighter")
@@ -78,6 +88,12 @@ struct TranscriptView: View {
                     Toggle(isOn: $model.followsPlayback) {
                         Label("Mitlesen", systemImage: "text.line.first.and.arrowtriangle.forward")
                     }
+                }
+                if drafts == nil {
+                    Button("Korrigieren", systemImage: "pencil") {
+                        drafts = [:]
+                    }
+                    .disabled(!note.isEditable)
                 }
             }
             .toggleStyle(.button)
@@ -101,6 +117,46 @@ struct TranscriptView: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // MARK: Correcting
+
+    private var correctionBar: some View {
+        HStack(spacing: Theme.Spacing.medium) {
+            Label("Text direkt bearbeiten. Ein leerer Abschnitt wird entfernt.", systemImage: "pencil")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button("Verwerfen", role: .cancel) { drafts = nil }
+            Button("Fertig", action: saveCorrections)
+                .buttonStyle(.borderedProminent)
+                .disabled(isSaving)
+                .keyboardShortcut(.defaultAction)
+        }
+        .controlSize(.small)
+    }
+
+    /// The editable text of a segment while correcting.
+    private func draftBinding(for segment: TranscriptSegment) -> Binding<String>? {
+        guard drafts != nil else { return nil }
+        return Binding(
+            get: { drafts?[segment.id] ?? segment.text },
+            set: { drafts?[segment.id] = $0 }
+        )
+    }
+
+    private func saveCorrections() {
+        guard let drafts else { return }
+        isSaving = true
+        Task {
+            defer { isSaving = false }
+            do {
+                try await editor.apply(drafts, to: note)
+                self.drafts = nil
+            } catch {
+                notices.post(UserNotice(title: String(localized: "Korrektur nicht gesichert"), message: error.localizedDescription))
             }
         }
     }
@@ -150,6 +206,8 @@ private struct TranscriptRow: View {
     let currentTime: TimeInterval?
     /// The speaker of the segment with its actions; `nil` without speakers.
     let speakerMenu: SegmentSpeakerMenu?
+    /// The text being corrected; `nil` unless the transcript is being corrected.
+    let draft: Binding<String>?
     let onTap: () -> Void
 
     var body: some View {
@@ -176,10 +234,18 @@ private struct TranscriptRow: View {
                         }
                     }
                 }
-                Text(attributedText)
-                    .lineSpacing(3)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let draft {
+                    TextField("Text", text: draft, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .lineSpacing(3)
+                        .padding(6)
+                        .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
+                } else {
+                    Text(attributedText)
+                        .lineSpacing(3)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .padding(.vertical, 6)
@@ -189,7 +255,10 @@ private struct TranscriptRow: View {
             in: RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous)
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
+        .onTapGesture {
+            // While correcting, a tap places the cursor instead of starting playback.
+            if draft == nil { onTap() }
+        }
     }
 
     /// Builds the text word by word so highlights cover exactly the marker windows.

@@ -193,6 +193,16 @@
         }
       }
     },
+    "%lld Begriffe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld terms"
+          }
+        }
+      }
+    },
     "%lld markiert" : {
       "localizations" : {
         "en" : {
@@ -235,6 +245,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld language packs"
+          }
+        }
+      }
+    },
+    "1 Begriff" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 term"
           }
         }
       }
@@ -1055,6 +1075,16 @@
         }
       }
     },
+    "Das Transkript enthält keine Füllwörter wie „äh“ oder „ähm“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript contains no filler words such as “uh” or “um”."
+          }
+        }
+      }
+    },
     "Das Transkript wird gerade erstellt." : {
       "localizations" : {
         "en" : {
@@ -1071,6 +1101,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The transcript will be created after the recording."
+          }
+        }
+      }
+    },
+    "Das Transkript wurde nach dieser Zusammenfassung korrigiert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript was corrected after this summary was made."
           }
         }
       }
@@ -1345,6 +1385,16 @@
         }
       }
     },
+    "Du hast dieses Transkript korrigiert. Beim neuen Transkribieren gehen deine Korrekturen und benannten Sprecher verloren; gemerkte Stimmen werden wieder erkannt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You corrected this transcript. Transcribing again discards your corrections and named speakers; remembered voices are recognized again."
+          }
+        }
+      }
+    },
     "Du kannst die App weiter nutzen. Die Verarbeitung läuft lokal auf diesem Gerät." : {
       "localizations" : {
         "en" : {
@@ -1371,6 +1421,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove speaker echo"
+          }
+        }
+      }
+    },
+    "Eigenes Vokabular" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Vocabulary"
           }
         }
       }
@@ -1431,6 +1491,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recommended"
+          }
+        }
+      }
+    },
+    "Entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        }
+      }
+    },
+    "Entfernt „äh“, „ähm“ und ähnliche Laute aus neuen Transkripten. Bestehende Transkripte bereinigst du in der Notiz über „Mehr“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes “uh”, “um” and similar sounds from new transcripts. To clean up existing transcripts, use “More” in the note."
           }
         }
       }
@@ -1626,6 +1706,16 @@
         }
       }
     },
+    "Füllwörter entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove filler words"
+          }
+        }
+      }
+    },
     "Für Aufnahmen" : {
       "localizations" : {
         "en" : {
@@ -1776,6 +1866,16 @@
         }
       }
     },
+    "Hinzufügen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        }
+      }
+    },
     "Im Dock für das Hauptfenster, in der Menüleiste für schnelle Aufnahmen – auch wenn das Fenster geschlossen ist." : {
       "localizations" : {
         "en" : {
@@ -1916,6 +2016,26 @@
         }
       }
     },
+    "Keine Begriffe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No terms"
+          }
+        }
+      }
+    },
+    "Keine Füllwörter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Filler Words"
+          }
+        }
+      }
+    },
     "Keine Notiz ausgewählt" : {
       "localizations" : {
         "en" : {
@@ -1972,6 +2092,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Key Points"
+          }
+        }
+      }
+    },
+    "Korrektur nicht gesichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correction Not Saved"
+          }
+        }
+      }
+    },
+    "Korrigieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct"
           }
         }
       }
@@ -2286,12 +2426,42 @@
         }
       }
     },
+    "Name oder Begriff" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name or term"
+          }
+        }
+      }
+    },
+    "Namen von Personen, Produkten und Projekten sowie Fachbegriffe, so geschrieben, wie sie im Transkript stehen sollen. Whisper und Apple Speech bevorzugen diese Schreibweisen; bei Parakeet werden fast gleiche Wörter danach korrigiert. Gilt für neue Transkripte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Names of people, products and projects as well as technical terms, spelled the way they should appear in the transcript. Whisper and Apple Speech prefer these spellings; with Parakeet, nearly identical words are corrected afterwards. Applies to new transcripts."
+          }
+        }
+      }
+    },
     "Neu transkribieren" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transcribe Again"
+          }
+        }
+      }
+    },
+    "Neu transkribieren?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribe Again?"
           }
         }
       }
@@ -3192,6 +3362,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Text"
+          }
+        }
+      }
+    },
+    "Text direkt bearbeiten. Ein leerer Abschnitt wird entfernt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit the text directly. An empty passage is removed."
           }
         }
       }

@@ -165,9 +165,15 @@ actor WhisperRuntime {
         let interval = Signposts.transcription.beginInterval("Whisper chunks", "\(chunks.count) chunks, \(duration, format: .fixed(precision: 1)) s")
         defer { Signposts.transcription.endInterval("Whisper chunks", interval) }
         let pipeline = try await pipeline(for: options.whisperModel)
+        var decodeOptions = Self.decodingOptions(language: options.language)
+        if let prompt = options.vocabulary.prompt, let tokenizer = pipeline.tokenizer {
+            // The terms condition the decoder like text that came before; WhisperKit trims the
+            // prompt to its maximum length and drops special tokens.
+            decodeOptions.promptTokens = tokenizer.encode(text: prompt).filter { $0 < tokenizer.specialTokens.specialTokenBegin }
+        }
         let results = await pipeline.transcribeWithResults(
             audioArrays: chunks.map(\.samples),
-            decodeOptions: Self.decodingOptions(language: options.language)
+            decodeOptions: decodeOptions
         ) { _ in
             // Returning `false` stops decoding early.
             Task.isCancelled ? false : nil

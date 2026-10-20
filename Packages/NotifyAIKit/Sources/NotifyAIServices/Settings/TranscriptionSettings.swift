@@ -16,6 +16,8 @@ public final class TranscriptionSettings {
         static let language = "transcription.language"
         static let whisperModel = "transcription.whisperModel"
         static let liveTranscription = "transcription.live"
+        static let vocabulary = "transcription.vocabulary"
+        static let removesFillerWords = "transcription.removesFillerWords"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -37,16 +39,32 @@ public final class TranscriptionSettings {
         didSet { defaults.set(liveTranscription, forKey: Key.liveTranscription) }
     }
 
+    /// Names and terms the recognizer should know (people, products, technical terms).
+    public var vocabulary: [String] {
+        didSet { defaults.set(vocabulary, forKey: Key.vocabulary) }
+    }
+
+    /// Removes "äh", "ähm" and similar fillers from new transcripts.
+    public var removesFillerWords: Bool {
+        didSet { defaults.set(removesFillerWords, forKey: Key.removesFillerWords) }
+    }
+
     init(defaults: UserDefaults) {
         self.defaults = defaults
         engine = defaults.string(forKey: Key.engine).flatMap(TranscriptionEngineKind.init(rawValue:)) ?? .appleSpeech
         language = defaults.string(forKey: Key.language).map(TranscriptionLanguage.init(id:)) ?? Self.defaultLanguage
         whisperModel = defaults.string(forKey: Key.whisperModel).flatMap(WhisperModel.withID) ?? .recommended
         liveTranscription = defaults.object(forKey: Key.liveTranscription) as? Bool ?? true
+        vocabulary = defaults.stringArray(forKey: Key.vocabulary) ?? []
+        removesFillerWords = defaults.bool(forKey: Key.removesFillerWords)
     }
 
     var options: TranscriptionOptions {
-        TranscriptionOptions(language: language, whisperModel: whisperModel)
+        options(for: language)
+    }
+
+    func options(for language: TranscriptionLanguage) -> TranscriptionOptions {
+        TranscriptionOptions(language: language, whisperModel: whisperModel, vocabulary: CustomVocabulary(vocabulary))
     }
 
     /// The system language if it is supported, German otherwise.
