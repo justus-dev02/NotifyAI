@@ -83,25 +83,37 @@ struct SourceReader {
         return losses
     }
 
+    /// Converts the input buffer completely.
+    ///
+    /// The resampler keeps a few samples of each input for its filter, so one call can produce
+    /// more output than the input alone would; then the output buffer is full and the
+    /// converter reports `.haveData`. It is called again until it has consumed the input
+    /// (`.inputRanDry`): the input buffer is overwritten by the next read, and whatever the
+    /// converter had not taken from it yet would be lost — a tiny jump in the audio each
+    /// time, which happens whenever more than a few milliseconds are converted at once.
     /// - Returns: The error description if the conversion failed; the input is then lost.
     private func convert(into output: inout SampleFIFO) -> String? {
-        outputBuffer.frameLength = 0
         var didProvideInput = false
-        var conversionError: NSError?
-        let status = converter.convert(to: outputBuffer, error: &conversionError) { _, inputStatus in
-            if didProvideInput {
-                inputStatus.pointee = .noDataNow
-                return nil
+        var status: AVAudioConverterOutputStatus
+        repeat {
+            outputBuffer.frameLength = 0
+            var conversionError: NSError?
+            status = converter.convert(to: outputBuffer, error: &conversionError) { _, inputStatus in
+                if didProvideInput {
+                    inputStatus.pointee = .noDataNow
+                    return nil
+                }
+                didProvideInput = true
+                inputStatus.pointee = .haveData
+                return inputBuffer
             }
-            didProvideInput = true
-            inputStatus.pointee = .haveData
-            return inputBuffer
-        }
-        if status == .error {
-            return conversionError?.localizedDescription ?? "AVAudioConverter status error"
-        }
-        guard outputBuffer.frameLength > 0, let samples = outputBuffer.floatChannelData?[0] else { return nil }
-        output.append(UnsafeBufferPointer(start: samples, count: Int(outputBuffer.frameLength)))
+            if status == .error {
+                return conversionError?.localizedDescription ?? "AVAudioConverter status error"
+            }
+            if outputBuffer.frameLength > 0, let samples = outputBuffer.floatChannelData?[0] {
+                output.append(UnsafeBufferPointer(start: samples, count: Int(outputBuffer.frameLength)))
+            }
+        } while status == .haveData
         return nil
     }
 }
