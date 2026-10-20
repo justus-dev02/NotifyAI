@@ -327,7 +327,8 @@ public final class RecordingController {
                 kind: .recording,
                 markedPassages: [],
                 recordedAt: note.createdAt,
-                participants: note.participants
+                participants: note.participants,
+                template: TemplateLookup(store: store).guidance(for: note)
             ))
         }
     }

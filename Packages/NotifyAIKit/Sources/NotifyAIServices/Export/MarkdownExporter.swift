@@ -75,6 +75,9 @@ public struct MarkdownExporter {
             }
         }
         appendList(String(localized: "Kernpunkte", bundle: .module), summary.keyPoints, to: &lines)
+        for section in summary.templateSections where !section.points.isEmpty {
+            appendList(section.title, section.points, to: &lines)
+        }
         appendList(String(localized: "Entscheidungen", bundle: .module), summary.decisions, to: &lines)
         if !summary.actionItems.isEmpty {
             lines += ["", String(localized: "## Aufgaben", bundle: .module), ""]

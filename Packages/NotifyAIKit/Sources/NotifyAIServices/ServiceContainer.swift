@@ -27,6 +27,7 @@ public final class ServiceContainer {
     public let neuralModels: NeuralModelManager
     public let speakers: SpeakerDirectory
     public let transcriptEditor: TranscriptEditor
+    public let templates: SummaryTemplates
     public let appLock: AppLock
     public let audioSession: AudioSessionController
     public let importer: ImportService
@@ -96,6 +97,7 @@ public final class ServiceContainer {
         )
         speakers = SpeakerDirectory(store: store, detection: speakerDetection)
         transcriptEditor = TranscriptEditor(store: store)
+        templates = SummaryTemplates(store: store, processing: processing)
         importer = ImportService(store: store, settings: settings, processing: processing)
         library = NoteLibrary(store: store, processing: processing)
         tasks = TaskBoard(store: store, library: library)

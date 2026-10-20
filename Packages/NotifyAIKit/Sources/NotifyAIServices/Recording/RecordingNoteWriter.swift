@@ -33,6 +33,7 @@ struct RecordingNoteWriter {
             consentConfirmedAt: .now,
             audioFileName: NoteStore.recordingFileName(for: id)
         )
+        note.summaryTemplateID = draft.templateID
         note.audioSource = configuration.source
         if configuration.source.usesSystemAudio, case .app(_, let name) = configuration.systemAudioTarget {
             note.sourceAppName = name

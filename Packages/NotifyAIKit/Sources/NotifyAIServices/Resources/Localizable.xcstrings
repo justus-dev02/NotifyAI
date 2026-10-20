@@ -446,6 +446,16 @@
         }
       }
     },
+    "Bitte gib der Vorlage einen Namen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please give the template a name."
+          }
+        }
+      }
+    },
     "Bitte gib einen Namen ein." : {
       "localizations" : {
         "en" : {
@@ -692,6 +702,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The file could not be read."
+          }
+        }
+      }
+    },
+    "Die eigenen Abschnitte der Vorlage „%@“ konnten nicht ausgefüllt werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The custom sections of the template “%@” could not be filled in."
+          }
+        }
+      }
+    },
+    "Die eigenen Abschnitte der Vorlage „%@“ werden nur mit Apple Intelligence ausgefüllt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The custom sections of the template “%@” are only filled in with Apple Intelligence."
           }
         }
       }
@@ -1734,6 +1764,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "Wähle mindestens einen Abschnitt oder lege eine eigene Überschrift an." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose at least one section or add a heading of your own."
           }
         }
       }

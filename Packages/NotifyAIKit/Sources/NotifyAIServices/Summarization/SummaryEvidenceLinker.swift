@@ -24,6 +24,7 @@ struct SummaryEvidenceLinker: Sendable {
         guard !segments.isEmpty else { return [:] }
         let windows = makeWindows(segments, languageCode: languageCode)
         let items = summary.keyPoints + summary.decisions + summary.actionItems.map(\.task) + summary.openQuestions
+            + summary.templateSections.flatMap(\.points)
 
         var result: [String: TimeInterval] = [:]
         for item in items where result[item] == nil {

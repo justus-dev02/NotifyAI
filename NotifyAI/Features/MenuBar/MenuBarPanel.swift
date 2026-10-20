@@ -167,10 +167,8 @@ private struct QuickStartForm: View {
             TextField("Titel (optional)", text: $recording.draft.title)
                 .textFieldStyle(.roundedBorder)
 
-            Picker("Art", selection: $recording.draft.focus) {
-                ForEach(RecordingFocus.allCases) { focus in
-                    Text(focus.title).tag(focus)
-                }
+            Picker("Art", selection: $recording.draft.templateChoice) {
+                TemplateChoiceOptions(showsSymbols: false)
             }
 
             AudioSourceRows()

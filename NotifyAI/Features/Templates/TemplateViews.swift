@@ -1,0 +1,274 @@
+//
+//  TemplateViews.swift
+//  NotifyAI
+//
+
+import DesignSystem
+import NotifyAICore
+import NotifyAIPersistence
+import NotifyAIServices
+import SwiftData
+import SwiftUI
+
+extension RecordingController.Draft {
+    /// The kind of conversation or the user's template, as one choice.
+    var templateChoice: SummaryTemplateChoice {
+        get { templateID.map(SummaryTemplateChoice.custom) ?? .focus(focus) }
+        set {
+            switch newValue {
+            case .focus(let focus):
+                self.focus = focus
+                templateID = nil
+            case .custom(let id):
+                templateID = id
+            }
+        }
+    }
+}
+
+/// The options of a template picker: the built-in kinds of conversation and the user's own
+/// templates.
+struct TemplateChoiceOptions: View {
+    var showsSymbols = true
+    @Query(sort: \SummaryTemplate.name) private var templates: [SummaryTemplate]
+
+    var body: some View {
+        ForEach(RecordingFocus.allCases) { focus in
+            option(focus.title, systemImage: focus.symbolName).tag(SummaryTemplateChoice.focus(focus))
+        }
+        if !templates.isEmpty {
+            Divider()
+            ForEach(templates) { template in
+                option(template.name, systemImage: template.symbolName).tag(SummaryTemplateChoice.custom(template.id))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func option(_ title: String, systemImage: String) -> some View {
+        if showsSymbols {
+            Label(title, systemImage: systemImage)
+        } else {
+            Text(title)
+        }
+    }
+}
+
+/// "Mit Vorlage neu zusammenfassen": the templates as a menu.
+struct ResummarizeWithTemplateMenu: View {
+    let note: Note
+    @Environment(SummaryTemplates.self) private var templates
+    @Query(sort: \SummaryTemplate.name) private var custom: [SummaryTemplate]
+
+    var body: some View {
+        Menu("Mit Vorlage neu zusammenfassen", systemImage: "doc.text.magnifyingglass") {
+            ForEach(RecordingFocus.allCases) { focus in
+                choiceButton(.focus(focus), title: focus.title, systemImage: focus.symbolName)
+            }
+            if !custom.isEmpty {
+                Divider()
+                ForEach(custom) { template in
+                    choiceButton(.custom(template.id), title: template.name, systemImage: template.symbolName)
+                }
+            }
+        }
+        .disabled(note.status.isProcessing || !note.hasText)
+    }
+
+    private func choiceButton(_ choice: SummaryTemplateChoice, title: String, systemImage: String) -> some View {
+        Button {
+            templates.summarize(note, with: choice)
+        } label: {
+            if templates.choice(for: note) == choice {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Label(title, systemImage: systemImage)
+            }
+        }
+    }
+}
+
+// MARK: - Settings
+
+/// The user's own templates.
+struct TemplateSettingsSection: View {
+    @Query(sort: \SummaryTemplate.name) private var templates: [SummaryTemplate]
+    @Environment(SummaryTemplates.self) private var library
+    @State private var editing: TemplateEditing?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Section {
+            ForEach(templates) { template in
+                Button {
+                    editing = TemplateEditing(template: template)
+                } label: {
+                    HStack {
+                        Label(template.name, systemImage: template.symbolName)
+                        Spacer()
+                        Text(summary(of: template))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button("Löschen", systemImage: "trash", role: .destructive) { delete(template) }
+                }
+            }
+            .onDelete { offsets in
+                offsets.map { templates[$0] }.forEach(delete)
+            }
+            Button("Neue Vorlage …", systemImage: "plus") {
+                editing = TemplateEditing(template: nil)
+            }
+        } header: {
+            Text("Vorlagen für Zusammenfassungen")
+        } footer: {
+            Text("Eigene Vorlagen legen fest, worauf die Zusammenfassung achtet, welche Abschnitte sie hat und welche eigenen Überschriften sie füllt. Du wählst sie vor der Aufnahme bei „Art des Gesprächs“ oder später in der Notiz.")
+        }
+        .sheet(item: $editing) { editing in
+            TemplateEditorSheet(template: editing.template)
+        }
+        .alert("Nicht gelöscht", isPresented: Binding(presenting: $errorMessage)) {
+            Button("OK") { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private func summary(of template: SummaryTemplate) -> String {
+        template.customHeadings.isEmpty
+            ? String(localized: "\(template.sections.count) Abschnitte")
+            : String(localized: "\(template.sections.count) Abschnitte · \(template.customHeadings.count) eigene")
+    }
+
+    private func delete(_ template: SummaryTemplate) {
+        do {
+            try library.delete(template)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+/// A template to edit, or a new one.
+private struct TemplateEditing: Identifiable {
+    let id = UUID()
+    let template: SummaryTemplate?
+}
+
+/// Creates or edits a template.
+struct TemplateEditorSheet: View {
+    let template: SummaryTemplate?
+    @Environment(SummaryTemplates.self) private var library
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft = SummaryTemplates.Draft()
+    @State private var newHeading = ""
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Name", text: $draft.name)
+                    Picker("Symbol", selection: $draft.symbolName) {
+                        ForEach(SummaryTemplates.symbols, id: \.self) { symbol in
+                            Image(systemName: symbol).tag(symbol)
+                        }
+                    }
+                }
+                Section {
+                    TextField("Worauf soll die Zusammenfassung achten?", text: $draft.instructions, axis: .vertical)
+                        .lineLimit(3...8)
+                } header: {
+                    Text("Anweisungen")
+                } footer: {
+                    Text("Zum Beispiel: „Achte auf Wünsche und Einwände des Kunden, Budget und Zeitplan.“")
+                }
+                Section("Abschnitte") {
+                    ForEach(SummarySection.allCases) { section in
+                        Toggle(section.title, isOn: binding(for: section))
+                    }
+                }
+                Section {
+                    ForEach(draft.headings, id: \.self) { heading in
+                        Text(heading)
+                    }
+                    .onDelete { draft.headings.remove(atOffsets: $0) }
+                    .onMove { draft.headings.move(fromOffsets: $0, toOffset: $1) }
+                    HStack {
+                        TextField("Neue Überschrift", text: $newHeading)
+                            .onSubmit(addHeading)
+                        Button("Hinzufügen", systemImage: "plus.circle.fill", action: addHeading)
+                            .labelStyle(.iconOnly)
+                            .disabled(newHeading.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                } header: {
+                    Text("Eigene Überschriften")
+                } footer: {
+                    Text("Jede Überschrift wird mit den passenden Punkten aus dem Gespräch gefüllt, etwa „Risiken“ oder „Nächste Termine“. Benötigt Apple Intelligence.")
+                }
+                if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.red)
+                }
+            }
+            .formStyle(.grouped)
+            .navigationTitle(template == nil ? String(localized: "Neue Vorlage") : String(localized: "Vorlage bearbeiten"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Sichern", action: save)
+                }
+            }
+        }
+        .frame(minWidth: 420, minHeight: 560)
+        .onAppear {
+            if let template { draft = SummaryTemplates.Draft(template) }
+        }
+    }
+
+    private func binding(for section: SummarySection) -> Binding<Bool> {
+        Binding(
+            get: { draft.sections.contains(section) },
+            set: { isOn in
+                if isOn { draft.sections.insert(section) } else { draft.sections.remove(section) }
+            }
+        )
+    }
+
+    private func addHeading() {
+        let heading = newHeading.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !heading.isEmpty, !draft.headings.contains(heading) else { return }
+        draft.headings.append(heading)
+        newHeading = ""
+    }
+
+    private func save() {
+        do {
+            if let template {
+                try library.update(template, with: draft)
+            } else {
+                try library.create(draft)
+            }
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+extension SummarySection {
+    var title: String {
+        switch self {
+        case .keyPoints: String(localized: "Kernpunkte")
+        case .decisions: String(localized: "Entscheidungen")
+        case .actionItems: String(localized: "Aufgaben")
+        case .openQuestions: String(localized: "Offene Fragen")
+        case .topics: String(localized: "Themen")
+        }
+    }
+}

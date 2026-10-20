@@ -183,3 +183,22 @@ struct NeuralModelIntegrationTests {
         return Double(previous[hypothesis.count]) / Double(reference.count)
     }
 }
+
+@Suite(
+    "Apple Intelligence (real model)",
+    .enabled(if: NeuralFixtures.directory != nil && LanguageModelAvailability.current(for: .german) == .available)
+)
+struct LanguageModelIntegrationTests {
+    @Test("The template's headings come back as one list each, in their order")
+    func templateSections() async throws {
+        let headings = ["Budget", "Termine", "Wetter"]
+        let sections = try await SystemLanguageModelResponder().respondSections(
+            headings: headings,
+            instructions: "Fill each list with what the text says about its heading. Leave a list empty when the text says nothing about it. Write in German.",
+            prompt: "Text:\n\nDas Budget für den Relaunch liegt bei 18.000 Euro. Der Start ist am 3. November geplant, die Abnahme eine Woche später."
+        )
+        #expect(sections.count == headings.count)
+        #expect(sections[0].contains { $0.contains("18.000") || $0.contains("18000") })
+        #expect(!sections[1].isEmpty)
+    }
+}

@@ -180,6 +180,7 @@ struct NoteDetailView: View {
                     processing.enqueue(.resummarize(note.id))
                 }
                 .disabled(note.status.isProcessing || !note.hasText)
+                ResummarizeWithTemplateMenu(note: note)
                 if note.kind.hasAudio {
                     Button("Füllwörter entfernen", systemImage: "text.badge.minus") {
                         removeFillerWords()
@@ -246,6 +247,7 @@ struct NoteDetailView: View {
 
 private struct NoteHeader: View {
     let note: Note
+    @Environment(SummaryTemplates.self) private var templates
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
@@ -268,7 +270,11 @@ private struct NoteHeader: View {
                 if note.duration > 0 {
                     Tag(text: TimeFormatting.duration(note.duration), systemImage: "clock")
                 }
-                Tag(text: note.focus.title, systemImage: note.focus.symbolName)
+                if let template = templates.template(for: note) {
+                    Tag(text: template.name, systemImage: template.symbolName)
+                } else {
+                    Tag(text: note.focus.title, systemImage: note.focus.symbolName)
+                }
                 Tag(text: note.language.displayName, systemImage: "globe")
                 if let source = note.audioSourceDescription {
                     Tag(text: source, systemImage: note.audioSource.symbolName)

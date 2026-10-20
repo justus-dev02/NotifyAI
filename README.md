@@ -17,6 +17,10 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
   Sprechermodell (20 MB) trennt eine einfache Erkennung deutlich unterschiedliche Stimmen.
 - **Zusammenfassung** mit Apple Intelligence (Foundation Models): Überblick, Kernpunkte, Aufgaben, Entscheidungen, offene Fragen, Themen.
   Ohne Apple Intelligence entsteht eine klar gekennzeichnete einfache Zusammenfassung.
+- **Eigene Vorlagen:** Anweisungen in eigenen Worten („Achte auf Einwände und Budget“), Auswahl der Abschnitte
+  (Kernpunkte, Aufgaben, Entscheidungen, offene Fragen, Themen) und eigene Überschriften („Risiken“, „Nächste
+  Termine“), die Apple Intelligence über ein dynamisches Ausgabeschema füllt. Wählbar vor der Aufnahme oder später
+  („Mit Vorlage neu zusammenfassen“); ohne Apple Intelligence gelten die gewählten Abschnitte ebenfalls.
 - **Belegte Zusammenfassungen:** Jeder Kernpunkt, jede Entscheidung und Aufgabe springt per Tipp zur Stelle im Transkript.
   Aufnahmen ohne eigenen Titel heißen nach ihren Stichworten plus Datum („Budget, Website-Relaunch – 29. Sept. 2026“).
 - **Lange Aufnahmen (2–4 h):** Kapitel von etwa 10 Minuten, geschnitten an Themenwechseln, jeweils einzeln

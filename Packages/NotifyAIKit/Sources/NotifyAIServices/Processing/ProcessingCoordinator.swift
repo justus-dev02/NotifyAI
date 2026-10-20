@@ -119,7 +119,7 @@ public final class ProcessingCoordinator {
             transcription: TranscriptionStep(transcription: transcription, settings: settings.transcription),
             cleanup: CleanupStep(settings: settings.transcription),
             speakers: SpeakerStep(settings: settings.analysis, diarizer: diarizer, profiles: VoiceProfiles(store: store)),
-            summary: SummaryStep(summarization: summarization, digestStore: digestStore, embedder: embedder)
+            summary: SummaryStep(summarization: summarization, digestStore: digestStore, embedder: embedder, templates: TemplateLookup(store: store))
         )
         store.events.subscribe { [weak self] event in
             guard case .deleted(let ids) = event else { return }

@@ -74,13 +74,11 @@ private struct RecordingSetupView: View {
         Form {
             Section {
                 TextField("Titel (optional)", text: $recording.draft.title)
-                Picker("Art des Gesprächs", selection: $recording.draft.focus) {
-                    ForEach(RecordingFocus.allCases) { focus in
-                        Label(focus.title, systemImage: focus.symbolName).tag(focus)
-                    }
+                Picker("Art des Gesprächs", selection: $recording.draft.templateChoice) {
+                    TemplateChoiceOptions()
                 }
                 TextField("Teilnehmende (durch Komma getrennt)", text: $recording.draft.participants)
-                Text("Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet.")
+                Text("Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

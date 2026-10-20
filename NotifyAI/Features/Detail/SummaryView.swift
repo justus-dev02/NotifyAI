@@ -40,6 +40,12 @@ struct SummaryView: View {
                     }
                 }
 
+                ForEach(summary.templateSections.filter { !$0.points.isEmpty }) { section in
+                    ContentSection(title: LocalizedStringKey(section.title), systemImage: "text.badge.star", tint: .teal) {
+                        SourcedBulletList(items: section.points, tint: .teal, sourceTimes: summary.sourceTimes, onOpen: onOpenTime)
+                    }
+                }
+
                 if !summary.actionItems.isEmpty {
                     ContentSection(title: "Aufgaben", systemImage: "checklist", tint: .blue) {
                         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {

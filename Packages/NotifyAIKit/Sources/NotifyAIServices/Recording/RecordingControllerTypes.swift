@@ -20,6 +20,8 @@ extension RecordingController {
     public struct Draft: Equatable, Sendable {
         public var title = ""
         public var focus: RecordingFocus = .general
+        /// A template of the user's own; it replaces the guidance of `focus`.
+        public var templateID: UUID?
         public var participants = ""
         public var consentConfirmed = false
 

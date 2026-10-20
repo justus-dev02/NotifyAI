@@ -193,6 +193,32 @@
         }
       }
     },
+    "%lld Abschnitte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sections"
+          }
+        }
+      }
+    },
+    "%lld Abschnitte · %lld eigene" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Abschnitte · %2$lld eigene"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sections · %2$lld custom"
+          }
+        }
+      }
+    },
     "%lld Begriffe" : {
       "localizations" : {
         "en" : {
@@ -315,6 +341,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Assign Passage"
+          }
+        }
+      }
+    },
+    "Abschnitte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sections"
           }
         }
       }
@@ -545,6 +581,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "View"
+          }
+        }
+      }
+    },
+    "Anweisungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instructions"
           }
         }
       }
@@ -1215,12 +1261,12 @@
         }
       }
     },
-    "Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet." : {
+    "Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The type of conversation determines what the summary focuses on."
+            "value" : "The kind of conversation or your template determines what the summary focuses on."
           }
         }
       }
@@ -1421,6 +1467,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove speaker echo"
+          }
+        }
+      }
+    },
+    "Eigene Überschriften" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Headings"
+          }
+        }
+      }
+    },
+    "Eigene Vorlagen legen fest, worauf die Zusammenfassung achtet, welche Abschnitte sie hat und welche eigenen Überschriften sie füllt. Du wählst sie vor der Aufnahme bei „Art des Gesprächs“ oder später in der Notiz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom templates define what the summary focuses on, which sections it has and which headings of your own it fills. Choose them before recording under “Kind of conversation” or later in the note."
           }
         }
       }
@@ -1956,6 +2022,16 @@
         }
       }
     },
+    "Jede Überschrift wird mit den passenden Punkten aus dem Gespräch gefüllt, etwa „Risiken“ oder „Nächste Termine“. Benötigt Apple Intelligence." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each heading is filled with the matching points from the conversation, such as “Risks” or “Upcoming dates”. Requires Apple Intelligence."
+          }
+        }
+      }
+    },
     "Jederzeit" : {
       "localizations" : {
         "en" : {
@@ -2316,6 +2392,16 @@
         }
       }
     },
+    "Mit Vorlage neu zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize Again with Template"
+          }
+        }
+      }
+    },
     "Mitlesen" : {
       "localizations" : {
         "en" : {
@@ -2506,12 +2592,42 @@
         }
       }
     },
+    "Neue Überschrift" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New heading"
+          }
+        }
+      }
+    },
     "Neue Unterhaltung" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Conversation"
+          }
+        }
+      }
+    },
+    "Neue Vorlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Template"
+          }
+        }
+      }
+    },
+    "Neue Vorlage …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Template…"
           }
         }
       }
@@ -3316,6 +3432,16 @@
         }
       }
     },
+    "Symbol" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbol"
+          }
+        }
+      }
+    },
     "Systemton von %@" : {
       "localizations" : {
         "en" : {
@@ -3636,6 +3762,26 @@
         }
       }
     },
+    "Vorlage bearbeiten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Template"
+          }
+        }
+      }
+    },
+    "Vorlagen für Zusammenfassungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summary Templates"
+          }
+        }
+      }
+    },
     "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
       "localizations" : {
         "en" : {
@@ -3786,6 +3932,16 @@
         }
       }
     },
+    "Worauf soll die Zusammenfassung achten?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should the summary focus on?"
+          }
+        }
+      }
+    },
     "Zu Favoriten" : {
       "localizations" : {
         "en" : {
@@ -3822,6 +3978,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last checked"
+          }
+        }
+      }
+    },
+    "Zum Beispiel: „Achte auf Wünsche und Einwände des Kunden, Budget und Zeitplan.“" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: “Pay attention to the customer’s wishes and objections, budget and schedule.”"
           }
         }
       }

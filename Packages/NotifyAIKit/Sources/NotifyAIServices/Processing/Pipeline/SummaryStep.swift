@@ -17,6 +17,7 @@ struct SummaryStep {
     let summarization: SummarizationService
     let digestStore: ChapterDigestStore
     let embedder: any SentenceEmbedding
+    let templates: TemplateLookup
 
     func needsToRun(for note: Note, options: ProcessingOptions) -> Bool {
         options.forceSummary || note.summary == nil
@@ -25,7 +26,7 @@ struct SummaryStep {
     func run(_ note: Note, options: ProcessingOptions, context: ProcessingContext) async throws {
         context.setStage(.summarizing, nil)
         let segments = note.decodedTranscript()
-        let input = SummaryInput(note: note, segments: segments)
+        let input = SummaryInput(note: note, segments: segments, template: templates.guidance(for: note))
 
         if options.forceSummary {
             // "Neu zusammenfassen" starts from scratch instead of reusing earlier chapters.
@@ -95,7 +96,7 @@ struct SummaryInput: Sendable {
     let isRecording: Bool
 
     @MainActor
-    init(note: Note, segments: [TranscriptSegment]) {
+    init(note: Note, segments: [TranscriptSegment], template: TemplateGuidance? = nil) {
         noteID = note.id
         self.segments = segments
         markers = note.markers
@@ -113,7 +114,8 @@ struct SummaryInput: Sendable {
                 Transcript.text(in: $0.highlightRange(duration: note.duration), of: segments)
             },
             recordedAt: note.createdAt,
-            participants: note.participants
+            participants: note.participants,
+            template: template
         )
     }
 

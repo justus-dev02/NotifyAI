@@ -23,7 +23,7 @@ import OSLog
 /// falls back to the extractive summary.
 struct FoundationModelSummarizer: Summarizer {
     /// Sends the requests; tests replace it.
-    private let responder: any LanguageModelResponder
+    let responder: any LanguageModelResponder
     /// Measures text in tokens; `nil` uses the model's tokenizer where available.
     private let customMeasure: TextChunker.Measure?
 
@@ -56,8 +56,11 @@ struct FoundationModelSummarizer: Summarizer {
         limitations.omittedMarkedPassages = marked.omitted
 
         let generated: GeneratedSummary
+        // What the template's own headings are filled from: the text, or the merged notes.
+        let sectionSource: String
         if await measure(text) <= finalChunker.budget {
             progress(0.1)
+            sectionSource = "Text:\n\n\(text)"
             generated = try await respond(
                 generating: GeneratedSummary.self,
                 instructions: Self.instructions(for: request, task: .summary),
@@ -79,15 +82,17 @@ struct FoundationModelSummarizer: Summarizer {
                 reduced = ReducedNotes(text: await finalChunker.chunks(of: text).first ?? "", isShortened: true)
             }
             limitations.isShortened = reduced.isShortened
+            sectionSource = "Notes covering the whole content:\n\n\(reduced.text)"
             generated = try await respond(
                 generating: GeneratedSummary.self,
                 instructions: Self.instructions(for: request, task: .summary),
-                prompt: "Notes covering the whole content:\n\n\(reduced.text)" + marked.text
+                prompt: sectionSource + marked.text
             )
         }
-        progress(1)
         var summary = generated.noteSummary()
         summary.processingNotes = limitations.messages
+        await fillTemplateSections(of: &summary, request: request, source: sectionSource)
+        progress(1)
         return summary
     }
 
@@ -137,16 +142,18 @@ struct FoundationModelSummarizer: Summarizer {
         // Very long recordings: chapter notes are merged until they fit into one request.
         let notes = try await reduce(texts, request: request, fitting: chunker)
         progress(0.5)
+        let source = "Chapter notes of a long recording, in chronological order:\n\n\(notes.text)"
         let generated = try await respond(
             generating: GeneratedSummary.self,
             instructions: Self.instructions(for: request, task: .summary),
-            prompt: "Chapter notes of a long recording, in chronological order:\n\n\(notes.text)"
+            prompt: source
         )
-        progress(1)
         var summary = generated.noteSummary()
         var limitations = SummaryLimitations()
         limitations.isShortened = notes.isShortened
         summary.processingNotes = limitations.messages
+        await fillTemplateSections(of: &summary, request: request, source: source)
+        progress(1)
         return summary
     }
 
@@ -358,7 +365,7 @@ struct FoundationModelSummarizer: Summarizer {
 
         return """
         \(taskDescription)
-        \(request.focus.modelGuidance)
+        \(Self.guidance(for: request))
         \(context)
         Only use information that is stated in the text. Never invent names, numbers, dates or facts. \
         Many recordings are plain minutes, lectures or conversations without tasks, decisions or open \

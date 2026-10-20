@@ -149,7 +149,12 @@ struct PipelineStepTests {
         let transcription = TranscriptionStep(transcription: service, settings: settings.transcription)
         let store = try NoteStore(locations: try StorageLocations.temporary(), inMemory: true)
         let speakers = SpeakerStep(settings: settings.analysis, diarizer: SpeakerDiarizer(), profiles: VoiceProfiles(store: store))
-        let summary = SummaryStep(summarization: SummarizationService(), digestStore: ChapterDigestStore(directory: nil), embedder: SentenceEmbedder())
+        let summary = SummaryStep(
+            summarization: SummarizationService(),
+            digestStore: ChapterDigestStore(directory: nil),
+            embedder: SentenceEmbedder(),
+            templates: TemplateLookup(store: store)
+        )
 
         let fresh = try note(kind: .recording, transcript: false, summary: false)
         #expect(transcription.needsToRun(for: fresh, options: ProcessingOptions()))

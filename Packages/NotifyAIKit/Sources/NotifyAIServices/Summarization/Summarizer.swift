@@ -20,6 +20,8 @@ struct SummaryRequest: Sendable {
     var recordedAt: Date = .now
     /// Names the user entered before recording.
     var participants: [String] = []
+    /// The user's own template; `nil` uses the guidance of `focus`.
+    var template: TemplateGuidance?
 }
 
 protocol Summarizer: Sendable {
@@ -294,7 +296,7 @@ struct SummarizationService: Sendable {
         }
         summary.processingNotes += SummaryLimitations(chapters: timed).messages
         progress(1)
-        return summary
+        return Self.applyingTemplate(of: request, to: summary)
     }
 
     /// Below this many different content words, a text is too thin for a language model:
@@ -302,6 +304,21 @@ struct SummarizationService: Sendable {
     static let minimumDistinctTermsForModel = 8
 
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        Self.applyingTemplate(of: request, to: try await summarizeWithoutTemplate(request, progress: progress))
+    }
+
+    /// A template's sections: the ones it leaves out are removed after every summarizer (the
+    /// extractive fallback has no instructions to follow), and a missing part is noted.
+    static func applyingTemplate(of request: SummaryRequest, to summary: NoteSummary) -> NoteSummary {
+        guard let template = request.template else { return summary }
+        var summary = summary.restricted(to: template.sections)
+        if !template.headings.isEmpty, summary.templateSections.isEmpty, summary.source == .extractive {
+            summary.processingNotes.append(String(localized: "Die eigenen Abschnitte der Vorlage „\(template.name)“ werden nur mit Apple Intelligence ausgefüllt.", bundle: .module))
+        }
+        return summary
+    }
+
+    private func summarizeWithoutTemplate(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
         if Self.isTooThin(request) {
             return try await thinSummary(of: request, progress: progress)
         }

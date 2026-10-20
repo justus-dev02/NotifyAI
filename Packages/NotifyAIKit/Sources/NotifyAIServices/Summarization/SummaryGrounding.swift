@@ -35,6 +35,10 @@ struct SummaryGrounding: Sendable {
         var grounded = summary
         grounded.decisions = summary.decisions.filter(isSupported)
         grounded.openQuestions = summary.openQuestions.filter(isSupported)
+        // The user's headings follow the same rule; a heading the text says nothing about stays.
+        grounded.templateSections = summary.templateSections.map { section in
+            SummaryTopic(id: section.id, title: section.title, points: section.points.filter(isSupported))
+        }
         grounded.actionItems = summary.actionItems
             .filter { isSupported($0.task) }
             .map { item in
