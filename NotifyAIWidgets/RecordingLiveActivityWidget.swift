@@ -44,8 +44,10 @@ struct RecordingLiveActivityWidget: Widget {
             } compactLeading: {
                 StatusIcon(isPaused: context.state.isPaused)
             } compactTrailing: {
+                // A timer text takes all the width it gets; it needs room for "0:00:00" from
+                // the first hour on, or the seconds are cut off.
                 ElapsedTime(state: context.state)
-                    .frame(maxWidth: 52)
+                    .frame(width: context.state.showsHours ? 64 : 44)
             } minimal: {
                 StatusIcon(isPaused: context.state.isPaused)
             }
@@ -98,7 +100,7 @@ private struct ElapsedTime: View {
     var body: some View {
         Group {
             if state.isPaused {
-                Text(Duration.seconds(state.elapsed), format: .time(pattern: state.elapsed >= 3_600 ? .hourMinuteSecond : .minuteSecond))
+                Text(Duration.seconds(state.elapsed), format: .time(pattern: state.showsHours ? .hourMinuteSecond : .minuteSecond))
             } else {
                 Text(timerInterval: state.timerStart...Date.distantFuture, countsDown: false)
             }

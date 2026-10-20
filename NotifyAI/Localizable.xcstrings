@@ -4392,6 +4392,16 @@
         }
       }
     },
+    "Zurück zu den Einstellungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Settings"
+          }
+        }
+      }
+    },
     "Zurücksetzen" : {
       "localizations" : {
         "en" : {

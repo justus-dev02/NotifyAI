@@ -16,6 +16,10 @@ import SwiftUI
 ///
 /// Reads only `elapsedSeconds`, which changes once per second: the menu bar item is
 /// re-rendered once per second, not with every level update.
+///
+/// The status item does not reliably grow with its label, so the time gets the room of
+/// "0:00:00" from the start: after the first hour the seconds would otherwise be cut off and
+/// only hours and minutes remain visible.
 struct MenuBarLabel: View {
     let recording: RecordingController
 
@@ -23,8 +27,13 @@ struct MenuBarLabel: View {
         if recording.isActive {
             HStack(spacing: 4) {
                 Image(systemName: recording.phase == .paused ? "pause.circle.fill" : "record.circle.fill")
-                Text(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))
-                    .monospacedDigit()
+                ZStack(alignment: .leading) {
+                    Text(verbatim: "0:00:00").hidden()
+                    Text(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))
+                }
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize()
             }
         } else {
             Image(systemName: "waveform")

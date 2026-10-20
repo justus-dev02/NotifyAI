@@ -56,7 +56,7 @@ struct IntegrationSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Integrationen")
+        .settingsPage("Integrationen")
         .fileImporter(isPresented: $isPickingFolder, allowedContentTypes: [.folder]) { result in
             switch result {
             case .success(let folder): perform { try integrations.setObsidianFolder(folder) }

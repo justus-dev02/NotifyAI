@@ -16,6 +16,8 @@ import OSLog
 final class RecordingLiveActivity: RecordingActivityPresenting {
     /// `Activity` is not `Sendable`, so async work looks it up by identifier instead of capturing it.
     private var activityID: String?
+    /// Updates the activity when the recording reaches its first hour (see `scheduleHourUpdate`).
+    private var hourUpdate: Task<Void, Never>?
     private let logger = Logger.audio
 
     init() {
@@ -38,6 +40,7 @@ final class RecordingLiveActivity: RecordingActivityPresenting {
                 attributes: RecordingActivityAttributes(title: title),
                 content: ActivityContent(state: state, staleDate: nil)
             ).id
+            scheduleHourUpdate(isPaused: false, elapsed: 0)
         } catch {
             logger.error("Starting the Live Activity failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -49,13 +52,31 @@ final class RecordingLiveActivity: RecordingActivityPresenting {
         Task {
             await Self.updateActivity(id: activityID, content: content)
         }
+        scheduleHourUpdate(isPaused: isPaused, elapsed: elapsed)
     }
 
     func end() {
+        hourUpdate?.cancel()
+        hourUpdate = nil
         guard let activityID else { return }
         self.activityID = nil
         Task {
             await Self.endActivity(id: activityID)
+        }
+    }
+
+    /// The timer counts by itself, but the widget only lays out again when the activity
+    /// changes. At the first hour the time gets its third part and needs more room, so the
+    /// activity is updated once at that moment.
+    private func scheduleHourUpdate(isPaused: Bool, elapsed: TimeInterval) {
+        hourUpdate?.cancel()
+        hourUpdate = nil
+        let remaining = RecordingActivityAttributes.hour - elapsed
+        guard !isPaused, remaining > 0 else { return }
+        hourUpdate = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(remaining))
+            guard !Task.isCancelled else { return }
+            self?.update(isPaused: false, elapsed: elapsed + remaining)
         }
     }
 

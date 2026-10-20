@@ -19,7 +19,17 @@ struct RecordingActivityAttributes: ActivityAttributes {
         var timerStart: Date
         /// Recorded time at the last update; shown while paused.
         var elapsed: TimeInterval
+
+        /// Whether the time has an hour part ("1:02:03"). The app updates the activity when
+        /// the first hour is reached, so the widget makes room for it.
+        var showsHours: Bool {
+            let time = isPaused ? elapsed : Date.now.timeIntervalSince(timerStart)
+            return time >= RecordingActivityAttributes.hour - 1
+        }
     }
+
+    /// From this recorded time on, the time has an hour part.
+    static let hour: TimeInterval = 3_600
 
     var title: String
 }

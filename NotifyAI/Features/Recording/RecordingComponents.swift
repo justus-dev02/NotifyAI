@@ -74,14 +74,20 @@ struct RecordingLevelMeter: View {
 }
 
 /// The recorded time, updated once per second.
+///
+/// From the first hour on the time has a third part ("1:00:00"). The text never wraps or
+/// shortens: it always shows hours, minutes and seconds in full.
 struct RecordingElapsedTime: View {
     @Environment(RecordingController.self) private var recording
 
     var body: some View {
-        Text(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))
+        let time = TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds))
+        Text(time)
             .monospacedDigit()
+            .lineLimit(1)
+            .fixedSize()
             .contentTransition(.numericText())
-            .accessibilityLabel("Aufnahmedauer \(TimeFormatting.timestamp(TimeInterval(recording.meter.elapsedSeconds)))")
+            .accessibilityLabel("Aufnahmedauer \(time)")
     }
 }
 

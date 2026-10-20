@@ -37,7 +37,7 @@ struct VocabularySettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Eigenes Vokabular")
+        .settingsPage("Eigenes Vokabular")
     }
 
     private func add() {
