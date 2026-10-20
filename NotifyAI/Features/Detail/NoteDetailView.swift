@@ -47,8 +47,8 @@ struct NoteDetailView: View {
     @State private var draftTitle = ""
     @State private var isConfirmingDelete = false
     @State private var isConfirmingRetranscription = false
-    /// The Markdown file the user is saving, while the save panel is open.
-    @State private var fileToSave: MarkdownFile?
+    /// The file the user is saving, while the save panel is open.
+    @State private var fileToSave: ExportFileDocument?
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -124,7 +124,7 @@ struct NoteDetailView: View {
         .fileExporter(
             isPresented: Binding(get: { fileToSave != nil }, set: { if !$0 { fileToSave = nil } }),
             document: fileToSave,
-            contentType: .markdownText,
+            contentType: fileToSave?.contentType ?? .markdownText,
             defaultFilename: fileToSave?.fileName
         ) { _ in
             fileToSave = nil
@@ -161,8 +161,8 @@ struct NoteDetailView: View {
             }
         }
         ToolbarItem {
-            ShareMenu(note: note, segments: model?.segments ?? []) { document in
-                fileToSave = MarkdownFile(document: document)
+            ShareMenu(note: note, segments: model?.segments ?? []) { file in
+                fileToSave = ExportFileDocument(file: file)
             }
         }
         ToolbarItem {

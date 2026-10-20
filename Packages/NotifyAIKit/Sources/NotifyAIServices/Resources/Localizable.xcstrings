@@ -21,72 +21,12 @@
         }
       }
     },
-    "## Aufgaben" : {
+    "%@ ist noch nicht eingerichtet. Du findest die Einstellung unter „Integrationen“." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "## Tasks"
-          }
-        }
-      }
-    },
-    "## Kapitel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Chapters"
-          }
-        }
-      }
-    },
-    "## Markierte Stellen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Marked Moments"
-          }
-        }
-      }
-    },
-    "## Text" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Text"
-          }
-        }
-      }
-    },
-    "## Themen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Topics"
-          }
-        }
-      }
-    },
-    "## Transkript" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Transcript"
-          }
-        }
-      }
-    },
-    "## Überblick" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "## Overview"
+            "value" : "%@ is not set up yet. You can find the setting under “Integrations”."
           }
         }
       }
@@ -342,6 +282,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Audio source: %1$@, echo cancellation: %2$@"
+          }
+        }
+      }
+    },
+    "Auf den Obsidian-Ordner kann nicht mehr zugegriffen werden. Wähle ihn in den Einstellungen erneut aus." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Obsidian folder can no longer be accessed. Choose it again in Settings."
           }
         }
       }
@@ -616,6 +566,16 @@
         }
       }
     },
+    "Das Ziel wurde nicht gefunden. In Notion muss die Seite über „Verbindungen“ für die Integration freigegeben sein." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The destination was not found. In Notion, the page must be shared with the integration under “Connections”."
+          }
+        }
+      }
+    },
     "Dazu habe ich in deinen Notizen nichts gefunden." : {
       "localizations" : {
         "en" : {
@@ -626,12 +586,72 @@
         }
       }
     },
+    "Der Dienst hat mit Fehler %lld geantwortet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service responded with error %lld."
+          }
+        }
+      }
+    },
+    "Der Dienst hat unerwartet geantwortet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service responded unexpectedly."
+          }
+        }
+      }
+    },
+    "Der Dienst hat zu viele Anfragen erhalten. Bitte versuche es in einer Minute erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service received too many requests. Please try again in a minute."
+          }
+        }
+      }
+    },
     "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The content was too long for a complete summary. The notes were shortened; details from later parts may be missing."
+          }
+        }
+      }
+    },
+    "Der Notion-Link enthält keine Seiten-ID. Kopiere den Link der Seite über „Teilen“ → „Link kopieren“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Notion link contains no page ID. Copy the page’s link via “Share” → “Copy link”."
+          }
+        }
+      }
+    },
+    "Der Zugang wurde abgelehnt. Prüfe den Schlüssel und ob die Seite für die Integration freigegeben ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access was denied. Check the key and whether the page is shared with the integration."
+          }
+        }
+      }
+    },
+    "Der Zugangsschlüssel konnte nicht im Schlüsselbund gesichert werden (Fehler %lld)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key could not be saved in the keychain (error %lld)."
           }
         }
       }
@@ -742,6 +762,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You’ll find the most relevant notes below."
+          }
+        }
+      }
+    },
+    "Die Webhook-Adresse ist ungültig. Sie muss mit https:// beginnen (http:// nur für localhost)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The webhook address is invalid. It must start with https:// (http:// only for localhost)."
           }
         }
       }
@@ -1136,12 +1166,38 @@
         }
       }
     },
+    "Integrationen: Obsidian %@, Notion %@, Webhook %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Integrationen: Obsidian %1$@, Notion %2$@, Webhook %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrations: Obsidian %1$@, Notion %2$@, webhook %3$@"
+          }
+        }
+      }
+    },
     "Interview" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Interview"
+          }
+        }
+      }
+    },
+    "Kapitel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters"
           }
         }
       }
@@ -1172,6 +1228,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No note mentions %@. I searched without this filter."
+          }
+        }
+      }
+    },
+    "Keine Sprache an dieser Stelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speech at this point"
           }
         }
       }
@@ -1248,6 +1314,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Live transcript: %1$@, remove filler words: %2$@, vocabulary: %3$lld terms"
+          }
+        }
+      }
+    },
+    "Markierte Stellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marked Passages"
           }
         }
       }
@@ -1698,12 +1774,32 @@
         }
       }
     },
+    "Text" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        }
+      }
+    },
     "Thema: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Topic: %@"
+          }
+        }
+      }
+    },
+    "Themen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topics"
           }
         }
       }
@@ -1724,6 +1820,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Title"
+          }
+        }
+      }
+    },
+    "Transkript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcript"
+          }
+        }
+      }
+    },
+    "Überblick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overview"
           }
         }
       }

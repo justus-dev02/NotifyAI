@@ -30,7 +30,7 @@ final class AppEnvironment {
             inMemory: inMemory,
             recordingActivity: platform.recordingActivity
         )
-        notices = UserNotices(store: services.store, recording: services.recording)
+        notices = UserNotices(store: services.store, recording: services.recording, integrations: services.integrations)
         lifecycle = AppLifecycle(services: services, platform: platform)
         platform.connect(to: services, registersBackgroundTasks: !inMemory)
     }
@@ -78,6 +78,7 @@ extension View {
             .environment(services.speakers)
             .environment(services.transcriptEditor)
             .environment(services.templates)
+            .environment(services.integrations)
             .environment(services.appLock)
             .environment(services.knowledge)
             .environment(services.tasks)

@@ -120,7 +120,7 @@ struct LibraryTests {
 
     @Test("A failed write and an automatic stop become notices for the user")
     func failuresBecomeNotices() throws {
-        let notices = UserNotices(store: services.store, recording: services.recording)
+        let notices = UserNotices(store: services.store, recording: services.recording, integrations: services.integrations)
         services.store.events.send(.saveFailed(TestError()))
         #expect(notices.current?.title == "Nicht gespeichert")
         #expect(notices.current?.message.contains("Testfehler") == true)

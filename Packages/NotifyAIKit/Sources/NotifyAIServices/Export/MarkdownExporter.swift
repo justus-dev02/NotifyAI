@@ -23,6 +23,7 @@ public struct MarkdownExporter {
     }
 
     public struct NoteSnapshot: Sendable {
+        var id = UUID()
         var title: String
         var createdAt: Date
         var duration: TimeInterval
@@ -33,96 +34,46 @@ public struct MarkdownExporter {
         var bodyText: String
         /// "Mikrofon + Zoom" etc.; `nil` for microphone recordings and imports.
         var audioSource: String?
+        /// Keywords of the summary, e.g. for tags in Obsidian.
+        var keywords: [String] = []
     }
 
     func markdown(for note: NoteSnapshot, options: Options = Options()) -> String {
-        var lines: [String] = ["# \(note.title)", "", "_\(metadata(of: note).joined(separator: " · "))_"]
-        if let summary = note.summary {
-            lines += summarySection(summary)
-        }
-        lines += markerSection(of: note)
-        if options.includesTranscript {
-            lines += textSection(of: note)
-        }
-        let markdown = lines.joined(separator: "\n") + "\n"
-        return options.redactsPersonalData ? Redactor.redact(markdown) : markdown
+        render(ExportDocument(note: note, options: options))
     }
 
-    // MARK: - Sections
-
-    private func metadata(of note: NoteSnapshot) -> [String] {
-        var metadata = [note.createdAt.formatted(date: .long, time: .shortened)]
-        if note.duration > 0 {
-            metadata.append(TimeFormatting.duration(note.duration))
-        }
-        if let audioSource = note.audioSource {
-            metadata.append(audioSource)
-        }
-        if !note.participants.isEmpty {
-            metadata.append(String(localized: "Teilnehmende: \(note.participants.joined(separator: ", "))", bundle: .module))
-        }
-        return metadata
-    }
-
-    private func summarySection(_ summary: NoteSummary) -> [String] {
-        var lines = ["", String(localized: "## Überblick", bundle: .module), "", summary.overview]
-        if !summary.chapters.isEmpty {
-            lines += ["", String(localized: "## Kapitel", bundle: .module), ""]
-            lines += summary.chapters.enumerated().map { index, chapter in
-                let range = "\(TimeFormatting.timestamp(chapter.start))–\(TimeFormatting.timestamp(chapter.end))"
-                let overview = chapter.overview.isEmpty ? "" : ": \(chapter.overview)"
-                return "\(index + 1). **\(chapter.title)** (\(range))\(overview)"
+    /// The document as Markdown: a level-1 block is a `##` heading, every content block is
+    /// separated by an empty line.
+    func render(_ document: ExportDocument) -> String {
+        var lines: [String] = ["# \(document.title)", "", "_\(document.metadata.joined(separator: " · "))_"]
+        for block in document.blocks {
+            switch block {
+            case .heading(let text, let level):
+                lines += ["", String(repeating: "#", count: level + 1) + " " + text]
+            case .paragraph(let text):
+                lines += ["", text]
+            case .bullets(let items):
+                lines += [""] + items.map { "- \($0)" }
+            case .chapters(let chapters):
+                lines += [""] + chapters.enumerated().map { index, chapter in
+                    let overview = chapter.overview.isEmpty ? "" : ": \(chapter.overview)"
+                    return "\(index + 1). **\(chapter.title)** (\(chapter.range))\(overview)"
+                }
+            case .tasks(let tasks):
+                lines += [""] + tasks.map { task in
+                    "- [\(task.isDone ? "x" : " ")] \(task.text)" + (task.details.isEmpty ? "" : " (\(task.details))")
+                }
+            case .markedPassages(let passages):
+                lines += [""] + passages.map { passage in
+                    "- **\(passage.time)** \(passage.text ?? String(localized: "_Keine Sprache an dieser Stelle_", bundle: .module))"
+                }
+            case .transcript(let transcript):
+                lines += [""] + transcript.map { line in
+                    "[\(line.time)] \(line.speaker.map { "**\($0):** " } ?? "")\(line.text)\n"
+                }
             }
         }
-        appendList(String(localized: "Kernpunkte", bundle: .module), summary.keyPoints, to: &lines)
-        for section in summary.templateSections where !section.points.isEmpty {
-            appendList(section.title, section.points, to: &lines)
-        }
-        appendList(String(localized: "Entscheidungen", bundle: .module), summary.decisions, to: &lines)
-        if !summary.actionItems.isEmpty {
-            lines += ["", String(localized: "## Aufgaben", bundle: .module), ""]
-            lines += summary.actionItems.map { item in
-                var line = "- [\(item.isDone ? "x" : " ")] \(item.task)"
-                let details = [item.owner, item.due.map { String(localized: "bis \($0)", bundle: .module) }].compactMap { $0 }
-                if !details.isEmpty { line += " (\(details.joined(separator: ", ")))" }
-                return line
-            }
-        }
-        appendList(String(localized: "Offene Fragen", bundle: .module), summary.openQuestions, to: &lines)
-        if !summary.topics.isEmpty {
-            lines += ["", String(localized: "## Themen", bundle: .module)]
-            for topic in summary.topics {
-                lines += ["", "### \(topic.title)", ""]
-                lines += topic.points.map { "- \($0)" }
-            }
-        }
-        return lines
-    }
-
-    private func markerSection(of note: NoteSnapshot) -> [String] {
-        guard !note.markers.isEmpty else { return [] }
-        return ["", String(localized: "## Markierte Stellen", bundle: .module), ""] + note.markers.map { marker in
-            let text = Transcript.text(in: marker.highlightRange(duration: note.duration), of: note.segments)
-            let passage = text.isEmpty ? String(localized: "_Keine Sprache an dieser Stelle_", bundle: .module) : text
-            return "- **\(TimeFormatting.timestamp(marker.time))** \(passage)"
-        }
-    }
-
-    private func textSection(of note: NoteSnapshot) -> [String] {
-        if !note.segments.isEmpty {
-            return ["", String(localized: "## Transkript", bundle: .module), ""] + note.segments.map { segment in
-                let speaker = segment.speaker.map { "**\($0):** " } ?? ""
-                return "[\(TimeFormatting.timestamp(segment.start))] \(speaker)\(segment.text)\n"
-            }
-        }
-        guard !note.bodyText.isEmpty else { return [] }
-        return ["", String(localized: "## Text", bundle: .module), "", note.bodyText]
-    }
-
-    private func appendList(_ title: String, _ items: [String], to lines: inout [String]) {
-        guard !items.isEmpty else { return }
-        lines += ["", "## \(title)", ""]
-        lines += items.map { "- \($0)" }
+        return lines.joined(separator: "\n") + "\n"
     }
 }
 
@@ -175,6 +126,7 @@ extension MarkdownExporter.NoteSnapshot {
     /// already decoded.
     public init(note: Note, segments: [TranscriptSegment]) {
         self.init(
+            id: note.id,
             title: note.title,
             createdAt: note.createdAt,
             duration: note.duration,
@@ -183,7 +135,8 @@ extension MarkdownExporter.NoteSnapshot {
             markers: note.markers,
             segments: segments,
             bodyText: note.bodyText,
-            audioSource: note.audioSourceDescription
+            audioSource: note.audioSourceDescription,
+            keywords: note.summary?.keywords ?? []
         )
     }
 }

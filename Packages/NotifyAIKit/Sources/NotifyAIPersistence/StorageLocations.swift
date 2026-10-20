@@ -26,6 +26,8 @@ public struct StorageLocations: Sendable {
     public var legacyKnowledgeIndexURL: URL { root.appending(path: "KnowledgeIndex.plist", directoryHint: .notDirectory) }
     /// Intermediate results of long summaries (chapter digests), removed when a summary is done.
     public var processingDirectory: URL { root.appending(path: "Processing", directoryHint: .isDirectory) }
+    /// Which Notion page each note was sent to, so sending again replaces the page.
+    public var integrationStateURL: URL { root.appending(path: "Integrations.json", directoryHint: .notDirectory) }
     /// MetricKit reports, kept on the device until the user exports a diagnosis.
     public var diagnosticsDirectory: URL { root.appending(path: "Diagnostics", directoryHint: .isDirectory) }
     /// Databases that could not be opened are moved here instead of being deleted.

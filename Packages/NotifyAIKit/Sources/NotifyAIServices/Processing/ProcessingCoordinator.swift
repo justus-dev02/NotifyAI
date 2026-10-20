@@ -13,6 +13,8 @@ import OSLog
 public enum ProcessingEvent: Equatable, Sendable {
     /// A job started; `audioDuration` is 0 for documents.
     case jobStarted(noteID: UUID, audioDuration: TimeInterval)
+    /// A job finished and the note is ready, with its transcript and summary.
+    case noteReady(noteID: UUID)
 }
 
 /// Runs processing jobs one at a time and publishes their progress.
@@ -280,6 +282,7 @@ public final class ProcessingCoordinator {
         guard let note = store.note(id: job.noteID) else { return }
         do {
             try await pipeline.run(note, options: job.options, context: makeContext(for: job.noteID))
+            events.send(.noteReady(noteID: job.noteID))
         } catch is CancellationError {
             // Leave the status as it is; the job resumes later.
             logger.info("Processing was cancelled")

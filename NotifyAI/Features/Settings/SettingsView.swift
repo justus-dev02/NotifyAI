@@ -19,6 +19,7 @@ struct SettingsView: View {
             AnalysisSettingsSection()
             SpeakerSettingsSection()
             TemplateSettingsSection()
+            IntegrationSettingsSection()
             PrivacySettingsSection()
             StorageSettingsSection()
             #if os(macOS)

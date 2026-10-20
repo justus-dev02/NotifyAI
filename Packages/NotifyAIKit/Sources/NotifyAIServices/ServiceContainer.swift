@@ -28,6 +28,7 @@ public final class ServiceContainer {
     public let speakers: SpeakerDirectory
     public let transcriptEditor: TranscriptEditor
     public let templates: SummaryTemplates
+    public let integrations: IntegrationService
     public let appLock: AppLock
     public let audioSession: AudioSessionController
     public let importer: ImportService
@@ -98,6 +99,8 @@ public final class ServiceContainer {
         speakers = SpeakerDirectory(store: store, detection: speakerDetection)
         transcriptEditor = TranscriptEditor(store: store)
         templates = SummaryTemplates(store: store, processing: processing)
+        let integrationState = inMemory ? nil : locations.integrationStateURL
+        integrations = IntegrationService(store: store, settings: settings.integrations, processing: processing, stateURL: integrationState)
         importer = ImportService(store: store, settings: settings, processing: processing)
         library = NoteLibrary(store: store, processing: processing)
         tasks = TaskBoard(store: store, library: library)

@@ -47,7 +47,12 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 - **Offene Aufgaben:** alle Aufgaben aus allen Zusammenfassungen in einer Liste, gruppiert nach Fälligkeit
   (überfällig, heute, diese Woche, später, ohne Termin), filterbar nach Person, abhakbar. Gesprochene Fristen
   („bis Freitag“, „3. Oktober“, „nächste Woche“) werden relativ zum Aufnahmetag in ein Datum umgerechnet.
-- **Export** als Markdown, optional anonymisiert (E-Mail, Telefonnummern, IBAN).
+- **Export** als Markdown, PDF, Word (.docx) und Untertitel (SRT, WebVTT), optional anonymisiert (E-Mail,
+  Telefonnummern, IBAN). Alle Formate entstehen aus demselben Dokumentmodell und haben denselben Inhalt.
+- **Integrationen:** Notizen in einen Obsidian-Ordner sichern (Markdown mit Eigenschaften; erneutes Sichern
+  aktualisiert dieselbe Datei), als Notion-Seite anlegen oder als signiertes JSON an einen Webhook senden (Zapier, Make,
+  n8n) – manuell über „Teilen“ oder automatisch, sobald eine Notiz fertig ist. Alles ist aus, bis es eingerichtet ist;
+  Zugangsschlüssel liegen im Schlüsselbund.
 - **Sprachen der Oberfläche:** Deutsch (Quellsprache) und Englisch (String Catalogs).
 - **Diagnosebericht** zum Teilen mit dem Support: Versionen, Einstellungen, Speicher, Protokoll der Sitzung und
   MetricKit-Berichte, ohne Inhalte der Notizen. Nichts wird automatisch hochgeladen.

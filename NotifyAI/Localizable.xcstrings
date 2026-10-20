@@ -127,6 +127,16 @@
         }
       }
     },
+    "%@ teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share %@"
+          }
+        }
+      }
+    },
     "%@ wird geladen" : {
       "localizations" : {
         "en" : {
@@ -485,12 +495,12 @@
         }
       }
     },
-    "Als Datei sichern …" : {
+    "Als Datei" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Save as File…"
+            "value" : "As File"
           }
         }
       }
@@ -535,6 +545,16 @@
         }
       }
     },
+    "An %@ gesendet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent to %@"
+          }
+        }
+      }
+    },
     "An der Stimme wiedererkannt. Tippen, um den Namen zu bestätigen oder zu ändern." : {
       "localizations" : {
         "en" : {
@@ -561,6 +581,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Other Person…"
+          }
+        }
+      }
+    },
+    "Anderen Ordner wählen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Another Folder…"
           }
         }
       }
@@ -1231,6 +1261,16 @@
         }
       }
     },
+    "Der Link enthält keine Seiten-ID." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The link contains no page ID."
+          }
+        }
+      }
+    },
     "Der Name ersetzt „%@“ im ganzen Transkript." : {
       "localizations" : {
         "en" : {
@@ -1247,6 +1287,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export Diagnostic Report…"
+          }
+        }
+      }
+    },
+    "Die Adresse muss mit https:// beginnen (http:// nur für localhost)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The address must start with https:// (http:// only for localhost)."
           }
         }
       }
@@ -1387,6 +1437,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The note could not be deleted: %@"
+          }
+        }
+      }
+    },
+    "Die Notiz liegt als „%@“ im Obsidian-Ordner." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The note is in the Obsidian folder as “%@”."
+          }
+        }
+      }
+    },
+    "Die Notiz wurde als Seite in Notion angelegt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The note was created as a page in Notion."
+          }
+        }
+      }
+    },
+    "Die Notiz wurde an den Webhook übertragen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The note was sent to the webhook."
           }
         }
       }
@@ -1711,6 +1791,36 @@
         }
       }
     },
+    "Fertige Notizen automatisch senden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send finished notes automatically"
+          }
+        }
+      }
+    },
+    "Fertige Notizen automatisch sichern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save finished notes automatically"
+          }
+        }
+      }
+    },
+    "Fertige Notizen werden als JSON (Zusammenfassung, Aufgaben, Markdown, auf Wunsch das Transkript) per POST an diese Adresse übertragen. Mit Geheimnis trägt jede Anfrage die Signatur X-NotifyAI-Signature (HMAC-SHA256 über Zeitstempel und Inhalt)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished notes are sent to this address as JSON (summary, tasks, Markdown, optionally the transcript) via POST. With a secret, every request carries the signature X-NotifyAI-Signature (HMAC-SHA256 over timestamp and content)."
+          }
+        }
+      }
+    },
     "Filter" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1832,6 +1942,16 @@
         }
       }
     },
+    "Geheimnis sichern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Secret"
+          }
+        }
+      }
+    },
     "Geladen · %@" : {
       "localizations" : {
         "en" : {
@@ -1912,6 +2032,16 @@
         }
       }
     },
+    "Gilt für Notion und Webhooks; der Obsidian-Ordner erhält immer das Transkript. „Persönliche Daten entfernen“ ersetzt E-Mail-Adressen, Telefonnummern und IBANs, auch in Obsidian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applies to Notion and webhooks; the Obsidian folder always gets the transcript. “Remove personal data” replaces e-mail addresses, phone numbers and IBANs, in Obsidian too."
+          }
+        }
+      }
+    },
     "Häufigkeit" : {
       "localizations" : {
         "en" : {
@@ -1938,6 +2068,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add"
+          }
+        }
+      }
+    },
+    "https://…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://…"
           }
         }
       }
@@ -2012,12 +2152,32 @@
         }
       }
     },
+    "Inhalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        }
+      }
+    },
     "Installiert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installed"
+          }
+        }
+      }
+    },
+    "Integrationen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrations"
           }
         }
       }
@@ -2088,6 +2248,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Transcript"
+          }
+        }
+      }
+    },
+    "Keine" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
           }
         }
       }
@@ -2212,12 +2382,32 @@
         }
       }
     },
+    "Lege unter notion.so/profile/integrations eine interne Integration an, kopiere ihren Schlüssel und gib die gewünschte Seite über „Verbindungen“ für sie frei. Notizen werden als Unterseiten angelegt und dabei an Notion übertragen. Der Schlüssel liegt im Schlüsselbund dieses Geräts." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an internal integration at notion.so/profile/integrations, copy its key and share the page you want with it under “Connections”. Notes are created as subpages and are transferred to Notion. The key is stored in this device’s keychain."
+          }
+        }
+      }
+    },
     "Letzte 7 Tage" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last 7 Days"
+          }
+        }
+      }
+    },
+    "Link der übergeordneten Seite" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link of the parent page"
           }
         }
       }
@@ -2632,6 +2822,16 @@
         }
       }
     },
+    "Nicht an %@ gesendet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Sent to %@"
+          }
+        }
+      }
+    },
     "Nicht geändert" : {
       "localizations" : {
         "en" : {
@@ -2652,12 +2852,32 @@
         }
       }
     },
+    "Nicht gesichert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Saved"
+          }
+        }
+      }
+    },
     "Nicht gespeichert" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not Saved"
+          }
+        }
+      }
+    },
+    "Nicht gewählt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not chosen"
           }
         }
       }
@@ -2802,6 +3022,16 @@
         }
       }
     },
+    "Notion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notion"
+          }
+        }
+      }
+    },
     "Notiz an der Stelle öffnen, an der die Aufgabe genannt wurde" : {
       "localizations" : {
         "en" : {
@@ -2882,6 +3112,16 @@
         }
       }
     },
+    "Notizen in einen Obsidian-Ordner sichern, als Notion-Seite anlegen oder an einen Webhook senden (Zapier, Make, n8n)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save notes to an Obsidian folder, create them as Notion pages or send them to a webhook (Zapier, Make, n8n)."
+          }
+        }
+      }
+    },
     "Notizen werden für die Suche vorbereitet …" : {
       "localizations" : {
         "en" : {
@@ -2918,6 +3158,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Share Summary Only"
+          }
+        }
+      }
+    },
+    "Obsidian" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obsidian"
           }
         }
       }
@@ -3032,6 +3282,36 @@
         }
       }
     },
+    "Ordner" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        }
+      }
+    },
+    "Ordner entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Folder"
+          }
+        }
+      }
+    },
+    "Ordner wählen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Folder…"
+          }
+        }
+      }
+    },
     "Ordnet jedes Wort einer Stimme zu und erkennt Stimmen wieder, die du benannt hast." : {
       "localizations" : {
         "en" : {
@@ -3112,6 +3392,16 @@
         }
       }
     },
+    "Persönliche Daten entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove personal data"
+          }
+        }
+      }
+    },
     "Quelle" : {
       "localizations" : {
         "en" : {
@@ -3152,6 +3442,36 @@
         }
       }
     },
+    "Schlüssel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key"
+          }
+        }
+      }
+    },
+    "Schlüssel der Integration (ntn_…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integration key (ntn_…)"
+          }
+        }
+      }
+    },
+    "Schlüssel sichern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Key"
+          }
+        }
+      }
+    },
     "Senden" : {
       "localizations" : {
         "en" : {
@@ -3162,12 +3482,52 @@
         }
       }
     },
+    "Senden an" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send To"
+          }
+        }
+      }
+    },
     "Sichern" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save"
+          }
+        }
+      }
+    },
+    "Sichern als …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save As…"
+          }
+        }
+      }
+    },
+    "Signatur-Geheimnis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing secret"
+          }
+        }
+      }
+    },
+    "Signatur-Geheimnis (optional)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing secret (optional)"
           }
         }
       }
@@ -3612,6 +3972,16 @@
         }
       }
     },
+    "Transkript mitsenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include transcript"
+          }
+        }
+      }
+    },
     "Transkript und Zusammenfassung" : {
       "localizations" : {
         "en" : {
@@ -3788,6 +4158,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select a note or start a new recording."
+          }
+        }
+      }
+    },
+    "Wähle einen Ordner in deinem Vault. Jede Notiz wird als Markdown-Datei mit Eigenschaften (Datum, Teilnehmende, Schlagwörter) gesichert; erneutes Sichern aktualisiert dieselbe Datei. Der Ordner bleibt auf deinem Gerät." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a folder in your vault. Every note is saved as a Markdown file with properties (date, participants, tags); saving again updates the same file. The folder stays on your device."
+          }
+        }
+      }
+    },
+    "Webhook" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook"
           }
         }
       }

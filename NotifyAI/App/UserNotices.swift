@@ -33,9 +33,14 @@ final class UserNotices {
 
     init() {}
 
-    /// Follows the failures of the store and the automatic stops of recordings.
-    convenience init(store: NoteStore, recording: RecordingController) {
+    /// Follows the failures of the store, the automatic stops of recordings and failed
+    /// automatic exports.
+    convenience init(store: NoteStore, recording: RecordingController, integrations: IntegrationService) {
         self.init()
+        integrations.events.subscribe { [weak self] event in
+            guard case .failed(let target, let noteID, let message) = event else { return }
+            self?.post(UserNotice(title: String(localized: "Nicht an \(target.name) gesendet"), message: message, noteID: noteID))
+        }.store(in: &subscriptions)
         store.events.subscribe { [weak self] event in
             self?.storeDidReport(event)
         }.store(in: &subscriptions)

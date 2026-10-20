@@ -44,6 +44,8 @@ final class BackgroundProcessingScheduler {
             switch event {
             case .jobStarted(let noteID, let duration):
                 self?.jobStarted(noteID: noteID, duration: duration)
+            case .noteReady:
+                break
             }
         }
     }

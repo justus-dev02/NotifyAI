@@ -5,6 +5,9 @@
 	<!-- Sparkle: the sandboxed app hands the installation to Sparkle's installer service
 	     (SUEnableInstallerLauncherService) and talks to it over these Mach services.
 	     Sandbox, microphone, network and file access come from the target's build settings. -->
+	<!-- The Obsidian folder the user picks stays accessible across launches (security-scoped bookmark). -->
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
 	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
