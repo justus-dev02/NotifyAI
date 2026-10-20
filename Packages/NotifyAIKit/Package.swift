@@ -8,7 +8,8 @@
 //    └─ NotifyAIServices          │
 //         ├─ NotifyAIPersistence ─┤
 //         ├─ AudioCapture ────────┤
-//         └─ WhisperKit           └─ NotifyAICore
+//         ├─ WhisperKit           └─ NotifyAICore
+//         └─ FluidAudio
 //
 // Access control carries the second rule: models and the store are readable from the app,
 // but every write is `package`, so only the services change notes.
@@ -29,6 +30,9 @@ let package = Package(
     dependencies: [
         // Pinned to the revision the app has always used.
         .package(url: "https://github.com/argmaxinc/WhisperKit", revision: "f31370fbb39818e32722426eb9878665dfcfae3c"),
+        // Speaker diarization and Parakeet on the Neural Engine. Without the default trait,
+        // which links a text-normalization engine for speech synthesis the app does not use.
+        .package(url: "https://github.com/FluidInference/FluidAudio", exact: "0.17.7", traits: []),
     ],
     targets: [
         /// Value types and rules: transcripts, markers, summaries, due dates, audio format,
@@ -50,6 +54,7 @@ let package = Package(
                 "NotifyAIPersistence",
                 "AudioCapture",
                 .product(name: "WhisperKit", package: "WhisperKit"),
+                .product(name: "FluidAudio", package: "FluidAudio"),
             ],
             resources: [.process("Resources")]
         ),

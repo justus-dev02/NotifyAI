@@ -11,6 +11,7 @@ import SwiftUI
 /// Disk usage, downloaded models, the search index and deleting all notes.
 struct StorageSettingsSection: View {
     @Environment(WhisperModelManager.self) private var whisperModels
+    @Environment(NeuralModelManager.self) private var neuralModels
     @Environment(RecordingController.self) private var recording
     @Environment(KnowledgeIndexService.self) private var knowledge
     @Environment(NoteLibrary.self) private var library
@@ -71,7 +72,7 @@ struct StorageSettingsSection: View {
         .confirmationDialog("Geladene Modelle löschen?", isPresented: $isConfirmingDeleteModels, titleVisibility: .visible) {
             Button("Modelle löschen", role: .destructive, action: deleteModels)
         } message: {
-            Text("Alle heruntergeladenen Whisper-Modelle werden entfernt (\(TimeFormatting.byteCount(whisperModels.downloadedBytes))). Sprachpakete von Apple Speech werden freigegeben; das System entfernt sie, sobald keine andere App sie braucht. Deine Notizen bleiben erhalten.")
+            Text("Alle heruntergeladenen Modelle werden entfernt (\(TimeFormatting.byteCount(whisperModels.downloadedBytes + neuralModels.downloadedBytes))): Whisper, Parakeet und das Sprechermodell. Sprachpakete von Apple Speech werden freigegeben; das System entfernt sie, sobald keine andere App sie braucht. Gemerkte Stimmen und deine Notizen bleiben erhalten.")
         }
         .alert("Modelle", isPresented: Binding(presenting: $modelMessage)) {
             Button("OK") { modelMessage = nil }
@@ -81,11 +82,14 @@ struct StorageSettingsSection: View {
     }
 
     private var hasDownloadedModels: Bool {
-        whisperModels.downloadedBytes > 0 || (reservedSpeechPacks ?? 0) > 0
+        whisperModels.downloadedBytes > 0 || neuralModels.downloadedBytes > 0 || (reservedSpeechPacks ?? 0) > 0
     }
 
     private var modelSummary: String {
         var parts = [String(localized: "Whisper \(TimeFormatting.byteCount(whisperModels.downloadedBytes))")]
+        if neuralModels.downloadedBytes > 0 {
+            parts.append(String(localized: "Parakeet und Sprecher \(TimeFormatting.byteCount(neuralModels.downloadedBytes))"))
+        }
         if let reservedSpeechPacks, reservedSpeechPacks > 0 {
             parts.append(reservedSpeechPacks == 1 ? String(localized: "1 Sprachpaket") : String(localized: "\(reservedSpeechPacks) Sprachpakete"))
         }
@@ -98,6 +102,7 @@ struct StorageSettingsSection: View {
             defer { isDeletingModels = false }
             do {
                 try await whisperModels.deleteAll()
+                try await neuralModels.deleteAll()
                 await AppleSpeechEngine.releaseReservedLocales()
             } catch {
                 modelMessage = error.localizedDescription
@@ -118,6 +123,7 @@ struct StorageSettingsSection: View {
 
     private func refreshStorage() async {
         await whisperModels.refresh()
+        await neuralModels.refresh()
         reservedSpeechPacks = await AppleSpeechEngine.reservedLocales.count
         recordingsSize = await storage.recordingsDiskUsage()
     }

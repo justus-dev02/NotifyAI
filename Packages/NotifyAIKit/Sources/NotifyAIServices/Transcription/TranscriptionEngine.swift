@@ -71,11 +71,13 @@ enum TranscriptionError: LocalizedError {
 struct TranscriptionService: Sendable {
     let appleSpeech: any TranscriptionEngine
     let whisper: any TranscriptionEngine
+    let parakeet: any TranscriptionEngine
 
     func engine(for kind: TranscriptionEngineKind) -> any TranscriptionEngine {
         switch kind {
         case .appleSpeech: appleSpeech
         case .whisper: whisper
+        case .parakeet: parakeet
         }
     }
 }

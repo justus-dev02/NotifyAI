@@ -73,7 +73,7 @@ struct ProcessingCoordinatorTests {
         ProcessingCoordinator(
             store: store,
             settings: settings,
-            transcription: TranscriptionService(appleSpeech: transcription, whisper: transcription),
+            transcription: TranscriptionService(appleSpeech: transcription, whisper: transcription, parakeet: transcription),
             summarization: SummarizationService(languageModel: summarizer, fallback: summarizer, availability: { _ in .available }),
             diarizer: SpeakerDiarizer()
         )

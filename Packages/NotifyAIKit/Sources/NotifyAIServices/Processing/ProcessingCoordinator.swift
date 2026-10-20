@@ -117,7 +117,7 @@ public final class ProcessingCoordinator {
         self.digestStore = digestStore
         pipeline = NoteProcessingPipeline(
             transcription: TranscriptionStep(transcription: transcription, settings: settings.transcription),
-            speakers: SpeakerStep(settings: settings.analysis, diarizer: diarizer),
+            speakers: SpeakerStep(settings: settings.analysis, diarizer: diarizer, profiles: VoiceProfiles(store: store)),
             summary: SummaryStep(summarization: summarization, digestStore: digestStore, embedder: embedder)
         )
         store.events.subscribe { [weak self] event in

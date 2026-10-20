@@ -6,7 +6,6 @@
 import Foundation
 import NotifyAICore
 import OSLog
-import Synchronization
 @preconcurrency import WhisperKit
 
 /// Transcription with Whisper via WhisperKit.
@@ -45,7 +44,16 @@ final class WhisperEngine: TranscriptionEngine, WhisperModelUsage {
         // Load the model up front so that a missing model is reported before recording
         // instead of silently producing no text.
         try await runtime.prepare(options.whisperModel)
-        return WhisperLiveSession(runtime: runtime, options: options, speechDetector: speechDetector)
+        let runtime = runtime
+        return ChunkedLiveSession(
+            speechDetector: speechDetector,
+            keepingModelLoaded: { work in
+                await runtime.beginUse()
+                defer { Task { await runtime.endUse() } }
+                return try await work()
+            },
+            transcribe: { chunks in try await runtime.transcribe(chunks, options: options) }
+        )
     }
 
     /// Reads the file block by block and transcribes it like a live recording. WhisperKit's
@@ -63,20 +71,9 @@ final class WhisperEngine: TranscriptionEngine, WhisperModelUsage {
         // Reports a missing model before the file is read.
         try await runtime.prepare(options.whisperModel)
 
-        var chunker = SpeechChunker()
-        var position: Int64 = 0
-        var segments: [TranscriptSegment] = []
-        try await SpeakerDiarizer.forEachMonoBlock(in: url) { block, fraction in
-            let chunks = chunker.append(AudioChunk(samples: block, startFrame: position))
-            position += Int64(block.count)
-            segments += try await runtime.transcribe(chunks.filter { speechDetector.containsSpeech($0.samples) }, options: options)
-            progress(fraction)
+        return try await ChunkedTranscription.transcribeFile(at: url, speechDetector: speechDetector, progress: progress) { chunks in
+            try await runtime.transcribe(chunks, options: options)
         }
-        if let tail = chunker.flush(), speechDetector.containsSpeech(tail.samples) {
-            segments += try await runtime.transcribe([tail], options: options)
-        }
-        progress(1)
-        return Transcript.normalized(segments)
     }
 
     /// Releases the loaded model, e.g. after it was deleted.
@@ -280,102 +277,6 @@ actor WhisperRuntime {
                 text: trimmed,
                 words: words
             )
-        }
-    }
-}
-
-// MARK: - Live session
-
-/// Cuts the live audio into phrase-sized chunks and transcribes them one after another;
-/// chunks without speech are skipped.
-///
-/// Each chunk is transcribed exactly once, so the work grows linearly with the recording.
-/// If transcription falls behind, chunks queue up; the session reports how much audio is
-/// waiting (`.backlog`), so the feed can give up on live transcription before the queue
-/// grows without bound. Whatever is queued is completed in `finish()`.
-private actor WhisperLiveSession: LiveTranscriptionSession {
-    nonisolated let events: AsyncStream<LiveTranscriptionEvent>
-
-    private let eventContinuation: AsyncStream<LiveTranscriptionEvent>.Continuation
-    private let chunkContinuation: AsyncStream<NotifyAICore.AudioChunk>.Continuation
-    private let worker: Task<[TranscriptSegment], any Error>
-    /// Seconds of audio handed to the worker and not transcribed yet.
-    private let queue: QueuedAudio
-    private var chunker = SpeechChunker()
-    private var isFinished = false
-
-    init(runtime: WhisperRuntime, options: TranscriptionOptions, speechDetector: SpeechDetector) {
-        let (events, eventContinuation) = AsyncStream.makeStream(of: LiveTranscriptionEvent.self)
-        let (chunks, chunkContinuation) = AsyncStream.makeStream(of: NotifyAICore.AudioChunk.self)
-        let queue = QueuedAudio()
-        self.events = events
-        self.eventContinuation = eventContinuation
-        self.chunkContinuation = chunkContinuation
-        self.queue = queue
-        self.worker = Task {
-            await runtime.beginUse()
-            defer { Task { await runtime.endUse() } }
-            var transcript: [TranscriptSegment] = []
-            for await chunk in chunks {
-                try Task.checkCancellation()
-                let segments = speechDetector.containsSpeech(chunk.samples)
-                    ? try await runtime.transcribe([chunk], options: options)
-                    : []
-                transcript.append(contentsOf: segments)
-                if !segments.isEmpty {
-                    eventContinuation.yield(.finalized(segments))
-                }
-                let remaining = queue.remove(chunk.duration)
-                eventContinuation.yield(.backlog(remaining))
-            }
-            return transcript
-        }
-    }
-
-    func append(_ chunk: NotifyAICore.AudioChunk) {
-        guard !isFinished else { return }
-        for completed in chunker.append(chunk) {
-            chunkContinuation.yield(completed)
-            let queued = queue.add(completed.duration)
-            eventContinuation.yield(.backlog(queued))
-        }
-    }
-
-    func finish() async throws -> [TranscriptSegment] {
-        guard !isFinished else { return try await worker.value }
-        isFinished = true
-        if let tail = chunker.flush() {
-            chunkContinuation.yield(tail)
-        }
-        chunkContinuation.finish()
-        defer { eventContinuation.finish() }
-        return Transcript.normalized(try await worker.value)
-    }
-
-    func cancel() {
-        guard !isFinished else { return }
-        isFinished = true
-        chunkContinuation.finish()
-        worker.cancel()
-        eventContinuation.finish()
-    }
-}
-
-/// Seconds of audio waiting for the Whisper worker; shared by the session and its worker.
-private final class QueuedAudio: Sendable {
-    private let seconds = Mutex<TimeInterval>(0)
-
-    func add(_ duration: TimeInterval) -> TimeInterval {
-        seconds.withLock { seconds in
-            seconds += duration
-            return seconds
-        }
-    }
-
-    func remove(_ duration: TimeInterval) -> TimeInterval {
-        seconds.withLock { seconds in
-            seconds = max(0, seconds - duration)
-            return seconds
         }
     }
 }

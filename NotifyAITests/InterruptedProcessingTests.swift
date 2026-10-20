@@ -103,7 +103,7 @@ struct InterruptedProcessingTests {
         return ProcessingCoordinator(
             store: store,
             settings: settings,
-            transcription: TranscriptionService(appleSpeech: engine, whisper: engine),
+            transcription: TranscriptionService(appleSpeech: engine, whisper: engine, parakeet: engine),
             summarization: SummarizationService(languageModel: summarizer, fallback: summarizer, availability: { _ in .available }),
             diarizer: SpeakerDiarizer()
         )

@@ -157,6 +157,7 @@ private struct QuickStartForm: View {
     @Environment(RecordingController.self) private var recording
     @Environment(AppSettings.self) private var settings
     @Environment(WhisperModelManager.self) private var whisperModels
+    @Environment(NeuralModelManager.self) private var neuralModels
     @Environment(AudioEnvironmentMonitor.self) private var audioEnvironment
 
     var body: some View {
@@ -183,8 +184,8 @@ private struct QuickStartForm: View {
             Toggle("Alle Anwesenden sind einverstanden", isOn: $recording.draft.consentConfirmed)
                 .toggleStyle(.checkbox)
 
-            if settings.transcription.engine == .whisper, !whisperModels.isInstalled(settings.transcription.whisperModel) {
-                Label("Whisper-Modell fehlt – bitte in den Einstellungen laden.", systemImage: "exclamationmark.triangle")
+            if !settings.transcription.isReady(whisperModels: whisperModels, neuralModels: neuralModels) {
+                Label("\(settings.transcription.engine.displayName)-Modell fehlt – bitte in den Einstellungen laden.", systemImage: "exclamationmark.triangle")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -216,7 +217,7 @@ private struct QuickStartForm: View {
     }
 
     private var canStart: Bool {
-        recording.canStart && (settings.transcription.engine != .whisper || whisperModels.isInstalled(settings.transcription.whisperModel))
+        recording.canStart && settings.transcription.isReady(whisperModels: whisperModels, neuralModels: neuralModels)
     }
 
     private var sourceSummary: String {

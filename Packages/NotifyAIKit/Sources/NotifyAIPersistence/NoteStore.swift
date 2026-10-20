@@ -42,7 +42,7 @@ public final class NoteStore {
 
     public init(locations: StorageLocations, inMemory: Bool = false) throws {
         self.locations = locations
-        let schema = Schema(versionedSchema: NotifyAISchemaV4.self)
+        let schema = Schema(versionedSchema: NotifyAISchemaV5.self)
         let configuration: ModelConfiguration = if inMemory {
             ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         } else {
@@ -96,6 +96,23 @@ public final class NoteStore {
     package func insert(_ note: Note) throws {
         context.insert(note)
         try save()
+    }
+
+    /// Inserts and saves a model that is not a note: a voice profile or a summary template.
+    package func insertModel(_ model: some PersistentModel) throws {
+        context.insert(model)
+        try save()
+    }
+
+    /// Deletes and saves a model that is not a note (notes have audio files; use `delete(_:)`).
+    package func deleteModel(_ model: some PersistentModel) throws {
+        context.delete(model)
+        do {
+            try save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 
     /// Persists pending changes and reports them through `events`. Errors are logged and

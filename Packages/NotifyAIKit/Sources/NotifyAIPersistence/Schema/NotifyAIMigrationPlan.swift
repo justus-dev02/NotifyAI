@@ -9,9 +9,9 @@ import SwiftData
 
 enum NotifyAIMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [NotifyAISchemaV1.self, NotifyAISchemaV2.self, NotifyAISchemaV3.self, NotifyAISchemaV4.self]
+        [NotifyAISchemaV1.self, NotifyAISchemaV2.self, NotifyAISchemaV3.self, NotifyAISchemaV4.self, NotifyAISchemaV5.self]
     }
-    static var stages: [MigrationStage] { [v1ToV2, v2ToV3, v3ToV4] }
+    static var stages: [MigrationStage] { [v1ToV2, v2ToV3, v3ToV4, v4ToV5] }
 
     /// V2 only adds optional attributes, which SwiftData migrates without custom code.
     static var v1ToV2: MigrationStage {
@@ -50,6 +50,11 @@ enum NotifyAIMigrationPlan: SchemaMigrationPlan {
         }
     }
 
+    /// V5 only adds optional attributes and new entities.
+    static var v4ToV5: MigrationStage {
+        .lightweight(fromVersion: NotifyAISchemaV4.self, toVersion: NotifyAISchemaV5.self)
+    }
+
     /// The new entity and relationship are inferred; afterwards the tasks move out of every
     /// summary's JSON into `NoteTask` rows.
     static var v3ToV4: MigrationStage {
@@ -77,14 +82,34 @@ enum NotifyAIMigrationPlan: SchemaMigrationPlan {
                       let summary = try? JSONDecoder().decode(NoteSummary.self, from: data),
                       !summary.actionItems.isEmpty
                 else { continue }
-                // The setter writes the rows and the JSON without tasks. The content itself
-                // does not change, so the search index keeps the note.
-                let revision = note.contentRevision
-                note.summary = summary
-                note.contentRevision = revision
+                // The content itself does not change, so the search index keeps the note.
+                moveTasks(of: summary, into: note, in: context)
             }
             try context.save()
             offset += batch.count
         }
+    }
+
+    /// Stores the summary of a V4 note as V4 did: the tasks as `NoteTask` rows with their
+    /// resolved due dates, everything else as JSON.
+    private static func moveTasks(of summary: NoteSummary, into note: NotifyAISchemaV4.Note, in context: ModelContext) {
+        let resolver = DueDateResolver()
+        note.tasks = summary.actionItems.enumerated().map { position, item in
+            let task = NotifyAISchemaV4.NoteTask(
+                id: item.id,
+                task: item.task,
+                owner: item.owner,
+                due: item.due,
+                dueDate: item.due.flatMap { resolver.resolve($0, relativeTo: note.createdAt) },
+                isDone: item.isDone,
+                position: position,
+                sourceTime: summary.sourceTimes[item.task]
+            )
+            context.insert(task)
+            return task
+        }
+        var stored = summary
+        stored.actionItems = []
+        note.summaryData = try? JSONEncoder().encode(stored)
     }
 }

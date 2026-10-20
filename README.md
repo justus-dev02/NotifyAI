@@ -7,7 +7,14 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 
 - **Aufnahme** mit Live-Transkript, Pause und Markierung wichtiger Stellen („Wichtig“ / ⇧⌘M).
   Im Transkript werden markierte Stellen 5 Sekunden davor und danach hervorgehoben.
-- **Zwei Spracherkennungen:** Apple Speech (`SpeechAnalyzer`, ohne Download) oder Whisper (WhisperKit, Modell wird einmalig geladen).
+- **Drei Spracherkennungen:** Apple Speech (`SpeechAnalyzer`, ohne Download), Whisper (WhisperKit) oder Parakeet TDT 0.6B
+  (FluidAudio, 25 europäische Sprachen, um ein Vielfaches schneller als Whisper). Modelle werden einmalig geladen und laufen
+  danach ohne Internet auf der Neural Engine.
+- **Sprecher erkennen und benennen:** Neuronale Sprechertrennung (pyannote-Segmentierung, WeSpeaker-Stimmabdrücke,
+  PLDA/VBx) ordnet jedes Wort einer Stimme zu. Sprecher lassen sich im Transkript benennen („Sprecher 2“ → „Anna“,
+  „Das bin ich“), einzelne Abschnitte umhängen; mit „Stimme merken“ erkennt NotifyAI die Person in künftigen Aufnahmen
+  wieder. Bei „Mikrofon + Systemton“ bleibt das Mikrofon „Ich“, die anderen werden nach Stimme getrennt. Ohne das
+  Sprechermodell (20 MB) trennt eine einfache Erkennung deutlich unterschiedliche Stimmen.
 - **Zusammenfassung** mit Apple Intelligence (Foundation Models): Überblick, Kernpunkte, Aufgaben, Entscheidungen, offene Fragen, Themen.
   Ohne Apple Intelligence entsteht eine klar gekennzeichnete einfache Zusammenfassung.
 - **Belegte Zusammenfassungen:** Jeder Kernpunkt, jede Entscheidung und Aufgabe springt per Tipp zur Stelle im Transkript.
@@ -108,9 +115,10 @@ Ausführlich in [docs/Architecture.md](docs/Architecture.md).
 Packages/NotifyAIKit/     Lokales Swift Package, vom Compiler erzwungene Schichten
 ├── NotifyAICore          Werte und Regeln, Logging, EventChannel, BackgroundWork
 ├── AudioCapture          Echtzeit-Aufnahmepfad: lock-freie Ringpuffer, Mischen, Schreiben     (→ Core)
-├── NotifyAIPersistence   SwiftData-Schema V1–V4 mit Migrationen, NoteStore, Abfragen, Ablage (→ Core)
-├── NotifyAIServices      Aufnahme, Verarbeitung, Transkription, Zusammenfassung, Suche, Aufgaben,
-│                         Import/Export, Einstellungen, Use Cases, ServiceContainer   (→ Persistence, AudioCapture, WhisperKit)
+├── NotifyAIPersistence   SwiftData-Schema V1–V5 mit Migrationen, NoteStore, Abfragen, Ablage (→ Core)
+├── NotifyAIServices      Aufnahme, Verarbeitung, Transkription, Sprecher, Zusammenfassung, Suche, Aufgaben,
+│                         Import/Export, Einstellungen, Use Cases, ServiceContainer
+│                         (→ Persistence, AudioCapture, WhisperKit, FluidAudio)
 └── DesignSystem          Theme, Komponenten, Sichtbarkeits-Modifier                        (→ Core)
 NotifyAI/
 ├── App/            Einstieg, AppLaunch (Datenbank-Wiederherstellung), Composition Root, Lebenszyklus, Hinweise

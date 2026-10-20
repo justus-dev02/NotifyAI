@@ -26,16 +26,10 @@ struct AnalysisSettingsSection: View {
             Toggle(isOn: $analysis.speakersFromAudioSource) {
                 SettingLabel(
                     "Sprecher nach Audioquelle trennen",
-                    detail: "Bei „Mikrofon + Systemton“ wird deine Stimme als „Ich“ und der Ton der App als „Andere“ beschriftet. Ist genau eine teilnehmende Person eingetragen, erscheint ihr Name."
+                    detail: "Bei „Mikrofon + Systemton“ wird deine Stimme als „Ich“ und der Ton der App als „Andere“ beschriftet. Mit „Sprecher erkennen“ werden die anderen zusätzlich nach Stimme getrennt und benannt. Ist genau eine teilnehmende Person eingetragen, erscheint ihr Name."
                 )
             }
             #endif
-            Toggle(isOn: $analysis.speakerDetection) {
-                SettingLabel(
-                    "Sprecher erkennen (experimentell)",
-                    detail: "Ordnet Abschnitte verschiedenen Stimmen zu. Funktioniert am besten bei deutlich unterschiedlichen Stimmen."
-                )
-            }
         } header: {
             Text("Auswertung")
         }

@@ -17,6 +17,7 @@ struct SettingsView: View {
             RecordingSourceSettingsSection()
             #endif
             AnalysisSettingsSection()
+            SpeakerSettingsSection()
             PrivacySettingsSection()
             StorageSettingsSection()
             #if os(macOS)

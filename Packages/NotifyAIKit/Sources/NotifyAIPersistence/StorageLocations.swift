@@ -17,6 +17,8 @@ public struct StorageLocations: Sendable {
 
     public var recordingsDirectory: URL { root.appending(path: "Recordings", directoryHint: .isDirectory) }
     public var whisperModelsDirectory: URL { root.appending(path: "Models/Whisper", directoryHint: .isDirectory) }
+    /// Speaker recognition and Parakeet (Core ML models from FluidAudio's repositories).
+    public var neuralModelsDirectory: URL { root.appending(path: "Models/Neural", directoryHint: .isDirectory) }
     public var databaseURL: URL { root.appending(path: "NotifyAI.store", directoryHint: .notDirectory) }
     /// The search index for "Notizen fragen" and related notes, one file per note. Can be rebuilt at any time.
     public var knowledgeIndexDirectory: URL { root.appending(path: "KnowledgeIndex", directoryHint: .isDirectory) }
@@ -75,7 +77,7 @@ public struct StorageLocations: Sendable {
 
     public func createDirectories() throws {
         let fileManager = FileManager.default
-        for directory in [root, recordingsDirectory, whisperModelsDirectory, processingDirectory] {
+        for directory in [root, recordingsDirectory, whisperModelsDirectory, neuralModelsDirectory, processingDirectory] {
             try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         }
         #if os(iOS)
@@ -100,10 +102,12 @@ public struct StorageLocations: Sendable {
         values.isExcludedFromBackup = !included
         try rootURL.setResourceValues(values)
 
-        var modelsURL = whisperModelsDirectory
-        var modelValues = URLResourceValues()
-        modelValues.isExcludedFromBackup = true
-        try modelsURL.setResourceValues(modelValues)
+        for directory in [whisperModelsDirectory, neuralModelsDirectory] {
+            var modelsURL = directory
+            var modelValues = URLResourceValues()
+            modelValues.isExcludedFromBackup = true
+            try modelsURL.setResourceValues(modelValues)
+        }
     }
 
     /// Free space on the volume holding `url` for data the user asked to keep, in bytes.

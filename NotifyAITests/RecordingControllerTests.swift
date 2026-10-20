@@ -135,7 +135,7 @@ private struct Harness {
         let settings = makeIsolatedSettings()
         settings.transcription.liveTranscription = false
         let engine = MockTranscriptionEngine(kind: .appleSpeech)
-        let transcription = TranscriptionService(appleSpeech: engine, whisper: engine)
+        let transcription = TranscriptionService(appleSpeech: engine, whisper: engine, parakeet: engine)
         let summarizer = MockSummarizer()
         processing = ProcessingCoordinator(
             store: store,

@@ -17,6 +17,7 @@ struct TranscriptView: View {
     let note: Note
     @Bindable var model: NoteDetailModel
     let scrollProxy: ScrollViewProxy
+    @State private var naming: SpeakerNamingRequest?
 
     var body: some View {
         if !note.kind.hasAudio {
@@ -26,6 +27,9 @@ struct TranscriptView: View {
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.large) {
                 controls
+                if !note.speakers.isEmpty {
+                    SpeakerOverview(note: note) { naming = $0 }
+                }
                 LazyVStack(alignment: .leading, spacing: Theme.Spacing.small) {
                     ForEach(model.segments) { segment in
                         let isCurrent = segment.id == currentSegmentID
@@ -33,13 +37,17 @@ struct TranscriptView: View {
                             segment: segment,
                             highlights: model.showsHighlights ? model.highlights : nil,
                             markers: markers(in: segment),
-                            currentTime: isCurrent ? model.player.currentTime : nil
+                            currentTime: isCurrent ? model.player.currentTime : nil,
+                            speakerMenu: hasSpeakers ? SegmentSpeakerMenu(note: note, segment: segment) { naming = $0 } : nil
                         ) {
                             model.play(from: segment.start)
                         }
                         .id(segment.id)
                     }
                 }
+            }
+            .sheet(item: $naming) { request in
+                SpeakerNamingSheet(note: note, request: request)
             }
             .onChange(of: currentSegmentID) { _, segmentID in
                 guard model.followsPlayback, model.player.isPlaying, let segmentID else { return }
@@ -51,6 +59,11 @@ struct TranscriptView: View {
     }
 
     private var currentSegmentID: UUID? { model.currentSegmentID }
+
+    /// Speaker labels and their menus appear once the transcript has speakers.
+    private var hasSpeakers: Bool {
+        !note.speakers.isEmpty || model.segments.contains { $0.speaker != nil }
+    }
 
     // MARK: Controls
 
@@ -135,6 +148,8 @@ private struct TranscriptRow: View {
     let markers: [Marker]
     /// Playback position, only set for the segment that is currently playing.
     let currentTime: TimeInterval?
+    /// The speaker of the segment with its actions; `nil` without speakers.
+    let speakerMenu: SegmentSpeakerMenu?
     let onTap: () -> Void
 
     var body: some View {
@@ -149,12 +164,10 @@ private struct TranscriptRow: View {
             .accessibilityLabel("Ab \(TimeFormatting.timestamp(segment.start)) abspielen")
 
             VStack(alignment: .leading, spacing: 4) {
-                if segment.speaker != nil || !markers.isEmpty {
+                if speakerMenu != nil || !markers.isEmpty {
                     HStack(spacing: Theme.Spacing.small) {
-                        if let speaker = segment.speaker {
-                            Text(speaker)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                        if let speakerMenu {
+                            speakerMenu
                         }
                         ForEach(markers) { marker in
                             Label(TimeFormatting.timestamp(marker.time), systemImage: "star.fill")

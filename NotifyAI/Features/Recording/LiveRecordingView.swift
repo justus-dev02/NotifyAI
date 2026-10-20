@@ -128,8 +128,8 @@ struct LiveTranscriptPanel: View {
                         .foregroundStyle(.orange)
                     case .running:
                         if recording.transcript.segments.isEmpty, recording.transcript.volatileText.isEmpty {
-                            placeholder(recording.transcript.engineKind == .whisper
-                                ? "Whisper schreibt abschnittsweise mit – der erste Text erscheint nach einer Sprechpause."
+                            placeholder(recording.transcript.engineKind.transcribesInPhrases
+                                ? "\(recording.transcript.engineKind.displayName) schreibt abschnittsweise mit – der erste Text erscheint nach einer Sprechpause."
                                 : "Sprich los – der Text erscheint hier.")
                         }
                         ForEach(displayedSegments) { segment in

@@ -31,10 +31,12 @@ struct TranscriptionStep {
         // Text the audio does not support (recognizers invent phrases in silence) is removed.
         let segments = try await TranscriptVerifier().verify(recognized, audioAt: audioURL)
         try Task.checkCancellation()
-        // A new transcript invalidates the summary made from the old one. Cleared before the
-        // transcript is saved, so both are written together: a job interrupted right after
-        // the save never resumes with the summary of the previous transcript.
+        // A new transcript invalidates the summary, the speakers and the corrections made for
+        // the old one. Cleared before the transcript is saved, so all is written together: a
+        // job interrupted right after the save never resumes with the previous transcript's.
         note.summary = nil
+        note.speakers = []
+        note.transcriptEditedAt = nil
         try await context.saveTranscript(segments, engine: engineKind, to: note)
     }
 }

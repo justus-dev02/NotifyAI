@@ -7,9 +7,11 @@ import Foundation
 import NotifyAICore
 import SwiftData
 
-public typealias Note = NotifyAISchemaV4.Note
-public typealias NoteContent = NotifyAISchemaV4.NoteContent
-public typealias NoteTask = NotifyAISchemaV4.NoteTask
+public typealias Note = NotifyAISchemaV5.Note
+public typealias NoteContent = NotifyAISchemaV5.NoteContent
+public typealias NoteTask = NotifyAISchemaV5.NoteTask
+public typealias VoiceProfile = NotifyAISchemaV5.VoiceProfile
+public typealias SummaryTemplate = NotifyAISchemaV5.SummaryTemplate
 
 // MARK: - Typed accessors
 
@@ -113,6 +115,17 @@ extension Note {
         contentRevision += 1
     }
 
+    /// The speakers of the transcript with their voice prints, in order of first appearance.
+    public package(set) var speakers: [NoteSpeaker] {
+        get {
+            guard let speakersData else { return [] }
+            return (try? JSONDecoder().decode([NoteSpeaker].self, from: speakersData)) ?? []
+        }
+        set {
+            speakersData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue)
+        }
+    }
+
     /// The tasks in the order of the summary.
     public var sortedTasks: [NoteTask] {
         tasks.sorted { $0.position < $1.position }
@@ -132,11 +145,13 @@ extension Note {
         transcriptionEngine = engine
     }
 
-    /// Removes the transcript, e.g. before transcribing again.
+    /// Removes the transcript and its speakers, e.g. before transcribing again.
     package func clearTranscript() {
         transcriptData = nil
         transcriptionEngine = nil
         bodyText = ""
+        speakers = []
+        transcriptEditedAt = nil
     }
 
     package func markFailed(_ message: String) {
@@ -190,5 +205,32 @@ extension NoteTask {
     /// The task as the summary types describe it.
     public var actionItem: ActionItem {
         ActionItem(id: id, task: task, owner: owner, due: due, isDone: isDone)
+    }
+}
+
+extension VoiceProfile {
+    /// The L2-normalized voice print.
+    public var voicePrint: [Float] {
+        voicePrintData.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
+    }
+
+    package func setVoicePrint(_ voicePrint: [Float]) {
+        voicePrintData = Self.encode(voicePrint)
+    }
+
+    package static func encode(_ voicePrint: [Float]) -> Data {
+        voicePrint.withUnsafeBufferPointer { Data(buffer: $0) }
+    }
+}
+
+extension SummaryTemplate {
+    /// The standard sections the template generates.
+    public package(set) var sections: Set<SummarySection> {
+        get { (try? JSONDecoder().decode(Set<SummarySection>.self, from: sectionsData)) ?? Set(SummarySection.allCases) }
+        set { sectionsData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+
+    package static func encode(_ sections: Set<SummarySection>) -> Data {
+        (try? JSONEncoder().encode(sections)) ?? Data()
     }
 }

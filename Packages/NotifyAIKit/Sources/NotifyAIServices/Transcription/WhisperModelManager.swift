@@ -10,16 +10,6 @@ import Observation
 import OSLog
 @preconcurrency import WhisperKit
 
-/// Download state of a Whisper model, as shown in the settings.
-public enum WhisperModelState: Equatable, Sendable {
-    case notInstalled
-    case downloading(progress: Double)
-    /// Downloaded; the model is being compiled for this device and the tokenizer fetched.
-    case preparing
-    case installed(bytes: Int64)
-    case failed(message: String)
-}
-
 enum WhisperModelError: LocalizedError {
     case inUse
 
@@ -40,12 +30,12 @@ protocol WhisperModelUsage: Sendable {
     func unloadModel() async
 }
 
-/// Downloads, prepares and deletes Whisper models. This is the only place in the app
-/// that uses the network, and only when the user explicitly starts a download.
+/// Downloads, prepares and deletes Whisper models. Uses the network only when the user
+/// explicitly starts a download (like `NeuralModelManager`).
 @MainActor
 @Observable
 public final class WhisperModelManager {
-    private(set) var states: [String: WhisperModelState] = [:]
+    private(set) var states: [String: ModelInstallState] = [:]
     /// Everything below the models folder: models, tokenizers, caches and partial downloads.
     public private(set) var downloadedBytes: Int64 = 0
 
@@ -59,7 +49,7 @@ public final class WhisperModelManager {
         self.usage = usage
     }
 
-    public func state(for model: WhisperModel) -> WhisperModelState {
+    public func state(for model: WhisperModel) -> ModelInstallState {
         states[model.id] ?? .notInstalled
     }
 
@@ -195,7 +185,7 @@ public final class WhisperModelManager {
         }
     }
 
-    private func finishDownload(of model: WhisperModel, result: WhisperModelState) {
+    private func finishDownload(of model: WhisperModel, result: ModelInstallState) {
         downloads[model.id] = nil
         states[model.id] = result
     }

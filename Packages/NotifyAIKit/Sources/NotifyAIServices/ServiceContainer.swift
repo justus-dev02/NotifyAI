@@ -24,6 +24,8 @@ public final class ServiceContainer {
     public let processing: ProcessingCoordinator
     public let recording: RecordingController
     public let whisperModels: WhisperModelManager
+    public let neuralModels: NeuralModelManager
+    public let speakers: SpeakerDirectory
     public let appLock: AppLock
     public let audioSession: AudioSessionController
     public let importer: ImportService
@@ -49,8 +51,12 @@ public final class ServiceContainer {
 
         let modelStore = WhisperModelStore(downloadBase: locations.whisperModelsDirectory)
         let whisperEngine = WhisperEngine(modelStore: modelStore)
-        let transcription = TranscriptionService(appleSpeech: AppleSpeechEngine(), whisper: whisperEngine)
+        let neuralStore = NeuralModelStore(downloadBase: locations.neuralModelsDirectory)
+        let parakeetEngine = ParakeetEngine(store: neuralStore)
+        let speakerDetection = SpeakerDetection(neural: NeuralSpeakerDiarizer(store: neuralStore))
+        let transcription = TranscriptionService(appleSpeech: AppleSpeechEngine(), whisper: whisperEngine, parakeet: parakeetEngine)
         whisperModels = WhisperModelManager(store: modelStore, usage: whisperEngine)
+        neuralModels = NeuralModelManager(store: neuralStore, usages: [parakeetEngine, speakerDetection.neural])
 
         let embedder = SentenceEmbedder()
         let summarization = SummarizationService()
@@ -60,7 +66,7 @@ public final class ServiceContainer {
             settings: settings,
             transcription: transcription,
             summarization: summarization,
-            diarizer: SpeakerDiarizer(),
+            diarizer: speakerDetection,
             embedder: embedder,
             digestStore: digestStore
         )
@@ -87,6 +93,7 @@ public final class ServiceContainer {
             ),
             liveChapters: LiveChapterSummarizer(summarization: summarization, store: digestStore)
         )
+        speakers = SpeakerDirectory(store: store, detection: speakerDetection)
         importer = ImportService(store: store, settings: settings, processing: processing)
         library = NoteLibrary(store: store, processing: processing)
         tasks = TaskBoard(store: store, library: library)
@@ -102,5 +109,6 @@ public final class ServiceContainer {
         knowledge.scheduleRefresh()
         tasks.startObserving()
         await whisperModels.refresh()
+        await neuralModels.refresh()
     }
 }

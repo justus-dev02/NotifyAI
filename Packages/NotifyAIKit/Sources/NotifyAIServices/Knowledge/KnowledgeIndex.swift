@@ -60,7 +60,8 @@ public struct IndexedNote: Codable, Hashable, Sendable, Identifiable {
 public struct KnowledgeIndex: Codable, Sendable {
     /// Bump when the indexing changes, so existing indexes are rebuilt.
     /// 4: fingerprints based on `contentRevision`, vectors stored as Float16.
-    static let formatVersion = 4
+    /// 5: named speakers count as persons of the note.
+    static let formatVersion = 5
 
     var formatVersion = Self.formatVersion
     public var notes: [UUID: IndexedNote] = [:]
@@ -186,7 +187,9 @@ struct KnowledgeIndexBuilder: Sendable {
         let summaryContent = note.summary.map(Self.summaryContent) ?? ""
         var entities = TextAnalysis.entities(in: [note.title, spokenText, summaryContent].joined(separator: "\n"))
         let owners = note.summary?.actionItems.compactMap(\.owner).filter { !TextAnalysis.isSpeakerLabel($0) } ?? []
-        entities.persons = unique(entities.persons + owners)
+        // Named and recognized speakers: "Was hat Anna gesagt?" finds the notes she speaks in.
+        let speakers = segments.compactMap(\.speaker).filter { !TextAnalysis.isSpeakerLabel($0) }
+        entities.persons = unique(entities.persons + owners + speakers)
 
         let summaryKeywords = (note.summary?.keywords ?? []) + (note.summary?.topics.map(\.title) ?? [])
         let textKeywords = TextAnalysis.keywords(in: spokenText, languageCode: note.languageCode, limit: 8)

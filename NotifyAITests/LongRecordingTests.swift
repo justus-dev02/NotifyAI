@@ -187,7 +187,7 @@ struct LongRecordingProcessingTests {
         let coordinator = ProcessingCoordinator(
             store: store,
             settings: makeIsolatedSettings(),
-            transcription: TranscriptionService(appleSpeech: engine, whisper: engine),
+            transcription: TranscriptionService(appleSpeech: engine, whisper: engine, parakeet: engine),
             summarization: SummarizationService(languageModel: MockSummarizer(), fallback: MockSummarizer(), availability: { _ in .available }),
             diarizer: SpeakerDiarizer(),
             digestStore: digestStore

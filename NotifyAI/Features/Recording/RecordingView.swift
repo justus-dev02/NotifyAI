@@ -65,6 +65,7 @@ private struct RecordingSetupView: View {
     @Environment(RecordingController.self) private var recording
     @Environment(AppSettings.self) private var settings
     @Environment(WhisperModelManager.self) private var whisperModels
+    @Environment(NeuralModelManager.self) private var neuralModels
 
     var body: some View {
         @Bindable var recording = recording
@@ -107,9 +108,7 @@ private struct RecordingSetupView: View {
                     }
                 }
                 Toggle("Live-Transkript anzeigen", isOn: $transcription.liveTranscription)
-                if transcription.engine == .whisper {
-                    WhisperModelStatusRow(model: transcription.whisperModel)
-                }
+                EngineModelStatusRow()
             } header: {
                 SectionHeader("Transkription")
             }
@@ -145,6 +144,6 @@ private struct RecordingSetupView: View {
 
     private var canStart: Bool {
         guard recording.canStart else { return false }
-        return settings.transcription.engine != .whisper || whisperModels.isInstalled(settings.transcription.whisperModel)
+        return settings.transcription.isReady(whisperModels: whisperModels, neuralModels: neuralModels)
     }
 }

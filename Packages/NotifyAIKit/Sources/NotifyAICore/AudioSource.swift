@@ -62,6 +62,8 @@ public enum TranscriptionEngineKind: String, CaseIterable, Codable, Identifiable
     case appleSpeech
     /// OpenAI Whisper running on the Neural Engine via WhisperKit.
     case whisper
+    /// NVIDIA Parakeet TDT running on the Neural Engine via FluidAudio.
+    case parakeet
 
     public var id: String { rawValue }
 
@@ -70,6 +72,7 @@ public enum TranscriptionEngineKind: String, CaseIterable, Codable, Identifiable
         switch self {
         case .appleSpeech: "Apple Speech"
         case .whisper: "Whisper"
+        case .parakeet: "Parakeet"
         }
     }
 }

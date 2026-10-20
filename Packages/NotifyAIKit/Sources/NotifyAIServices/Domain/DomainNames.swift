@@ -86,6 +86,8 @@ extension TranscriptionEngineKind {
             String(localized: "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit.", bundle: .module)
         case .whisper:
             String(localized: "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise.", bundle: .module)
+        case .parakeet:
+            String(localized: "Genau und um ein Vielfaches schneller als Whisper, mit präzisen Wortzeiten. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise.", bundle: .module)
         }
     }
 }

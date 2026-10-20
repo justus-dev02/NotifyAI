@@ -15,14 +15,32 @@ struct SpeakerTurn: Equatable, Sendable {
     var speaker: Int
 }
 
-/// Finds who spoke when in an audio file. Implemented by `SpeakerDiarizer`; tests and
-/// the pipeline's step depend on this protocol.
-protocol SpeakerDiarizing: Sendable {
-    /// Speaker turns of the file; empty when only one speaker (or no speech) was found.
-    func turns(forAudioAt url: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> [SpeakerTurn]
+/// Who spoke when in an audio file.
+struct Diarization: Equatable, Sendable {
+    /// Chronological turns. The simple diarizer returns none for a single voice; the neural
+    /// one returns them for a single voice too, so that voice can still be recognized.
+    var turns: [SpeakerTurn]
+    /// Voice print per speaker (index of `SpeakerTurn.speaker`), L2-normalized. Only neural
+    /// diarization produces them; they recognize a voice in later recordings.
+    var voicePrints: [Int: [Float]] = [:]
+
+    /// Seconds of speech per voice.
+    var speechPerVoice: [Int: TimeInterval] {
+        turns.reduce(into: [:]) { result, turn in
+            result[turn.speaker, default: 0] += turn.end - turn.start
+        }
+    }
 }
 
-/// Experimental, fully local speaker diarization ("who spoke when").
+/// Finds who spoke when in an audio file. Implemented by `NeuralSpeakerDiarizer` and the
+/// simple `SpeakerDiarizer`; `SpeakerDetection` picks one, the pipeline's step and the tests
+/// depend on this protocol.
+protocol SpeakerDiarizing: Sendable {
+    func diarize(audioAt url: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> Diarization
+}
+
+/// Simple, fully local speaker diarization ("who spoke when") without a model download. Used
+/// when the neural speaker model is not installed.
 ///
 /// Pipeline:
 /// 1. Log-mel spectrogram (25 ms frames), energy-based voice activity detection.
@@ -37,9 +55,13 @@ protocol SpeakerDiarizing: Sendable {
 ///    smoothed and merged into speaker turns.
 ///
 /// Spectral-shape embeddings separate clearly different voices but are far less robust
-/// than neural speaker embeddings, and the threshold has not been calibrated on real
-/// recordings. The feature is therefore opt-in and labelled experimental in the UI.
+/// than neural speaker embeddings (`NeuralSpeakerDiarizer`), and they cannot recognize a
+/// voice in another recording.
 struct SpeakerDiarizer: SpeakerDiarizing {
+    func diarize(audioAt url: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> Diarization {
+        Diarization(turns: try await turns(forAudioAt: url, progress: progress))
+    }
+
     /// "Sprecher 1", "Sprecher 2" …, in the language of the app.
     static func speakerLabel(_ number: Int) -> String {
         String(localized: "Sprecher \(number)", bundle: .module)

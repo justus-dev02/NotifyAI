@@ -10,15 +10,16 @@ App (Szenen, Views, View-Models, Plattform-Adapter)
  └─ NotifyAIServices            │
       ├─ NotifyAIPersistence ───┤
       ├─ AudioCapture ──────────┤
-      └─ WhisperKit             └─ NotifyAICore
+      ├─ WhisperKit             └─ NotifyAICore
+      └─ FluidAudio
 ```
 
 | Modul | Inhalt | Darf nicht |
 |---|---|---|
 | `NotifyAICore` | Werttypen (Transkript, Zusammenfassung, Marker, Fristen), Logging, `EventChannel`, `BackgroundWork` | UI, Daten, Services kennen |
 | `AudioCapture` | Echtzeit-Aufnahme: lock-freie Ringpuffer, Konvertieren, Mischen, Schreiben | UI, Daten |
-| `NotifyAIPersistence` | SwiftData-Schema V1–V4 mit Migrationen, `NoteStore`, `NoteQueries`, Dateiablage | UI, Services |
-| `NotifyAIServices` | Aufnahme, Verarbeitung, Transkription, Zusammenfassung, Suche, Aufgaben, Import/Export, Einstellungen, Use Cases (`NoteLibrary`, `StorageMaintenance`), `ServiceContainer` | SwiftUI; UIKit/AppKit nur in `Platform/` und `Audio/SystemAudio/` |
+| `NotifyAIPersistence` | SwiftData-Schema V1–V5 mit Migrationen, `NoteStore`, `NoteQueries`, Dateiablage | UI, Services |
+| `NotifyAIServices` | Aufnahme, Verarbeitung, Transkription, Sprecher, Zusammenfassung, Suche, Aufgaben, Import/Export, Einstellungen, Use Cases (`NoteLibrary`, `SpeakerDirectory`, `StorageMaintenance`), `ServiceContainer` | SwiftUI; UIKit/AppKit nur in `Platform/` und `Audio/SystemAudio/` |
 | `DesignSystem` | Theme und wiederverwendbare SwiftUI-Komponenten | Daten, Services |
 | App | Szenen, Views, `NoteDetailModel`, Composition Root, Plattform-Adapter (Live Activity, Hintergrundaufgaben) | die Datenbank selbst schreiben |
 
@@ -44,7 +45,7 @@ Ereignissen, die App formuliert daraus die Texte (`UserNotices`).
 **Ports für Hardware und System.** Was Hardware, Modelle, Dateien oder das System berührt, liegt
 hinter einem Protokoll: `TranscriptionEngine`, `Summarizer`, `LanguageModelResponder`,
 `NoteAssistant`, `SpeakerDiarizing`, `SentenceEmbedding`, `KnowledgeIndexPersisting`,
-`WhisperModelUsage`, `AudioRecording`, `CaptureDevice`, `MicrophoneAccess`,
+`WhisperModelUsage`, `NeuralModelUsage`, `AudioRecording`, `CaptureDevice`, `MicrophoneAccess`,
 `SystemActivityControlling`, `RecordingActivityPresenting`. Reine Berechnungen (Kapitelschnitt,
 Textanalyse, Suche) bleiben konkret. Der Store wird in Tests mit einer In-Memory-Datenbank ersetzt.
 
@@ -59,7 +60,34 @@ Controller und Store enthalten kein `#if os(…)`.
 **Texte.** Jedes Modul mit Texten hat seinen eigenen String-Katalog (`bundle: .module`). Jeder Text
 ist ins Englische übersetzt; ein Test prüft das.
 
+**Netzwerk nur auf Wunsch.** Modelle (Whisper, Parakeet, Sprecher) werden nur geladen, wenn das in den
+Einstellungen ausdrücklich ausgelöst wird (`WhisperModelManager`, `NeuralModelManager`). Zur Laufzeit werden sie
+ausschließlich aus dem geladenen Ordner mit Fertig-Markierung geöffnet (`AsrModels.loadLocal`, eigener
+Loader für die Sprechermodelle), nie implizit nachgeladen. Geladene Modelle gibt `LoadedModel` zwei Minuten
+nach der letzten Nutzung oder bei Speicherdruck frei.
+
+## Sprecher
+
+`SpeakerStep` sammelt drei Hinweise und überlässt die Zuordnung `SpeakerAttribution` (pro Wort, Segmente
+werden am Sprecherwechsel geteilt):
+
+1. Audioquelle bei „Mikrofon + Systemton“ (`SourceActivity`): Mikrofon → „Ich“, Systemton → die andere
+   Seite. Gewinnt immer.
+2. Sprechertrennung (`SpeakerDetection`): neuronal (`NeuralSpeakerDiarizer`, FluidAudio-Offline-Pipeline)
+   oder ohne Modell die einfache spektrale (`SpeakerDiarizer`). Die neuronale liefert pro Stimme einen
+   L2-normierten Stimmabdruck.
+3. Wiedererkennung (`VoiceRecognition`): Kosinus-Ähnlichkeit zu den gemerkten Stimmen (`VoiceProfile`),
+   eindeutig zugeordnet ab 0,55 (gemessen: gleiche Stimme 0,85–0,94, verschiedene 0,06–0,42).
+
+Korrekturen (`SpeakerDirectory`) markieren das Transkript als bearbeitet (`transcriptEditedAt`); der
+Schritt läuft danach erst wieder beim erneuten Transkribieren. „Stimme merken“ lernt den Abdruck in das
+Profil des Namens (gewichtetes Mittel), überschreibt aber nie ein anderes Profil.
+
 ## Daten
+
+- **Schema V5:** gemerkte Stimmen (`VoiceProfile`), eigene Vorlagen (`SummaryTemplate`), Sprecher einer
+  Notiz mit Stimmabdrücken (`Note.speakersData`), Vorlage einer Notiz und Bearbeitungsstand des
+  Transkripts. Nur neue Entitäten und optionale Attribute: leichtgewichtige Migration.
 
 - **Schema V4:** Aufgaben sind eigene Zeilen (`NoteTask`) mit beim Speichern aufgelöstem
   Fälligkeitsdatum. `Note.summary` fügt JSON und Aufgaben-Zeilen zusammen; Abhaken ändert nur die
@@ -75,6 +103,7 @@ ist ins Englische übersetzt; ein Test prüft das.
 | Core, Echtzeit-Aufnahme | `Packages/NotifyAIKit/Tests/…` | `swift test` |
 | Services, Persistenz, App | `NotifyAITests` | `scripts/ci.sh macos` |
 | Qualität der Analyse | `NotifyAITests/QualityEvaluationTests.swift`, siehe [Quality.md](Quality.md) | mit den App-Tests |
+| Echte Modelle (Sprecher, Parakeet) | `NotifyAITests/NeuralModelIntegrationTests.swift` | nur mit Fixtures unter `~/Library/Caches/NotifyAINeuralFixtures`, sonst übersprungen |
 | Abläufe und Barrierefreiheit | `NotifyAIUITests` | `scripts/ci.sh ui` |
 
 Tests warten auf Ereignisse (Observation, `EventChannel`, Gates), nie auf feste Zeiten.

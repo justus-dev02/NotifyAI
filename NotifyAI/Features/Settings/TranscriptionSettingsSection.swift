@@ -33,11 +33,20 @@ struct TranscriptionSettingsSection: View {
             Text(transcription.engine.summary)
         }
 
-        if transcription.engine == .appleSpeech {
+        switch transcription.engine {
+        case .appleSpeech:
             Section("Apple Speech") {
                 AppleSpeechAssetRow(language: transcription.language)
             }
-        } else {
+        case .parakeet:
+            Section {
+                NeuralModelRow(model: .parakeet)
+            } header: {
+                Text("Parakeet-Modell")
+            } footer: {
+                Text("Das Modell wird einmalig von Hugging Face geladen und danach ausschließlich lokal ausgeführt. Deine Aufnahmen werden nie hochgeladen.")
+            }
+        case .whisper:
             Section {
                 ForEach(WhisperModel.all) { model in
                     WhisperModelRow(model: model, isSelected: transcription.whisperModel == model) {

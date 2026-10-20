@@ -74,6 +74,8 @@ extension View {
             .environment(services.processing)
             .environment(services.recording)
             .environment(services.whisperModels)
+            .environment(services.neuralModels)
+            .environment(services.speakers)
             .environment(services.appLock)
             .environment(services.knowledge)
             .environment(services.tasks)

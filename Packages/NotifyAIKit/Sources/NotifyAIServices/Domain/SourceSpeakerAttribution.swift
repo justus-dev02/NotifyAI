@@ -17,7 +17,8 @@ import NotifyAICore
 /// - Otherwise silence, which does not vote.
 ///
 /// Segments with word timings are split at speaker changes, so a phrase that contains a
-/// quick reply of the other side is divided correctly.
+/// quick reply of the other side is divided correctly (`SpeakerAttribution`, which also
+/// combines the audio source with speaker detection).
 enum SourceSpeakerAttribution {
     enum Speaker: Equatable, Sendable {
         case user
@@ -60,52 +61,18 @@ enum SourceSpeakerAttribution {
         }
     }
 
+    /// The segments labelled "Ich" / the other side by audio source alone.
     static func assign(
         _ activity: SourceActivity,
         to segments: [TranscriptSegment],
         othersLabel: String = defaultOthersLabel,
         configuration: Configuration = Configuration()
     ) -> [TranscriptSegment] {
-        let speakers = classify(activity, configuration: configuration)
-        guard !speakers.isEmpty else { return segments }
-
-        func label(_ speaker: Speaker) -> String {
-            speaker == .user ? userLabel : othersLabel
-        }
-
-        var result: [TranscriptSegment] = []
-        for segment in segments {
-            guard !segment.words.isEmpty else {
-                var updated = segment
-                if let speaker = majority(in: activity.bins(from: segment.start, to: segment.end), of: speakers) {
-                    updated.speaker = label(speaker)
-                }
-                result.append(updated)
-                continue
-            }
-
-            let wordSpeakers = smoothed(
-                filled(segment.words.map { majority(in: activity.bins(from: $0.start, to: $0.end), of: speakers) }),
-                words: segment.words,
-                configuration: configuration
-            )
-            for (index, run) in runs(of: wordSpeakers).enumerated() {
-                let words = Array(segment.words[run.range])
-                var part = TranscriptSegment(
-                    id: index == 0 ? segment.id : UUID(),
-                    start: index == 0 ? segment.start : words[0].start,
-                    end: run.range.upperBound == segment.words.count ? segment.end : words[words.count - 1].end,
-                    text: words.map(\.text).joined().trimmingCharacters(in: .whitespacesAndNewlines),
-                    speaker: segment.speaker,
-                    words: words
-                )
-                if let speaker = run.speaker {
-                    part.speaker = label(speaker)
-                }
-                result.append(part)
-            }
-        }
-        return result
+        SpeakerAttribution.attribute(
+            segments,
+            evidence: SpeakerAttribution.Evidence(activity: activity, othersLabel: othersLabel),
+            configuration: configuration
+        ).segments
     }
 
     // MARK: Helpers
@@ -116,79 +83,5 @@ enum SourceSpeakerAttribution {
         let floor = sorted[Int(Double(sorted.count - 1) * 0.1)]
         let adaptive = min(floor + configuration.activationMarginDB, configuration.maximumThresholdDB)
         return max(adaptive, configuration.minimumLevelDB)
-    }
-
-    private static func majority(in bins: Range<Int>, of speakers: [Speaker?]) -> Speaker? {
-        var user = 0
-        var others = 0
-        for index in bins {
-            switch speakers[index] {
-            case .user: user += 1
-            case .others: others += 1
-            case nil: break
-            }
-        }
-        if user == 0, others == 0 { return nil }
-        return others >= user ? .others : .user
-    }
-
-    /// Words in silent bins (e.g. very short words) take the speaker of the previous word,
-    /// or of the next one at the start of a segment.
-    private static func filled(_ speakers: [Speaker?]) -> [Speaker?] {
-        var result = speakers
-        var previous: Speaker?
-        for index in result.indices {
-            if let speaker = result[index] {
-                previous = speaker
-            } else {
-                result[index] = previous
-            }
-        }
-        var next: Speaker?
-        for index in result.indices.reversed() {
-            if let speaker = result[index] {
-                next = speaker
-            } else {
-                result[index] = next
-            }
-        }
-        return result
-    }
-
-    /// Merges short runs that sit between two runs of the same other speaker.
-    private static func smoothed(_ speakers: [Speaker?], words: [TranscriptWord], configuration: Configuration) -> [Speaker?] {
-        var result = speakers
-        let allRuns = runs(of: speakers)
-        guard allRuns.count >= 3 else { return result }
-        for index in 1..<(allRuns.count - 1) {
-            let run = allRuns[index]
-            let before = allRuns[index - 1]
-            let after = allRuns[index + 1]
-            guard before.speaker == after.speaker, before.speaker != run.speaker else { continue }
-            let duration = words[run.range.upperBound - 1].end - words[run.range.lowerBound].start
-            if run.range.count < configuration.minimumRunWords, duration < configuration.minimumRunDuration {
-                for wordIndex in run.range {
-                    result[wordIndex] = before.speaker
-                }
-            }
-        }
-        return result
-    }
-
-    private struct Run {
-        var speaker: Speaker?
-        var range: Range<Int>
-    }
-
-    private static func runs(of speakers: [Speaker?]) -> [Run] {
-        var runs: [Run] = []
-        for (index, speaker) in speakers.enumerated() {
-            if let last = runs.last, last.speaker == speaker {
-                runs[runs.count - 1].range = last.range.lowerBound..<(index + 1)
-            } else {
-                runs.append(Run(speaker: speaker, range: index..<(index + 1)))
-            }
-        }
-        return runs
     }
 }

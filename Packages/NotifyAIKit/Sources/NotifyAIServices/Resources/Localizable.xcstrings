@@ -446,6 +446,26 @@
         }
       }
     },
+    "Bitte gib einen Namen ein." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a name."
+          }
+        }
+      }
+    },
+    "ca. 20 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 20 MB"
+          }
+        }
+      }
+    },
     "ca. 150 MB" : {
       "localizations" : {
         "en" : {
@@ -462,6 +482,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "approx. 500 MB"
+          }
+        }
+      }
+    },
+    "ca. 610 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 610 MB"
           }
         }
       }
@@ -502,6 +532,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The audio device for system audio could not be set up."
+          }
+        }
+      }
+    },
+    "Das Modell „%@“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model “%@” has not been downloaded yet. You can download it in Settings."
+          }
+        }
+      }
+    },
+    "Das Modell wird gerade verwendet. Lösche es, sobald die Verarbeitung abgeschlossen ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model is in use right now. Delete it once processing has finished."
           }
         }
       }
@@ -696,6 +746,16 @@
         }
       }
     },
+    "Dieser Sprecher kommt im Transkript nicht mehr vor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This speaker no longer appears in the transcript."
+          }
+        }
+      }
+    },
     "Dieses Gerät unterstützt Apple Intelligence nicht." : {
       "localizations" : {
         "en" : {
@@ -752,6 +812,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unlock NotifyAI to access your notes."
+          }
+        }
+      }
+    },
+    "Erkennt, wer wann spricht, und merkt sich Stimmen, die du benennst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detects who speaks when and remembers voices you name."
           }
         }
       }
@@ -852,6 +922,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For online meetings: your voice through the microphone, the other participants directly from the app (e.g. Zoom, Teams, Discord)."
+          }
+        }
+      }
+    },
+    "Genau und um ein Vielfaches schneller als Whisper, mit präzisen Wortzeiten. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accurate and many times faster than Whisper, with precise word timings. Requires a one-time model download; live text appears phrase by phrase."
           }
         }
       }
@@ -1390,6 +1470,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Very fast, for clear speech in a quiet environment."
+          }
+        }
+      }
+    },
+    "Sehr schnelle Spracherkennung für 25 europäische Sprachen, auch live." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very fast speech recognition for 25 European languages, also live."
           }
         }
       }

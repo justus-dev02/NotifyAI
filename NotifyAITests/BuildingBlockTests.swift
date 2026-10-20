@@ -145,8 +145,10 @@ struct PipelineStepTests {
     @Test("Each step runs only when its result is missing or forced")
     func stepSelection() throws {
         let engine = MockTranscriptionEngine(kind: .appleSpeech)
-        let transcription = TranscriptionStep(transcription: TranscriptionService(appleSpeech: engine, whisper: engine), settings: settings.transcription)
-        let speakers = SpeakerStep(settings: settings.analysis, diarizer: SpeakerDiarizer())
+        let service = TranscriptionService(appleSpeech: engine, whisper: engine, parakeet: engine)
+        let transcription = TranscriptionStep(transcription: service, settings: settings.transcription)
+        let store = try NoteStore(locations: try StorageLocations.temporary(), inMemory: true)
+        let speakers = SpeakerStep(settings: settings.analysis, diarizer: SpeakerDiarizer(), profiles: VoiceProfiles(store: store))
         let summary = SummaryStep(summarization: SummarizationService(), digestStore: ChapterDigestStore(directory: nil), embedder: SentenceEmbedder())
 
         let fresh = try note(kind: .recording, transcript: false, summary: false)
