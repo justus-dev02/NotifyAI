@@ -330,12 +330,18 @@
         }
       }
     },
-    "Audioquelle: %@" : {
+    "Audioquelle: %@, Echo-Unterdrückung: %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Audioquelle: %1$@, Echo-Unterdrückung: %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Audio source: %@"
+            "value" : "Audio source: %1$@, echo cancellation: %2$@"
           }
         }
       }

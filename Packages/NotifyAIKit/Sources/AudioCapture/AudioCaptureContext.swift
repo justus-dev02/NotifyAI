@@ -81,6 +81,8 @@ public final class AudioCaptureContext: Sendable {
     /// recording's `finish()` has returned, so no processing runs and no lock is contended.
     /// - Parameters:
     ///   - chunks: Receives the recorded audio for live transcription; `nil` if nobody needs it.
+    ///   - cancelsEcho: Removes the system audio's echo from the microphone when both are
+    ///     recorded (`EchoCanceller`).
     ///   - storageDirectory: Checked periodically for free space.
     public func begin(
         sink: any RecordingSink,
@@ -88,6 +90,7 @@ public final class AudioCaptureContext: Sendable {
         levels: AsyncStream<AudioLevel>.Continuation,
         events: AsyncStream<CaptureEvent>.Continuation? = nil,
         recordsSourceActivity: Bool,
+        cancelsEcho: Bool = false,
         storageDirectory: URL? = nil
     ) {
         writer.withLock { writer in
@@ -103,6 +106,8 @@ public final class AudioCaptureContext: Sendable {
             state.levels = levels
             state.events = events
             state.activity = recordsSourceActivity ? SourceActivityRecorder() : nil
+            state.cancelsEcho = cancelsEcho
+            state.echoCanceller = cancelsEcho ? EchoCanceller() : nil
         }
         counter.frames.store(0, ordering: .relaxed)
         startTimer()
@@ -128,6 +133,7 @@ public final class AudioCaptureContext: Sendable {
                 guard !state.isFinished else { return (nil, true) }
                 state.drain()
                 state.flush(force: true)
+                state.flushEchoCanceller(restart: false)
                 state.reportLosses(force: true)
                 let activity = state.activity.flatMap { $0.isEmpty ? nil : $0.makeActivity() }
                 state.isFinished = true
@@ -187,6 +193,11 @@ public final class AudioCaptureContext: Sendable {
             let microphone = try input.microphone.map { try SourceReader(source: $0) }
             state.drain()
             state.reportLosses(force: true)
+            if state.echoCanceller != nil {
+                // The audio inside the canceller belongs to the previous devices.
+                state.flush(force: true)
+                state.flushEchoCanceller(restart: true)
+            }
             state.alignPending()
             state.system = system
             state.microphone = microphone

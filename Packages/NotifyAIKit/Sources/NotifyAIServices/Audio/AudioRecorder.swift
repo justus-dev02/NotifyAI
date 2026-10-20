@@ -13,6 +13,13 @@ import OSLog
 public struct CaptureConfiguration: Sendable {
     var source: RecordingAudioSource = .microphone
     var systemAudioTarget: SystemAudioTarget = .allApps
+    /// Removes the system audio's echo from the microphone; only used when both are recorded.
+    var cancelsEcho = true
+
+    /// Whether the echo canceller runs for this recording.
+    var usesEchoCancellation: Bool {
+        cancelsEcho && source == .microphoneAndSystemAudio
+    }
 }
 
 /// The streams a running recording produces.
@@ -131,6 +138,7 @@ final class AudioRecorder: AudioRecording {
             levels: levelContinuation,
             events: eventContinuation,
             recordsSourceActivity: configuration.source == .microphoneAndSystemAudio,
+            cancelsEcho: configuration.usesEchoCancellation,
             storageDirectory: directory
         )
 

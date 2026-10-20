@@ -14,6 +14,7 @@ public final class RecordingSettings {
     private enum Key {
         static let audioSource = "recording.audioSource"
         static let systemAudioTarget = "recording.systemAudioTarget"
+        static let echoCancellation = "recording.echoCancellation"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -28,6 +29,12 @@ public final class RecordingSettings {
         didSet { defaults.set(try? JSONEncoder().encode(systemAudioTarget), forKey: Key.systemAudioTarget) }
     }
 
+    /// Removes the echo of the system audio from the microphone in "Mikrofon + Systemton"
+    /// recordings, for meetings without headphones.
+    public var echoCancellation: Bool {
+        didSet { defaults.set(echoCancellation, forKey: Key.echoCancellation) }
+    }
+
     init(defaults: UserDefaults) {
         self.defaults = defaults
         audioSource = defaults.string(forKey: Key.audioSource)
@@ -35,9 +42,10 @@ public final class RecordingSettings {
             .flatMap { RecordingAudioSource.available.contains($0) ? $0 : nil } ?? .microphone
         systemAudioTarget = defaults.data(forKey: Key.systemAudioTarget)
             .flatMap { try? JSONDecoder().decode(SystemAudioTarget.self, from: $0) } ?? .allApps
+        echoCancellation = defaults.object(forKey: Key.echoCancellation) as? Bool ?? true
     }
 
     var captureConfiguration: CaptureConfiguration {
-        CaptureConfiguration(source: audioSource, systemAudioTarget: systemAudioTarget)
+        CaptureConfiguration(source: audioSource, systemAudioTarget: systemAudioTarget, cancelsEcho: echoCancellation)
     }
 }

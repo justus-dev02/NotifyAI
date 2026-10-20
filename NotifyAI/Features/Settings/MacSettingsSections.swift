@@ -48,9 +48,17 @@ struct RecordingSourceSettingsSection: View {
     @Environment(AppSettings.self) private var settings
 
     var body: some View {
+        @Bindable var recording = settings.recording
+
         Section {
             AudioSourceRows()
             SystemAudioHints(source: settings.recording.audioSource)
+            Toggle(isOn: $recording.echoCancellation) {
+                SettingLabel(
+                    "Echo der Lautsprecher entfernen",
+                    detail: "Bei „Mikrofon + Systemton“ ohne Kopfhörer nimmt das Mikrofon die anderen ein zweites Mal über die Lautsprecher auf. NotifyAI zieht dieses Echo mithilfe des Systemtons vom Mikrofon ab, damit nichts doppelt im Transkript steht. Deine eigene Stimme bleibt erhalten."
+                )
+            }
         } header: {
             Text("Aufnahmequelle")
         } footer: {

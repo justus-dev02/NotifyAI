@@ -44,6 +44,10 @@ struct CaptureState {
     var pausedSamples = 0
     var hasReceivedSystemAudio = false
     var activity: SourceActivityRecorder?
+    /// Whether the system audio's echo is removed from the microphone (`EchoCanceller`).
+    var cancelsEcho = false
+    /// Exists while `cancelsEcho` is set; only used while both sources are recorded.
+    var echoCanceller: EchoCanceller?
 
     var levelInterval = 1
     var blocksSinceLevelUpdate = 0
@@ -90,32 +94,54 @@ extension CaptureState {
             }
             guard available > 0, force || available >= AudioCaptureContext.blockSize else { return }
             let count = min(available, force ? AudioCaptureContext.writeCapacity : AudioCaptureContext.blockSize)
-            let microphoneSamples = recordsMicrophone ? pendingMicrophone.prefix(count) : nil
-            let systemSamples = recordsSystem ? pendingSystem.prefix(count) : nil
+            var microphoneSamples = recordsMicrophone ? pendingMicrophone.prefix(count) : nil
+            var systemSamples = recordsSystem ? pendingSystem.prefix(count) : nil
 
             if let systemSamples, !hasReceivedSystemAudio, vDSP.maximumMagnitude(systemSamples) > 0 {
                 // A denied permission delivers digital silence, so this is the only sign of success.
                 hasReceivedSystemAudio = true
             }
-            let mixed: [Float] = if let microphoneSamples, let systemSamples {
-                AudioCaptureContext.mix(microphoneSamples, systemSamples)
-            } else {
-                Array(microphoneSamples ?? systemSamples ?? [])
+            if let microphone = microphoneSamples, let system = systemSamples, echoCanceller != nil {
+                // Both come out delayed by the same few milliseconds and stay aligned.
+                let cancelled = echoCanceller?.process(microphone: microphone, reference: system)
+                microphoneSamples = cancelled.map { ArraySlice($0.microphone) }
+                systemSamples = cancelled.map { ArraySlice($0.reference) }
             }
-            if let microphoneSamples, let systemSamples {
-                activity?.append(microphone: microphoneSamples, system: systemSamples, startFrame: framesProduced)
-            }
-            blocks.append(MixedBlock(samples: mixed, startFrame: framesProduced))
-            framesProduced += Int64(mixed.count)
-            counter.frames.store(Int(framesProduced), ordering: .relaxed)
-            yieldLevel(
-                microphone: microphoneSamples.map { Self.rms(of: $0) },
-                system: systemSamples.map { Self.rms(of: $0) }
-            )
+            appendBlock(microphone: microphoneSamples, system: systemSamples)
 
             if recordsMicrophone { pendingMicrophone.removeFirst(count) }
             if recordsSystem { pendingSystem.removeFirst(count) }
         }
+    }
+
+    /// Hands the samples still inside the echo canceller to the writer, after a
+    /// `flush(force: true)`: when the recording finishes, and before the devices change
+    /// (a new microphone or output is a new echo path, which is learned from scratch).
+    /// - Parameter restart: Whether a new canceller continues the recording.
+    mutating func flushEchoCanceller(restart: Bool) {
+        let remaining = echoCanceller?.finish()
+        echoCanceller = restart && cancelsEcho ? EchoCanceller() : nil
+        guard !hasFailed, recordsMicrophone, recordsSystem, let remaining, !remaining.microphone.isEmpty else { return }
+        appendBlock(microphone: remaining.microphone[...], system: remaining.reference[...])
+    }
+
+    /// Mixes one block, records its source activity and level and queues it for the writer.
+    private mutating func appendBlock(microphone microphoneSamples: ArraySlice<Float>?, system systemSamples: ArraySlice<Float>?) {
+        let mixed: [Float] = if let microphoneSamples, let systemSamples {
+            AudioCaptureContext.mix(microphoneSamples, systemSamples)
+        } else {
+            Array(microphoneSamples ?? systemSamples ?? [])
+        }
+        if let microphoneSamples, let systemSamples {
+            activity?.append(microphone: microphoneSamples, system: systemSamples, startFrame: framesProduced)
+        }
+        blocks.append(MixedBlock(samples: mixed, startFrame: framesProduced))
+        framesProduced += Int64(mixed.count)
+        counter.frames.store(Int(framesProduced), ordering: .relaxed)
+        yieldLevel(
+            microphone: microphoneSamples.map { Self.rms(of: $0) },
+            system: systemSamples.map { Self.rms(of: $0) }
+        )
     }
 
     /// Pads the shorter pending source with silence so both have the same length.

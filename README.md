@@ -26,6 +26,8 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 - **Online-Meetings mitschneiden (macOS):** Systemton von Zoom, Teams, Discord, Browsern & Co. über Core Audio Process Taps –
   wahlweise *Mikrofon + Systemton* oder *nur Systemton*, für alle Apps oder eine bestimmte App (inkl. Helper-Prozesse).
   Mikrofon und Systemton werden getrennt gepegelt: Das Transkript beschriftet dich als „Ich“ und die anderen als „Andere“.
+  Ohne Kopfhörer entfernt eine Echo-Unterdrückung die Lautsprecher aus dem Mikrofon (adaptiver Filter mit dem Systemton
+  als Referenz), damit nichts doppelt im Transkript steht.
 - **macOS-Menüleiste:** Aufnahmen starten, pausieren, markieren und beenden, ohne das Hauptfenster zu öffnen.
 - **Offene Aufgaben:** alle Aufgaben aus allen Zusammenfassungen in einer Liste, gruppiert nach Fälligkeit
   (überfällig, heute, diese Woche, später, ohne Termin), filterbar nach Person, abhakbar. Gesprochene Fristen

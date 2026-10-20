@@ -829,6 +829,16 @@
         }
       }
     },
+    "Bei „Mikrofon + Systemton“ ohne Kopfhörer nimmt das Mikrofon die anderen ein zweites Mal über die Lautsprecher auf. NotifyAI zieht dieses Echo mithilfe des Systemtons vom Mikrofon ab, damit nichts doppelt im Transkript steht. Deine eigene Stimme bleibt erhalten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With “Microphone + System Audio” and no headphones, the microphone picks up the other participants a second time through the speakers. NotifyAI subtracts this echo from the microphone using the system audio, so nothing appears twice in the transcript. Your own voice is kept."
+          }
+        }
+      }
+    },
     "Bei „Mikrofon + Systemton“ wird deine Stimme als „Ich“ und der Ton der App als „Andere“ beschriftet. Ist genau eine teilnehmende Person eingetragen, erscheint ihr Name." : {
       "localizations" : {
         "en" : {
@@ -1191,6 +1201,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Searching your notes…"
+          }
+        }
+      }
+    },
+    "Echo der Lautsprecher entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove speaker echo"
           }
         }
       }
