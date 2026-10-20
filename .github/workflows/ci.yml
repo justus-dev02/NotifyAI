@@ -6,11 +6,12 @@
 
 name: CI
 
+# Bewusst ohne `pull_request`: Das Repository ist öffentlich, und der Runner ist der eigene Mac.
+# Ein Pull Request aus einem Fork würde sonst fremden Code auf diesem Mac ausführen. Fremde
+# Änderungen werden daher erst nach dem Review geprüft (Push auf main oder von Hand gestartet).
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**']
-  pull_request:
     paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**']
   workflow_dispatch:
 
