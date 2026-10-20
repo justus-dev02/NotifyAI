@@ -294,6 +294,7 @@
 			packageReferences = (
 				27BB00012F00000000000001 /* XCLocalSwiftPackageReference "Packages/NotifyAIKit" */,
 				27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				27A3023D30764F60008651B0 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 275D605A2E6F188200EB7BA5 /* Products */;
@@ -825,6 +826,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		27A3023D30764F60008651B0 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		27CC00012F00000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sparkle-project/Sparkle";

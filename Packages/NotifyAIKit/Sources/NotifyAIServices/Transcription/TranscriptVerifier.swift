@@ -57,6 +57,11 @@ struct SpeechEvidence: Sendable {
         }
     }
 
+    /// Total length of the frames that contain speech.
+    var speechDuration: TimeInterval {
+        Double(speech.count { $0 }) * Self.frameDuration
+    }
+
     /// The share of frames between `start` and `end` that contain speech (0…1).
     func speechFraction(from start: TimeInterval, to end: TimeInterval) -> Double {
         guard !speech.isEmpty else { return 0 }

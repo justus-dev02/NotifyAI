@@ -61,6 +61,36 @@ struct SpeechChunkerTests {
         #expect(chunks.isEmpty)
     }
 
+    @Test("A single click does not let silence through")
+    func dropsSilenceWithClick() {
+        var samples = Signal.silence(seconds: 10)
+        // 20 ms, one analysis frame.
+        for index in 80_000..<80_320 {
+            samples[index] = index.isMultiple(of: 2) ? 0.3 : -0.3
+        }
+        #expect(run(samples).isEmpty)
+    }
+
+    @Test("Short noises below the minimum audible duration are dropped")
+    func dropsShortNoises() {
+        var samples = Signal.silence(seconds: 20)
+        // Five clicks of 40 ms: 0.2 s in total.
+        for second in stride(from: 2, to: 20, by: 4) {
+            let start = second * Int(Signal.sampleRate)
+            for index in start..<(start + 640) {
+                samples[index] = index.isMultiple(of: 2) ? 0.2 : -0.2
+            }
+        }
+        #expect(run(samples).isEmpty)
+    }
+
+    @Test("A short word in silence is kept")
+    func keepsShortWord() {
+        let samples = Signal.silence(seconds: 5) + Signal.voice(seconds: 0.4, frequency: 140, overtoneDecay: 0.7) + Signal.silence(seconds: 5)
+        let chunks = run(samples)
+        #expect(chunks.count == 1)
+    }
+
     @Test("Quiet speech in background noise is never dropped")
     func keepsQuietSpeechInNoise() {
         let noise = Signal.noise(seconds: 30, amplitude: 0.02)

@@ -1,6 +1,26 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "_Keine Sprache an dieser Stelle_" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_No speech at this point_"
+          }
+        }
+      }
+    },
+    "„%@“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is not open. Open the app or choose “All Apps” as the source."
+          }
+        }
+      }
+    },
     "## Aufgaben" : {
       "localizations" : {
         "en" : {
@@ -108,6 +128,7 @@
       }
     },
     "%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -137,22 +158,22 @@
         }
       }
     },
-    "_Keine Sprache an dieser Stelle_" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "_No speech at this point_"
-          }
-        }
-      }
-    },
     "Aggregate-Gerät anlegen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create aggregate device"
+          }
+        }
+      }
+    },
+    "Ähnlicher Inhalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Similar Content"
           }
         }
       }
@@ -1160,6 +1181,7 @@
       }
     },
     "Neu zusammenfassen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1246,6 +1268,7 @@
       }
     },
     "Notizen fragen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1365,6 +1388,16 @@
         }
       }
     },
+    "Später" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Later"
+          }
+        }
+      }
+    },
     "Speicher" : {
       "localizations" : {
         "en" : {
@@ -1437,16 +1470,6 @@
         }
       }
     },
-    "Später" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Later"
-          }
-        }
-      }
-    },
     "Stromsparmodus: an" : {
       "localizations" : {
         "en" : {
@@ -1487,6 +1510,16 @@
         }
       }
     },
+    "Systemton · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Audio · %@"
+          }
+        }
+      }
+    },
     "Systemton kann auf diesem Gerät nicht aufgenommen werden." : {
       "localizations" : {
         "en" : {
@@ -1509,16 +1542,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "System audio could not be recorded (%1$@, error %2$d)."
-          }
-        }
-      }
-    },
-    "Systemton · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System Audio · %@"
           }
         }
       }
@@ -1569,6 +1592,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Title"
+          }
+        }
+      }
+    },
+    "Überfällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overdue"
           }
         }
       }
@@ -1689,36 +1722,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summary"
-          }
-        }
-      }
-    },
-    "Ähnlicher Inhalt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Similar Content"
-          }
-        }
-      }
-    },
-    "Überfällig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overdue"
-          }
-        }
-      }
-    },
-    "„%@“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” is not open. Open the app or choose “All Apps” as the source."
           }
         }
       }

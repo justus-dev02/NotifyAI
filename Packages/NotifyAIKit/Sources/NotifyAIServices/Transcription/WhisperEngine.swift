@@ -14,16 +14,22 @@ import Synchronization
 /// Models are only ever loaded from the local model directory (`download: false`), so
 /// transcription works offline once a model has been downloaded in the settings.
 ///
+/// Live audio and files take the same path: `SpeechChunker` cuts phrase-sized chunks and
+/// `SpeechDetector` lets only chunks with speech through. Whisper invents text for silence
+/// and noise, so audio without speech never reaches it.
+///
 /// A loaded model takes several hundred megabytes. It is released two minutes after the last
 /// transcription and immediately when the system reports memory pressure, unless it is in use.
 final class WhisperEngine: TranscriptionEngine, WhisperModelUsage {
     let kind = TranscriptionEngineKind.whisper
     private let runtime: WhisperRuntime
+    private let speechDetector: SpeechDetector
     private let memoryPressure: any DispatchSourceMemoryPressure
 
-    init(modelStore: WhisperModelStore) {
+    init(modelStore: WhisperModelStore, speechDetector: SpeechDetector = SpeechDetector()) {
         let runtime = WhisperRuntime(modelStore: modelStore)
         self.runtime = runtime
+        self.speechDetector = speechDetector
         memoryPressure = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .global(qos: .utility))
         memoryPressure.setEventHandler {
             Task { await runtime.unloadIfIdle(reason: "memory pressure") }
@@ -39,15 +45,37 @@ final class WhisperEngine: TranscriptionEngine, WhisperModelUsage {
         // Load the model up front so that a missing model is reported before recording
         // instead of silently producing no text.
         try await runtime.prepare(options.whisperModel)
-        return WhisperLiveSession(runtime: runtime, options: options)
+        return WhisperLiveSession(runtime: runtime, options: options, speechDetector: speechDetector)
     }
 
+    /// Reads the file block by block and transcribes it like a live recording. WhisperKit's
+    /// own file chunking is not used: it only looks for cut points and transcribes silent
+    /// stretches as well.
     func transcribeFile(
         at url: URL,
         options: TranscriptionOptions,
         progress: @escaping @Sendable (Double) -> Void
     ) async throws -> [TranscriptSegment] {
-        let segments = try await runtime.transcribeFile(at: url, options: options, progress: progress)
+        let runtime = runtime
+        let speechDetector = speechDetector
+        await runtime.beginUse()
+        defer { Task { await runtime.endUse() } }
+        // Reports a missing model before the file is read.
+        try await runtime.prepare(options.whisperModel)
+
+        var chunker = SpeechChunker()
+        var position: Int64 = 0
+        var segments: [TranscriptSegment] = []
+        try await SpeakerDiarizer.forEachMonoBlock(in: url) { block, fraction in
+            let chunks = chunker.append(AudioChunk(samples: block, startFrame: position))
+            position += Int64(block.count)
+            segments += try await runtime.transcribe(chunks.filter { speechDetector.containsSpeech($0.samples) }, options: options)
+            progress(fraction)
+        }
+        if let tail = chunker.flush(), speechDetector.containsSpeech(tail.samples) {
+            segments += try await runtime.transcribe([tail], options: options)
+        }
+        progress(1)
         return Transcript.normalized(segments)
     }
 
@@ -65,7 +93,7 @@ final class WhisperEngine: TranscriptionEngine, WhisperModelUsage {
 // MARK: - Runtime
 
 /// Owns the WhisperKit pipeline. As an actor it serializes access to the (non-thread-safe)
-/// pipeline, so live transcription and file transcription never run concurrently.
+/// pipeline: live and file transcription hand it chunks, never the pipeline itself.
 ///
 /// Users of the model bracket their work with `beginUse()` / `endUse()`. When the last use
 /// ends, the model is unloaded after `idleUnloadDelay`; memory pressure unloads it at once.
@@ -132,37 +160,27 @@ actor WhisperRuntime {
         }
     }
 
-    /// Transcribes a chunk of the live recording.
-    func transcribe(_ chunk: NotifyAICore.AudioChunk, options: TranscriptionOptions) async throws -> [TranscriptSegment] {
-        let interval = Signposts.transcription.beginInterval("Whisper chunk", "\(chunk.duration, format: .fixed(precision: 1)) s")
-        defer { Signposts.transcription.endInterval("Whisper chunk", interval) }
+    /// Transcribes chunks of at most one Whisper window each; WhisperKit decodes them in
+    /// parallel. The segments are on the recording timeline, in the order of the chunks.
+    func transcribe(_ chunks: [NotifyAICore.AudioChunk], options: TranscriptionOptions) async throws -> [TranscriptSegment] {
+        guard !chunks.isEmpty else { return [] }
+        let duration = chunks.map(\.duration).reduce(0, +)
+        let interval = Signposts.transcription.beginInterval("Whisper chunks", "\(chunks.count) chunks, \(duration, format: .fixed(precision: 1)) s")
+        defer { Signposts.transcription.endInterval("Whisper chunks", interval) }
         let pipeline = try await pipeline(for: options.whisperModel)
-        let results = try await pipeline.transcribe(
-            audioArray: chunk.samples,
-            decodeOptions: Self.decodingOptions(language: options.language, chunking: false)
-        )
-        return Self.segments(from: results, offset: chunk.startTime)
-    }
-
-    func transcribeFile(
-        at url: URL,
-        options: TranscriptionOptions,
-        progress: @escaping @Sendable (Double) -> Void
-    ) async throws -> [TranscriptSegment] {
-        beginUse()
-        defer { endUse() }
-        let pipeline = try await pipeline(for: options.whisperModel)
-        let fractionCompleted = pipeline.progress
-        let results = try await pipeline.transcribe(
-            audioPath: url.path(percentEncoded: false),
-            decodeOptions: Self.decodingOptions(language: options.language, chunking: true)
+        let results = await pipeline.transcribeWithResults(
+            audioArrays: chunks.map(\.samples),
+            decodeOptions: Self.decodingOptions(language: options.language)
         ) { _ in
-            progress(fractionCompleted.fractionCompleted)
             // Returning `false` stops decoding early.
-            return Task.isCancelled ? false : nil
+            Task.isCancelled ? false : nil
         }
         try Task.checkCancellation()
-        return Self.segments(from: results, offset: 0)
+        var segments: [TranscriptSegment] = []
+        for (chunk, result) in zip(chunks, results) {
+            segments += Self.segments(from: try result.get(), offset: chunk.startTime)
+        }
+        return segments
     }
 
     private func pipeline(for model: WhisperModel) async throws -> WhisperKit {
@@ -196,8 +214,10 @@ actor WhisperRuntime {
     }
 
     /// Explicit language and task: without them WhisperKit falls back to English for the
-    /// prefill prompt and translates German speech. Special tokens are removed from the text.
-    private static func decodingOptions(language: TranscriptionLanguage, chunking: Bool) -> DecodingOptions {
+    /// prefill prompt and translates German speech. Special tokens are removed from the text,
+    /// and a blank is never the first token of a text. Chunks are at most one window long,
+    /// so WhisperKit does not chunk them again.
+    static func decodingOptions(language: TranscriptionLanguage) -> DecodingOptions {
         DecodingOptions(
             verbose: false,
             task: .transcribe,
@@ -209,15 +229,43 @@ actor WhisperRuntime {
             skipSpecialTokens: true,
             withoutTimestamps: false,
             wordTimestamps: true,
-            chunkingStrategy: chunking ? .vad : ChunkingStrategy.none
+            suppressBlank: true,
+            chunkingStrategy: ChunkingStrategy.none
         )
+    }
+
+    /// Above this compression ratio the text is a loop ("Danke. Danke. Danke."); Whisper's own
+    /// threshold for a failed decoding.
+    static let maximumCompressionRatio: Float = 2.4
+    /// Below this average log probability Whisper considers a decoding failed.
+    static let minimumAverageLogProbability: Float = -1
+    /// Below this average the model itself does not believe the words it wrote.
+    static let minimumMeanWordProbability: Float = 0.4
+
+    /// Whether Whisper is confident enough in a segment to keep it.
+    ///
+    /// Whisper's no-speech probability cannot be used: WhisperKit (at the pinned revision)
+    /// always reports 0. The values it does report decide instead. WhisperKit reports the
+    /// compression ratio and the average log probability per decoded window, so they rate
+    /// the whole chunk; the word probabilities rate the segment itself.
+    static func isReliable(compressionRatio: Float, averageLogProbability: Float, wordProbabilities: [Float]) -> Bool {
+        guard compressionRatio <= maximumCompressionRatio, averageLogProbability >= minimumAverageLogProbability else {
+            return false
+        }
+        guard !wordProbabilities.isEmpty else { return true }
+        let mean = wordProbabilities.reduce(0, +) / Float(wordProbabilities.count)
+        return mean >= minimumMeanWordProbability
     }
 
     /// Converts WhisperKit results into segments on the recording timeline.
     static func segments(from results: [TranscriptionResult], offset: TimeInterval) -> [TranscriptSegment] {
         results.flatMap(\.segments).compactMap { segment in
-            // Standard Whisper heuristic against hallucinations on non-speech audio.
-            if segment.noSpeechProb > 0.6, segment.avgLogprob < -1 {
+            guard isReliable(
+                compressionRatio: segment.compressionRatio,
+                averageLogProbability: segment.avgLogprob,
+                wordProbabilities: (segment.words ?? []).map(\.probability)
+            ) else {
+                Logger.transcription.info("Dropped an unreliable Whisper segment (\(segment.text.count, privacy: .public) characters)")
                 return nil
             }
             let words = (segment.words ?? []).map {
@@ -238,7 +286,8 @@ actor WhisperRuntime {
 
 // MARK: - Live session
 
-/// Cuts the live audio into phrase-sized chunks and transcribes them one after another.
+/// Cuts the live audio into phrase-sized chunks and transcribes them one after another;
+/// chunks without speech are skipped.
 ///
 /// Each chunk is transcribed exactly once, so the work grows linearly with the recording.
 /// If transcription falls behind, chunks queue up; the session reports how much audio is
@@ -255,7 +304,7 @@ private actor WhisperLiveSession: LiveTranscriptionSession {
     private var chunker = SpeechChunker()
     private var isFinished = false
 
-    init(runtime: WhisperRuntime, options: TranscriptionOptions) {
+    init(runtime: WhisperRuntime, options: TranscriptionOptions, speechDetector: SpeechDetector) {
         let (events, eventContinuation) = AsyncStream.makeStream(of: LiveTranscriptionEvent.self)
         let (chunks, chunkContinuation) = AsyncStream.makeStream(of: NotifyAICore.AudioChunk.self)
         let queue = QueuedAudio()
@@ -269,7 +318,9 @@ private actor WhisperLiveSession: LiveTranscriptionSession {
             var transcript: [TranscriptSegment] = []
             for await chunk in chunks {
                 try Task.checkCancellation()
-                let segments = try await runtime.transcribe(chunk, options: options)
+                let segments = speechDetector.containsSpeech(chunk.samples)
+                    ? try await runtime.transcribe([chunk], options: options)
+                    : []
                 transcript.append(contentsOf: segments)
                 if !segments.isEmpty {
                     eventContinuation.yield(.finalized(segments))

@@ -11,10 +11,12 @@ import NotifyAICore
 ///
 /// Whisper works on windows of at most 30 s. Cutting at a fixed interval would split
 /// words, so the chunker waits for a short pause once a chunk has a minimum length and
-/// only cuts hard (at the quietest moment) when the maximum length is reached. Chunks
-/// that are practically silent are dropped: feeding silence to Whisper is the main cause
-/// of hallucinated sentences. The speech/noise estimate is only used to find pauses and
-/// never decides whether audio is discarded, so loud rooms cannot swallow speech.
+/// only cuts hard (at the quietest moment) when the maximum length is reached. Chunks with
+/// less than `minimumAudibleDuration` of audible frames are dropped: feeding silence to
+/// Whisper is the main cause of hallucinated sentences, and a single click or breath must
+/// not let a silent chunk through. Whether audible audio is speech is decided afterwards by
+/// `SpeechDetector`. The speech/noise estimate here is only used to find pauses and never
+/// decides whether audio is discarded, so loud rooms cannot swallow speech.
 ///
 /// Each sample is analysed once, so the cost is linear in the recording length.
 struct SpeechChunker {
@@ -26,8 +28,10 @@ struct SpeechChunker {
         /// Analysis frame length.
         var frameDuration: TimeInterval = 0.02
         /// Frames quieter than this RMS (about -48 dBFS) are silent, regardless of the noise
-        /// floor. A chunk is only dropped if every frame is below it.
+        /// floor.
         var absoluteSilenceThreshold: Float = 0.004
+        /// A chunk is kept only with at least this much audio above `absoluteSilenceThreshold`.
+        var minimumAudibleDuration: TimeInterval = 0.3
         /// A frame is speech when it is this many times louder than the noise floor.
         var speechToNoiseRatio: Float = 3
     }
@@ -63,7 +67,7 @@ struct SpeechChunker {
         return completed
     }
 
-    /// Returns the remaining audio as a final chunk, if it contains speech.
+    /// Returns the remaining audio as a final chunk, if it is audible.
     mutating func flush() -> AudioChunk? {
         guard !samples.isEmpty else { return nil }
         return emitChunk(upTo: samples.count)
@@ -137,9 +141,8 @@ struct SpeechChunker {
     private mutating func emitChunk(upTo cut: Int) -> AudioChunk? {
         let chunkSamples = Array(samples[..<cut])
         let chunkFrames = min(frameLevels.count, cut / frameLength)
-        let isAudible = chunkFrames == 0
-            ? chunkSamples.contains { abs($0) > configuration.absoluteSilenceThreshold }
-            : frameLevels[..<chunkFrames].contains { $0 > configuration.absoluteSilenceThreshold }
+        let audibleFrames = frameLevels[..<chunkFrames].count { $0 > configuration.absoluteSilenceThreshold }
+        let isAudible = Double(audibleFrames) * configuration.frameDuration >= configuration.minimumAudibleDuration
         let chunk = AudioChunk(samples: chunkSamples, startFrame: startFrame)
 
         samples.removeFirst(cut)

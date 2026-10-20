@@ -1,6 +1,62 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "„%@“" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”"
+          }
+        }
+      }
+    },
+    "„%@“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is not open. Open the app before starting or choose “All Apps”."
+          }
+        }
+      }
+    },
+    "„%@“ löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete “%@”?"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ · spielt Ton ab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · playing audio"
+          }
+        }
+      }
+    },
     "%@ (nicht geöffnet)" : {
       "localizations" : {
         "en" : {
@@ -71,32 +127,6 @@
         }
       }
     },
-    "%@ · %@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ · %3$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@ · %3$@"
-          }
-        }
-      }
-    },
-    "%@ · spielt Ton ab" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · playing audio"
-          }
-        }
-      }
-    },
     "%@–%@" : {
       "localizations" : {
         "de" : {
@@ -133,16 +163,6 @@
         }
       }
     },
-    "%lld Notizen durchsuchbar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld notes searchable"
-          }
-        }
-      }
-    },
     "%lld Notizen · %lld Abschnitte" : {
       "localizations" : {
         "de" : {
@@ -155,6 +175,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld notes · %2$lld passages"
+          }
+        }
+      }
+    },
+    "%lld Notizen durchsuchbar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes searchable"
           }
         }
       }
@@ -385,6 +415,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark as Open"
+          }
+        }
+      }
+    },
+    "Ändere die Filter, um weitere Aufgaben zu sehen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the filters to see more tasks."
           }
         }
       }
@@ -749,22 +789,22 @@
         }
       }
     },
-    "Auswertung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Analysis"
-          }
-        }
-      }
-    },
     "Auswählen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select"
+          }
+        }
+      }
+    },
+    "Auswertung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysis"
           }
         }
       }
@@ -965,6 +1005,16 @@
         }
       }
     },
+    "Die Änderung konnte nicht gespeichert werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The change could not be saved: %@"
+          }
+        }
+      }
+    },
     "Die Art des Gesprächs bestimmt, worauf die Zusammenfassung achtet." : {
       "localizations" : {
         "en" : {
@@ -1095,16 +1145,6 @@
         }
       }
     },
-    "Die Notizen konnten nicht gelöscht werden: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The notes could not be deleted: %@"
-          }
-        }
-      }
-    },
     "Die Notizen können nicht geöffnet werden" : {
       "localizations" : {
         "en" : {
@@ -1115,22 +1155,22 @@
         }
       }
     },
+    "Die Notizen konnten nicht gelöscht werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The notes could not be deleted: %@"
+          }
+        }
+      }
+    },
     "Die Spracherkennung kommt auf diesem Gerät nicht hinterher. Das Transkript wird nach der Aufnahme aus der Audiodatei erstellt." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speech recognition can’t keep up on this device. The transcript will be created from the audio file after the recording."
-          }
-        }
-      }
-    },
-    "Die Änderung konnte nicht gespeichert werden: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The change could not be saved: %@"
           }
         }
       }
@@ -1285,6 +1325,16 @@
         }
       }
     },
+    "Fällig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due"
+          }
+        }
+      }
+    },
     "Favorit" : {
       "localizations" : {
         "en" : {
@@ -1326,6 +1376,7 @@
       }
     },
     "Filter" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1381,16 +1432,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ask questions about all notes (⌘K)"
-          }
-        }
-      }
-    },
-    "Fällig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due"
           }
         }
       }
@@ -1515,22 +1556,22 @@
         }
       }
     },
-    "Heute" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today"
-          }
-        }
-      }
-    },
     "Häufigkeit" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Frequency"
+          }
+        }
+      }
+    },
+    "Heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
           }
         }
       }
@@ -2045,22 +2086,22 @@
         }
       }
     },
-    "Neue Aufnahme starten (⇧⌘R)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start a new recording (⇧⌘R)"
-          }
-        }
-      }
-    },
     "Neue Aufnahme …" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Recording…"
+          }
+        }
+      }
+    },
+    "Neue Aufnahme starten (⇧⌘R)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a new recording (⇧⌘R)"
           }
         }
       }
@@ -2255,22 +2296,22 @@
         }
       }
     },
-    "Notiz umbenennen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename Note"
-          }
-        }
-      }
-    },
     "Notiz öffnen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Note"
+          }
+        }
+      }
+    },
+    "Notiz umbenennen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Note"
           }
         }
       }
@@ -2331,6 +2372,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Questions"
+          }
+        }
+      }
+    },
+    "Öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz an der Stelle, an der die Aufgabe genannt wurde" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note where the task was mentioned"
+          }
+        }
+      }
+    },
+    "Öffnet die Notiz an dieser Stelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the note at this point"
           }
         }
       }
@@ -2695,6 +2776,16 @@
         }
       }
     },
+    "Täglich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily"
+          }
+        }
+      }
+    },
     "Teilen" : {
       "localizations" : {
         "en" : {
@@ -2865,12 +2956,12 @@
         }
       }
     },
-    "Täglich" : {
+    "Überblick" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Daily"
+            "value" : "Overview"
           }
         }
       }
@@ -2941,6 +3032,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discard"
+          }
+        }
+      }
+    },
+    "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a note or start a new recording."
           }
         }
       }
@@ -3095,16 +3196,6 @@
         }
       }
     },
-    "Wähle eine Notiz aus oder starte eine neue Aufnahme." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a note or start a new recording."
-          }
-        }
-      }
-    },
     "Wöchentlich" : {
       "localizations" : {
         "en" : {
@@ -3211,96 +3302,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summary Coming"
-          }
-        }
-      }
-    },
-    "Ändere die Filter, um weitere Aufgaben zu sehen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change the filters to see more tasks."
-          }
-        }
-      }
-    },
-    "Öffnen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz an der Stelle, an der die Aufgabe genannt wurde" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note where the task was mentioned"
-          }
-        }
-      }
-    },
-    "Öffnet die Notiz an dieser Stelle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the note at this point"
-          }
-        }
-      }
-    },
-    "Überblick" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overview"
-          }
-        }
-      }
-    },
-    "„%@“" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@”"
-          }
-        }
-      }
-    },
-    "„%@“ ist nicht geöffnet. Öffne die App vor dem Start oder wähle „Alle Apps“." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” is not open. Open the app before starting or choose “All Apps”."
-          }
-        }
-      }
-    },
-    "„%@“ löschen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete “%@”?"
           }
         }
       }
