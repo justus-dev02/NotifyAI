@@ -35,7 +35,7 @@ struct ObsidianExporter {
         }
         // A tag needs a letter; purely numeric tags are not tags in Obsidian.
         var seen = Set<String>()
-        let tags = (["notifyai"] + snapshot.keywords.map(tag)).filter { $0.contains(where: \.isLetter) && seen.insert($0).inserted }
+        let tags = (["notifyai"] + snapshot.labels.map(tag) + snapshot.keywords.map(tag)).filter { $0.contains(where: \.isLetter) && seen.insert($0).inserted }
         lines.append("tags:")
         lines += tags.map { "  - \($0)" }
         lines += ["\(idKey): \(snapshot.id.uuidString)", "---", ""]

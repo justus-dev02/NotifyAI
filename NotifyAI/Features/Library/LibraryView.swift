@@ -4,6 +4,8 @@
 //
 
 import DesignSystem
+import NotifyAICore
+import NotifyAIPersistence
 import NotifyAIServices
 import PhotosUI
 import SwiftData
@@ -24,9 +26,9 @@ struct LibraryView: View {
     var body: some View {
         @Bindable var navigation = navigation
 
-        NoteList(filter: navigation.filter, searchText: navigation.searchText, selection: $navigation.selection)
-            .navigationTitle(navigation.filter.title)
-            .searchable(text: $navigation.searchText, prompt: "Titel, Transkript, Zusammenfassung")
+        NoteList(filter: navigation.filter, label: navigation.labelFilter, searchText: navigation.searchText, selection: $navigation.selection)
+            .navigationTitle(navigation.labelFilter.map { String(localized: "Label: \($0)") } ?? navigation.filter.title)
+            .searchable(text: $navigation.searchText, prompt: "Titel, Label, Transkript, Zusammenfassung")
             .toolbar { toolbarContent }
             #if os(iOS)
             .safeAreaInset(edge: .bottom) {
@@ -107,8 +109,16 @@ struct LibraryView: View {
                         Label(filter.title, systemImage: filter.symbolName)
                     }
                 }
+                LabelFilterOptions()
             }
             .help("Notizen filtern")
+        }
+
+        ToolbarItem {
+            Button("Notizen zusammenfassen …", systemImage: NoteKind.collection.symbolName) {
+                navigation.collectionRequest = CollectionRequest(label: navigation.labelFilter)
+            }
+            .help("Eine Zusammenfassung über mehrere Notizen erstellen")
         }
 
         ToolbarItem {
@@ -168,6 +178,31 @@ struct LibraryView: View {
                 navigation.selectedNoteID = try await importer.importImage(data: data)
             } catch {
                 importError = error.localizedDescription
+            }
+        }
+    }
+}
+
+/// The labels in the filter menu: one checkable entry per label, the same again to show all.
+private struct LabelFilterOptions: View {
+    @Environment(AppNavigation.self) private var navigation
+    @Environment(NoteLabels.self) private var labels
+    /// Refreshes the labels when notes change.
+    @Query(filter: #Predicate<Note> { !$0.labelKeys.isEmpty }) private var labeledNotes: [Note]
+
+    var body: some View {
+        @Bindable var navigation = navigation
+        let usages = labeledNotes.isEmpty ? [] : labels.all()
+        if !usages.isEmpty {
+            Section("Labels") {
+                ForEach(usages) { usage in
+                    Toggle(isOn: Binding(
+                        get: { navigation.labelFilter.map(NoteLabel.key) == usage.id },
+                        set: { isOn in navigation.labelFilter = isOn ? usage.name : nil }
+                    )) {
+                        Label("\(usage.name) (\(usage.noteCount))", systemImage: "tag")
+                    }
+                }
             }
         }
     }

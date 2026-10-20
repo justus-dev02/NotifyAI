@@ -20,6 +20,8 @@ struct SummaryRequest: Sendable {
     var recordedAt: Date = .now
     /// Names the user entered before recording.
     var participants: [String] = []
+    /// Labels the user gave the note ("Samsung"): its context, which the text often omits.
+    var labels: [String] = []
     /// The user's own template; `nil` uses the guidance of `focus`.
     var template: TemplateGuidance?
 }
@@ -32,6 +34,9 @@ protocol Summarizer: Sendable {
 
     /// Turns the chapter digests of a long recording into the summary of the whole.
     func combine(_ chapters: [TimedDigest], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary
+
+    /// One summary across several notes, made from their summaries.
+    func summarizeCollection(_ sources: [CollectionSource], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary
 }
 
 /// One chapter to condense, with the context of the whole note.
@@ -75,6 +80,18 @@ extension Summarizer {
     func combine(_ chapters: [TimedDigest], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
         progress(1)
         return ChapterMerger.merge(chapters)
+    }
+
+    /// Default: the notes' summaries merged without a language model, like chapters.
+    func summarizeCollection(
+        _ sources: [CollectionSource],
+        request: SummaryRequest,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> NoteSummary {
+        progress(1)
+        var summary = ChapterMerger.merge(sources.map { TimedDigest(start: 0, end: 0, digest: $0.digest) })
+        summary.suggestedTitle = nil
+        return summary
     }
 }
 
@@ -305,6 +322,35 @@ struct SummarizationService: Sendable {
 
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
         Self.applyingTemplate(of: request, to: try await summarizeWithoutTemplate(request, progress: progress))
+    }
+
+    /// One summary across several notes. Without Apple Intelligence, or when it fails, the
+    /// notes' summaries are merged instead and the summary says so. Tasks stay out of it: the
+    /// collection lists the tasks of its notes themselves, without duplicates.
+    func summarizeCollection(
+        _ request: SummaryRequest,
+        sources: [CollectionSource],
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> NoteSummary {
+        guard !sources.isEmpty else { throw SummarizationError.emptyInput }
+        var summary: NoteSummary
+        switch availability(request.language) {
+        case .available:
+            do {
+                summary = try await languageModel.summarizeCollection(sources, request: request, progress: progress)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.summarization.error("Summarizing several notes failed: \(error.localizedDescription, privacy: .public)")
+                summary = try await fallback.summarizeCollection(sources, request: request, progress: progress)
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte die Notizen nicht zusammenführen; die Zusammenfassung wurde aus ihren Zusammenfassungen zusammengestellt.", bundle: .module)
+            }
+        case .unavailable(let reason):
+            summary = try await fallback.summarizeCollection(sources, request: request, progress: progress)
+            summary.fallbackReason = reason
+        }
+        summary.actionItems = []
+        return Self.applyingTemplate(of: request, to: summary)
     }
 
     /// A template's sections: the ones it leaves out are removed after every summarizer (the

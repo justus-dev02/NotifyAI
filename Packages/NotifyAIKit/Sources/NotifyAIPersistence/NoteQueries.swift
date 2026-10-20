@@ -18,17 +18,20 @@ public struct NoteListFilter: Equatable, Sendable {
 
     public var favoritesOnly: Bool
     public var origin: Origin
+    /// Only notes with this label; `nil` for all.
+    public var label: String?
 
-    public init(favoritesOnly: Bool = false, origin: Origin = .any) {
+    public init(favoritesOnly: Bool = false, origin: Origin = .any, label: String? = nil) {
         self.favoritesOnly = favoritesOnly
         self.origin = origin
+        self.label = label
     }
 }
 
 /// Predicates shared by views, services and tests.
 public enum NoteQueries {
     /// The notes of a list filter, optionally matching a search text in the title, the
-    /// summary overview or the full text.
+    /// labels, the summary overview or the full text.
     ///
     /// The full text lives in `NoteContent`; the predicate follows the relationship inside
     /// the database, so searching does not load any text into memory.
@@ -38,13 +41,16 @@ public enum NoteQueries {
         let favoritesOnly = filter.favoritesOnly
         let recordingsOnly = filter.origin == .recordings
         let importsOnly = filter.origin == .imports
+        let labelToken = filter.label.map(NoteLabel.queryToken(for:)) ?? ""
 
         return #Predicate<Note> { note in
             (!favoritesOnly || note.isFavorite)
                 && (!recordingsOnly || note.kindRawValue == recording)
                 && (!importsOnly || note.kindRawValue != recording)
+                && (labelToken.isEmpty || note.labelKeys.contains(labelToken))
                 && (query.isEmpty
                     || note.title.localizedStandardContains(query)
+                    || note.labelKeys.localizedStandardContains(query)
                     || note.summaryOverview.localizedStandardContains(query)
                     || note.content.flatMap { $0.text.localizedStandardContains(query) } == true)
         }

@@ -205,7 +205,7 @@ struct FoundationModelSummarizer: Summarizer {
     }
 
     /// Notes merged until they fit into `target`, and whether they had to be cut.
-    private struct ReducedNotes {
+    struct ReducedNotes {
         var text: String
         var isShortened: Bool
     }
@@ -213,7 +213,7 @@ struct FoundationModelSummarizer: Summarizer {
     /// Merges notes in rounds until they fit into `target`. A group the model cannot merge
     /// stays as it is and is tried again in the next round. If the notes still do not fit
     /// after several rounds, they are cut, and the result says so.
-    private func reduce(_ notes: [String], request: SummaryRequest, fitting target: TextChunker) async throws -> ReducedNotes {
+    func reduce(_ notes: [String], request: SummaryRequest, fitting target: TextChunker) async throws -> ReducedNotes {
         // Merge requests carry no marked passages, so a group may use the whole budget.
         let groupChunker = TextChunker(budget: inputTokenBudget, measure: target.measure)
         var texts = notes
@@ -310,7 +310,7 @@ struct FoundationModelSummarizer: Summarizer {
 
     // MARK: - Model access
 
-    private func respond<Content: Generable>(
+    func respond<Content: Generable>(
         generating type: Content.Type,
         instructions: String,
         prompt: String
@@ -318,7 +318,7 @@ struct FoundationModelSummarizer: Summarizer {
         try await responder.respond(generating: type, instructions: instructions, prompt: prompt)
     }
 
-    private var tokenMeasure: TextChunker.Measure {
+    var tokenMeasure: TextChunker.Measure {
         customMeasure ?? Self.systemTokenMeasure()
     }
 
@@ -334,60 +334,5 @@ struct FoundationModelSummarizer: Summarizer {
             }
         }
         return TextChunker.estimatedTokens
-    }
-
-    // MARK: - Prompts
-
-    private enum PromptTask {
-        case summary, extractNotes, mergeNotes, chapter
-    }
-
-    private static func instructions(for request: SummaryRequest, task: PromptTask) -> String {
-        // The language name is given in English ("German") to match the English instructions.
-        let languageName = Locale(identifier: "en").localizedString(forLanguageCode: request.language.languageCode)
-            ?? "the language of the text"
-        let source = request.kind.hasAudio ? "a transcript of a spoken conversation" : "a document"
-
-        let taskDescription = switch task {
-        case .summary:
-            "Summarize \(source) for the person who recorded it."
-        case .extractNotes:
-            "You receive one excerpt of \(source). Extract structured notes from this excerpt only."
-        case .mergeNotes:
-            "You receive several sets of notes about \(source). Merge them into one set: combine duplicates and keep every distinct fact, decision and task."
-        case .chapter:
-            "You receive one chapter of \(source). Condense this chapter only; other chapters are condensed separately."
-        }
-
-        let date = request.recordedAt.formatted(Date.FormatStyle(date: .complete, time: .shortened).locale(Locale(identifier: "en_US")))
-        var context = "The content was recorded on \(date)."
-        if !request.participants.isEmpty {
-            context += " Participants: \(request.participants.joined(separator: ", "))."
-        }
-        if request.kind.hasAudio {
-            context += " Lines starting with \"\(SourceSpeakerAttribution.userLabel):\" are spoken by the user who recorded; other labels are the other participants."
-        }
-
-        return """
-        \(taskDescription)
-        \(Self.guidance(for: request))
-        \(context)
-        Only use information that is stated in the text. Never invent names, numbers, dates or facts. \
-        Many recordings are plain minutes, lectures or conversations without tasks, decisions or open \
-        questions: then leave those lists empty. A task is only a concrete action that a person in the \
-        text explicitly committed to ("I'll send it", "Anna takes care of the budget") or was asked to do \
-        ("Could you check the contract by Friday?"). Not tasks: topics, decisions, ideas, wishes, \
-        hypothetical or conditional actions ("we could", "maybe", "if"), things already done, and \
-        general "next steps". Write each task as a self-contained instruction that starts with a verb \
-        and says what exactly is to be done, so it is clear without the conversation. List each task \
-        once, even when it was mentioned several times. The owner is the person who will do it: when \
-        someone says "I will", it is the label at the start of their line. Leave the owner and deadline \
-        empty when they were not said; never write placeholders such as "not specified". \
-        Transcripts can contain recognition errors; interpret them sensibly and do not quote them verbatim.
-        Be concrete: keep names, numbers, amounts, dates, deadlines and product or project names. \
-        Avoid generic statements such as "various topics were discussed". \
-        When a deadline is relative ("Friday", "next week"), keep it and add the calendar date based on the recording date.
-        Write every field in \(languageName). Be concise and specific.
-        """
     }
 }

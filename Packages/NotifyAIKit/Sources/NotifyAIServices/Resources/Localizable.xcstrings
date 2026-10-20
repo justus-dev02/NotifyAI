@@ -21,6 +21,22 @@
         }
       }
     },
+    "%@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ (angepasst)" : {
       "localizations" : {
         "en" : {
@@ -94,6 +110,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld marked passages no longer fit into the request and were not given special weight."
+          }
+        }
+      }
+    },
+    "%lld Notizen · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Notizen · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld notes · %2$@"
           }
         }
       }
@@ -280,6 +312,16 @@
         }
       }
     },
+    "Apple Intelligence konnte die Notizen nicht zusammenführen; die Zusammenfassung wurde aus ihren Zusammenfassungen zusammengestellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not combine the notes; the summary was compiled from their summaries."
+          }
+        }
+      }
+    },
     "Apple Intelligence konnte diesen Text nicht zusammenfassen." : {
       "localizations" : {
         "en" : {
@@ -462,6 +504,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please give the template a name."
+          }
+        }
+      }
+    },
+    "Bitte gib der Zusammenfassung einen Titel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please give the summary a title."
           }
         }
       }
@@ -816,6 +868,16 @@
         }
       }
     },
+    "Die Notizen dieser Zusammenfassung sind nicht mehr vorhanden oder haben keine Zusammenfassung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The notes of this summary no longer exist or have no summary."
+          }
+        }
+      }
+    },
     "Die passendsten Notizen findest du unten." : {
       "localizations" : {
         "en" : {
@@ -1156,6 +1218,16 @@
         }
       }
     },
+    "Ich habe %lld passende Notizen gefunden. Eine Zusammenfassung über alle liest jede Notiz vollständig, nicht nur einzelne Stellen; prüfe die Auswahl und starte sie unten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found %lld matching notes. A summary across all of them reads every note in full, not just individual passages; check the selection and start it below."
+          }
+        }
+      }
+    },
     "Ich habe eine passende Notiz gefunden." : {
       "localizations" : {
         "en" : {
@@ -1312,6 +1384,16 @@
         }
       }
     },
+    "Keine Notiz hat das Label %@. Ich habe danach im Text gesucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No note has the label %@. I searched for it in the text instead."
+          }
+        }
+      }
+    },
     "Keine Sprache an dieser Stelle" : {
       "localizations" : {
         "en" : {
@@ -1338,6 +1420,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Customer Conversation"
+          }
+        }
+      }
+    },
+    "Label: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label: %@"
+          }
+        }
+      }
+    },
+    "Labels: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels: %@"
           }
         }
       }
@@ -1662,6 +1764,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Log of the Current Session"
+          }
+        }
+      }
+    },
+    "Sammelzusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summary Across Notes"
           }
         }
       }
@@ -2004,6 +2116,16 @@
         }
       }
     },
+    "Wähle mindestens zwei Notizen mit Zusammenfassung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose at least two notes with a summary."
+          }
+        }
+      }
+    },
     "Was wurde zuletzt entschieden?" : {
       "localizations" : {
         "en" : {
@@ -2090,6 +2212,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summary"
+          }
+        }
+      }
+    },
+    "Zusammengefasste Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarized Notes"
           }
         }
       }

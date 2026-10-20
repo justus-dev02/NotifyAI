@@ -16,6 +16,8 @@ struct NoteChatView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @FocusState private var isInputFocused: Bool
+    /// The notes a question found, being chosen for a summary across them.
+    @State private var collectionRequest: CollectionRequest?
 
     var body: some View {
         NavigationStack {
@@ -26,8 +28,10 @@ struct NoteChatView: View {
                             introduction
                         }
                         ForEach(chat.messages) { message in
-                            ChatMessageView(message: message, onOpen: open)
-                                .id(message.id)
+                            ChatMessageView(message: message, onOpen: open) { ids in
+                                collectionRequest = CollectionRequest(noteIDs: ids)
+                            }
+                            .id(message.id)
                         }
                     }
                     .padding(Theme.Spacing.large)
@@ -41,6 +45,10 @@ struct NoteChatView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) { inputBar }
+            .sheet(item: $collectionRequest) { request in
+                // The new summary opens in the main window; the conversation closes.
+                CollectionSheet(request: request) { dismiss() }
+            }
             .navigationTitle("Notizen fragen")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -151,6 +159,8 @@ struct NoteChatView: View {
 private struct ChatMessageView: View {
     let message: ChatMessage
     let onOpen: (UUID, TimeInterval?) -> Void
+    /// Offers a summary across the notes the question found.
+    let onSummarize: ([UUID]) -> Void
 
     var body: some View {
         switch message.role {
@@ -194,6 +204,13 @@ private struct ChatMessageView: View {
                     Label(notice, systemImage: "info.circle")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+
+                if message.collectionNoteIDs.count >= 2 {
+                    Button("Zusammenfassung über \(message.collectionNoteIDs.count) Notizen erstellen …", systemImage: NoteKind.collection.symbolName) {
+                        onSummarize(message.collectionNoteIDs)
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
 
                 if !message.sources.isEmpty {

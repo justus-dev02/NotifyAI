@@ -78,7 +78,8 @@ private struct RecordingSetupView: View {
                     TemplateChoiceOptions()
                 }
                 TextField("Teilnehmende (durch Komma getrennt)", text: $recording.draft.participants)
-                Text("Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet.")
+                TextField("Labels (optional, z. B. Firma oder Projekt)", text: $recording.draft.labels)
+                Text("Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet. Labels nennen den Zusammenhang, etwa deine Firma oder ein Projekt; Zusammenfassung und „Notizen fragen“ nutzen sie.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

@@ -61,6 +61,32 @@
         }
       }
     },
+    "„%@“ wird von %lld Notizen entfernt. Die Notizen bleiben erhalten." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "„%1$@“ wird von %2$lld Notizen entfernt. Die Notizen bleiben erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” is removed from %2$lld notes. The notes are kept."
+          }
+        }
+      }
+    },
+    "„%@“ wird von einer Notiz entfernt. Die Notiz bleibt erhalten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is removed from one note. The note is kept."
+          }
+        }
+      }
+    },
     "%@ · %@ · %@" : {
       "localizations" : {
         "de" : {
@@ -83,6 +109,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ · playing audio"
+          }
+        }
+      }
+    },
+    "%@ (%lld)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$lld)"
           }
         }
       }
@@ -269,6 +311,16 @@
         }
       }
     },
+    "%lld Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes"
+          }
+        }
+      }
+    },
     "%lld Notizen · %lld Abschnitte" : {
       "localizations" : {
         "de" : {
@@ -295,6 +347,16 @@
         }
       }
     },
+    "%lld Notizen wurden inzwischen gelöscht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes have been deleted since."
+          }
+        }
+      }
+    },
     "%lld Sprachpakete" : {
       "localizations" : {
         "en" : {
@@ -311,6 +373,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 term"
+          }
+        }
+      }
+    },
+    "1 Notiz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 note"
           }
         }
       }
@@ -431,6 +503,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark the current moment as important"
+          }
+        }
+      }
+    },
+    "Alle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
           }
         }
       }
@@ -903,6 +985,16 @@
         }
       }
     },
+    "Aufgaben aus den Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks from the Notes"
+          }
+        }
+      }
+    },
     "Aufgaben filtern" : {
       "localizations" : {
         "en" : {
@@ -1173,6 +1265,16 @@
         }
       }
     },
+    "Aus %lld Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %lld notes"
+          }
+        }
+      }
+    },
     "Aus 1 Aufnahme gelernt" : {
       "localizations" : {
         "en" : {
@@ -1309,6 +1411,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deleting recordings keeps the transcript, summary, tasks and speakers; only playback and transcribing again are no longer possible. Only recordings that are not favorites are deleted automatically. Models can be downloaded again at any time."
+          }
+        }
+      }
+    },
+    "Bis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
           }
         }
       }
@@ -1589,12 +1701,12 @@
         }
       }
     },
-    "Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet." : {
+    "Die Art des Gesprächs oder deine Vorlage bestimmt, worauf die Zusammenfassung achtet. Labels nennen den Zusammenhang, etwa deine Firma oder ein Projekt; Zusammenfassung und „Notizen fragen“ nutzen sie." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The kind of conversation or your template determines what the summary focuses on."
+            "value" : "The kind of conversation or your template determines what the summary focuses on. Labels name the context, such as your company or a project; the summary and “Ask Notes” use them."
           }
         }
       }
@@ -1835,6 +1947,36 @@
         }
       }
     },
+    "Die Zusammenfassung wird als eigene Notiz gesichert und verweist auf ihre Notizen. Sie liest die Zusammenfassung jeder Notiz vollständig und verdichtet sie schrittweise; Aufgaben werden ohne Doppelte aus den Notizen übernommen. „Neu zusammenfassen“ liest die Notizen später erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The summary is saved as a note of its own and links to its notes. It reads every note's summary in full and condenses them step by step; tasks are taken from the notes without duplicates. “Summarize Again” reads the notes again later."
+          }
+        }
+      }
+    },
+    "Diese Zusammenfassung wurde aus den Zusammenfassungen dieser Notizen erstellt. „Neu zusammenfassen“ liest sie erneut, mit allen Änderungen seither." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This summary was made from the summaries of these notes. “Summarize Again” reads them again, with all changes since."
+          }
+        }
+      }
+    },
+    "Dieses Jahr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Year"
+          }
+        }
+      }
+    },
     "Du hast dieses Transkript korrigiert. Beim neuen Transkribieren gehen deine Korrekturen und benannten Sprecher verloren; gemerkte Stimmen werden wieder erkannt." : {
       "localizations" : {
         "en" : {
@@ -1905,6 +2047,16 @@
         }
       }
     },
+    "Eigener Zeitraum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Period"
+          }
+        }
+      }
+    },
     "Eigenes Vokabular" : {
       "localizations" : {
         "en" : {
@@ -1915,12 +2067,42 @@
         }
       }
     },
+    "Ein Label nennt den Zusammenhang, den der Text oft nicht sagt, etwa deine Firma, ein Projekt oder einen Kurs. „Notizen fragen“ findet so z. B. mit „Samsung: Was wurde zum Budget entschieden?“ nur diese Notizen; die Zusammenfassung berücksichtigt das Label beim nächsten Zusammenfassen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A label names the context the text often does not mention, such as your company, a project or a course. “Ask Notes” then finds only these notes, e.g. with “Samsung: What was decided about the budget?”; the summary takes the label into account the next time it is made."
+          }
+        }
+      }
+    },
     "Eine Aufnahme ist schon älter und verliert sofort ihre Audiodatei. Transkript, Zusammenfassung und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "One recording is already older and loses its audio file right away. Transcript, summary and tasks are kept; favorites keep their recording."
+          }
+        }
+      }
+    },
+    "Eine Notiz wurde inzwischen gelöscht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One note has been deleted since."
+          }
+        }
+      }
+    },
+    "Eine Zusammenfassung über mehrere Notizen erstellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a summary across several notes"
           }
         }
       }
@@ -1991,6 +2173,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove"
+          }
+        }
+      }
+    },
+    "Entfernen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove …"
           }
         }
       }
@@ -2536,6 +2728,16 @@
         }
       }
     },
+    "In diesen Notizen wurden keine Aufgaben vereinbart." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tasks were agreed in these notes."
+          }
+        }
+      }
+    },
     "In dieser Version sind keine Updates eingerichtet. Neue Versionen findest du auf GitHub." : {
       "localizations" : {
         "en" : {
@@ -2686,6 +2888,16 @@
         }
       }
     },
+    "Keine fertige Notiz mit Zusammenfassung passt zu dieser Auswahl." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No finished note with a summary matches this selection."
+          }
+        }
+      }
+    },
     "Keine Füllwörter" : {
       "localizations" : {
         "en" : {
@@ -2806,6 +3018,116 @@
         }
       }
     },
+    "Label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label"
+          }
+        }
+      }
+    },
+    "Label %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label %@"
+          }
+        }
+      }
+    },
+    "Label entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Label"
+          }
+        }
+      }
+    },
+    "Label entfernen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove label?"
+          }
+        }
+      }
+    },
+    "Label hinzufügen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Label"
+          }
+        }
+      }
+    },
+    "Label hinzufügen, z. B. deine Firma oder ein Projekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a label, e.g. your company or a project"
+          }
+        }
+      }
+    },
+    "Label umbenennen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Label"
+          }
+        }
+      }
+    },
+    "Label: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label: %@"
+          }
+        }
+      }
+    },
+    "Labels" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels"
+          }
+        }
+      }
+    },
+    "Labels (optional, z. B. Firma oder Projekt)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels (optional, e.g. company or project)"
+          }
+        }
+      }
+    },
+    "Labels nennen den Zusammenhang einer Notiz, etwa deine Firma, ein Projekt oder einen Kurs. „Notizen fragen“ sucht mit einem Label in der Frage nur in diesen Notizen („Samsung: Was ist noch offen?“), und die Zusammenfassung berücksichtigt es. Umbenennen auf einen vorhandenen Namen führt beide Labels zusammen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels name the context of a note, such as your company, a project or a course. With a label in the question, “Ask Notes” searches only these notes (“Samsung: What is still open?”), and the summary takes it into account. Renaming to an existing name merges both labels."
+          }
+        }
+      }
+    },
     "Laden (%@)" : {
       "localizations" : {
         "en" : {
@@ -2842,6 +3164,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last 7 Days"
+          }
+        }
+      }
+    },
+    "Letzte 30 Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 30 Days"
+          }
+        }
+      }
+    },
+    "Letzte 90 Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 90 Days"
           }
         }
       }
@@ -3276,6 +3618,16 @@
         }
       }
     },
+    "Neues Label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Label"
+          }
+        }
+      }
+    },
     "Nicht an %@ gesendet" : {
       "localizations" : {
         "en" : {
@@ -3362,6 +3714,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No system audio received yet. Has the meeting started? If so, allow NotifyAI to record system audio under “Screen & System Audio Recording”."
+          }
+        }
+      }
+    },
+    "Noch keine Labels. Du vergibst sie in einer Notiz unter dem Titel oder vor der Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No labels yet. You add them in a note below its title or before recording."
           }
         }
       }
@@ -3546,6 +3908,32 @@
         }
       }
     },
+    "Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
+          }
+        }
+      }
+    },
+    "Notizen (%lld von %lld)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notizen (%1$lld von %2$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes (%1$lld of %2$lld)"
+          }
+        }
+      }
+    },
     "Notizen behalten den Namen, den sie haben; neue Aufnahmen erhalten den neuen." : {
       "localizations" : {
         "en" : {
@@ -3592,6 +3980,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing notes for search…"
+          }
+        }
+      }
+    },
+    "Notizen zeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Notes"
+          }
+        }
+      }
+    },
+    "Notizen zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize Notes"
+          }
+        }
+      }
+    },
+    "Notizen zusammenfassen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize Notes …"
           }
         }
       }
@@ -4516,12 +4934,12 @@
         }
       }
     },
-    "Titel, Transkript, Zusammenfassung" : {
+    "Titel, Label, Transkript, Zusammenfassung" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Title, transcript, summary"
+            "value" : "Title, label, transcript, summary"
           }
         }
       }
@@ -4666,6 +5084,16 @@
         }
       }
     },
+    "Umbenennen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        }
+      }
+    },
     "Umbenennen …" : {
       "localizations" : {
         "en" : {
@@ -4766,12 +5194,52 @@
         }
       }
     },
+    "Von" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        }
+      }
+    },
+    "Von allen Notizen entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from All Notes"
+          }
+        }
+      }
+    },
     "Von dir benannt." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Named by you."
+          }
+        }
+      }
+    },
+    "Vorhandene Labels" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Existing Labels"
+          }
+        }
+      }
+    },
+    "Vorlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Template"
           }
         }
       }
@@ -4876,6 +5344,16 @@
         }
       }
     },
+    "Welche Notizen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which Notes?"
+          }
+        }
+      }
+    },
     "Whisper %@" : {
       "localizations" : {
         "en" : {
@@ -4922,6 +5400,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark What Matters"
+          }
+        }
+      }
+    },
+    "Wieder öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reopen"
           }
         }
       }
@@ -5012,6 +5500,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What should the summary focus on?"
+          }
+        }
+      }
+    },
+    "Zeitraum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period"
           }
         }
       }
@@ -5142,6 +5640,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summary Coming"
+          }
+        }
+      }
+    },
+    "Zusammenfassung über %lld Notizen erstellen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Summary Across %lld Notes …"
+          }
+        }
+      }
+    },
+    "Zusammengefasst werden die neuesten %lld Notizen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The newest %lld notes are summarized."
           }
         }
       }

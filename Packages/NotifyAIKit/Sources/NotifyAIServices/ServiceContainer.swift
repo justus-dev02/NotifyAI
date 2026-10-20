@@ -36,6 +36,8 @@ public final class ServiceContainer {
     public let chat: NoteChatModel
     public let tasks: TaskBoard
     public let library: NoteLibrary
+    public let labels: NoteLabels
+    public let collections: NoteCollections
     public let storage: StorageMaintenance
 
     /// - Parameters:
@@ -103,6 +105,8 @@ public final class ServiceContainer {
         integrations = IntegrationService(store: store, settings: settings.integrations, processing: processing, stateURL: integrationState)
         importer = ImportService(store: store, settings: settings, processing: processing)
         library = NoteLibrary(store: store, processing: processing)
+        labels = NoteLabels(store: store)
+        collections = NoteCollections(store: store, processing: processing)
         tasks = TaskBoard(store: store, library: library)
         storage = StorageMaintenance(locations: locations, settings: settings, library: library)
         appLock = AppLock(settings: settings.privacy)

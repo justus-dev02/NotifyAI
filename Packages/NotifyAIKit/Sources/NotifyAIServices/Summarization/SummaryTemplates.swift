@@ -204,6 +204,10 @@ struct TemplateLookup {
         return store.fetch(descriptor).first
     }
 
+    func template(for note: Note) -> SummaryTemplate? {
+        note.summaryTemplateID.flatMap(template(id:))
+    }
+
     func guidance(for note: Note) -> TemplateGuidance? {
         note.summaryTemplateID.flatMap(template(id:)).map(TemplateGuidance.init)
     }

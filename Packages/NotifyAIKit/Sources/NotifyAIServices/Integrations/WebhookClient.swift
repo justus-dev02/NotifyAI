@@ -52,6 +52,7 @@ struct WebhookClient {
             duration: snapshot.duration,
             participants: snapshot.participants,
             keywords: snapshot.keywords,
+            labels: snapshot.labels,
             summary: summary,
             markdown: MarkdownExporter().markdown(for: snapshot, options: options),
             transcript: transcript
@@ -95,6 +96,7 @@ struct WebhookPayload: Encodable {
         let duration: TimeInterval
         let participants: [String]
         let keywords: [String]
+        let labels: [String]
         let summary: Summary?
         let markdown: String
         let transcript: [Line]?

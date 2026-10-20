@@ -25,6 +25,10 @@ struct SummaryStep {
 
     func run(_ note: Note, options: ProcessingOptions, context: ProcessingContext) async throws {
         context.setStage(.summarizing, nil)
+        if note.kind == .collection {
+            try await summarizeCollection(note, context: context)
+            return
+        }
         let segments = note.decodedTranscript()
         let input = SummaryInput(note: note, segments: segments, template: templates.guidance(for: note))
 
@@ -51,6 +55,25 @@ struct SummaryStep {
                 note.title = title
             }
         }
+    }
+
+    /// A summary across several notes: made from the notes' current summaries, so it reflects
+    /// corrections made since. Notes deleted meanwhile are left out.
+    private func summarizeCollection(_ note: Note, context: ProcessingContext) async throws {
+        let sources = NoteCollections.sources(of: note, in: context.store).compactMap { source in
+            CollectionSource(note: source, templateName: templates.template(for: source)?.name)
+        }
+        guard !sources.isEmpty else { throw ProcessingError.missingSourceNotes }
+        let text = CollectionSource.text(of: sources)
+        if note.bodyText != text {
+            note.bodyText = text
+        }
+        var request = SummaryInput(note: note, segments: [], template: templates.guidance(for: note)).request
+        request.recordedAt = sources.map(\.createdAt).max() ?? note.createdAt
+        let generated = try await summarization.summarizeCollection(request, sources: sources, progress: context.progress)
+        try Task.checkCancellation()
+        // Only what the notes' summaries support.
+        note.summary = SummaryGrounding(text: text, languageCode: note.language.languageCode).apply(to: generated)
     }
 
     private func summarize(_ input: SummaryInput, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
@@ -120,6 +143,7 @@ struct SummaryInput: Sendable {
             },
             recordedAt: note.createdAt,
             participants: note.participants,
+            labels: note.labels,
             template: template
         )
     }

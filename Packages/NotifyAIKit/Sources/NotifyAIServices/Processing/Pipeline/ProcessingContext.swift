@@ -46,11 +46,14 @@ struct ProcessingContext {
 enum ProcessingError: LocalizedError {
     case missingAudio
     case noSpeechDetected
+    /// A summary across several notes whose notes were all deleted.
+    case missingSourceNotes
 
     var errorDescription: String? {
         switch self {
         case .missingAudio: String(localized: "Die Audiodatei dieser Notiz fehlt.", bundle: .module)
         case .noSpeechDetected: String(localized: "In der Aufnahme wurde keine Sprache erkannt.", bundle: .module)
+        case .missingSourceNotes: String(localized: "Die Notizen dieser Zusammenfassung sind nicht mehr vorhanden oder haben keine Zusammenfassung.", bundle: .module)
         }
     }
 }

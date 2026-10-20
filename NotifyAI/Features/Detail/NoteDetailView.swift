@@ -64,7 +64,7 @@ struct NoteDetailView: View {
 
                     Picker("Ansicht", selection: $tab) {
                         Text("Zusammenfassung").tag(Tab.summary)
-                        Text(note.kind.hasAudio ? String(localized: "Transkript") : String(localized: "Text")).tag(Tab.transcript)
+                        Text(secondTabTitle).tag(Tab.transcript)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -79,7 +79,9 @@ struct NoteDetailView: View {
                             RelatedNotesSection(noteID: note.id)
                         }
                     case .transcript:
-                        if let model {
+                        if note.kind == .collection {
+                            CollectionSourcesView(note: note)
+                        } else if let model {
                             TranscriptView(note: note, model: model, scrollProxy: proxy, isCorrecting: $isCorrecting)
                         }
                     }
@@ -144,6 +146,14 @@ struct NoteDetailView: View {
         }
     }
 
+    private var secondTabTitle: String {
+        switch note.kind {
+        case .recording, .audioImport: String(localized: "Transkript")
+        case .document, .image: String(localized: "Text")
+        case .collection: String(localized: "Notizen")
+        }
+    }
+
     /// Changes whenever the model needs to re-read the note.
     private var updateKey: String {
         "\(note.statusRawValue)|\(note.contentRevision)|\(note.markersData?.count ?? -1)|\(note.audioFileName ?? "")"
@@ -172,26 +182,31 @@ struct NoteDetailView: View {
                     draftTitle = note.title
                     isRenaming = true
                 }
-                Button("Text kopieren", systemImage: "doc.on.doc") {
-                    Clipboard.copy(note.bodyText)
+                // A collection's text is what it was made from, not something to copy.
+                if note.kind != .collection {
+                    Button("Text kopieren", systemImage: "doc.on.doc") {
+                        Clipboard.copy(note.bodyText)
+                    }
+                    .disabled(!note.hasText)
                 }
-                .disabled(!note.hasText)
                 Divider()
                 Button("Neu zusammenfassen", systemImage: "sparkles") {
                     processing.enqueue(.resummarize(note.id))
                 }
                 .disabled(note.status.isProcessing || !note.hasText)
                 ResummarizeWithTemplateMenu(note: note)
-                Divider()
-                Button(note.kind.hasAudio ? String(localized: "Transkript korrigieren") : String(localized: "Text bearbeiten"), systemImage: "pencil") {
-                    tab = .transcript
-                    isCorrecting = true
+                if note.kind != .collection {
+                    Divider()
+                    Button(note.kind.hasAudio ? String(localized: "Transkript korrigieren") : String(localized: "Text bearbeiten"), systemImage: "pencil") {
+                        tab = .transcript
+                        isCorrecting = true
+                    }
+                    .disabled(!note.isEditable || (note.kind.hasAudio ? !note.hasTranscript : !note.hasText))
+                    Button("Suchen und ersetzen …", systemImage: "text.magnifyingglass") {
+                        isReplacing = true
+                    }
+                    .disabled(!note.isEditable || !note.hasText)
                 }
-                .disabled(!note.isEditable || (note.kind.hasAudio ? !note.hasTranscript : !note.hasText))
-                Button("Suchen und ersetzen …", systemImage: "text.magnifyingglass") {
-                    isReplacing = true
-                }
-                .disabled(!note.isEditable || !note.hasText)
                 if note.kind.hasAudio {
                     Button("Füllwörter entfernen", systemImage: "text.badge.minus") {
                         removeFillerWords()
@@ -307,10 +322,15 @@ private struct NoteHeader: View {
                 if !note.markers.isEmpty {
                     Tag(text: String(localized: "\(note.markers.count) markiert"), systemImage: "star.fill")
                 }
+                if note.kind == .collection {
+                    Tag(text: String(localized: "Aus \(note.sourceNoteIDs.count) Notizen"), systemImage: NoteKind.collection.symbolName)
+                }
                 ForEach(note.participants, id: \.self) { name in
                     Tag(text: name, systemImage: "person")
                 }
             }
+
+            NoteLabelsRow(note: note)
         }
     }
 }

@@ -7,6 +7,7 @@ import CoreTransferable
 import Foundation
 import NotifyAICore
 import NotifyAIPersistence
+import SwiftData
 import UniformTypeIdentifiers
 
 /// Renders a note as Markdown for sharing.
@@ -36,6 +37,10 @@ public struct MarkdownExporter {
         var audioSource: String?
         /// Keywords of the summary, e.g. for tags in Obsidian.
         var keywords: [String] = []
+        /// The user's labels ("Samsung"): metadata and tags in Obsidian.
+        var labels: [String] = []
+        /// For a summary across several notes: its notes ("Weekly · 14. Okt. 2026").
+        var sources: [String] = []
     }
 
     func markdown(for note: NoteSnapshot, options: Options = Options()) -> String {
@@ -124,19 +129,38 @@ extension UTType {
 extension MarkdownExporter.NoteSnapshot {
     /// Everything the export needs from a note; `segments` is the transcript the caller
     /// already decoded.
+    ///
+    /// A summary across several notes exports its notes instead of its source text, and the
+    /// tasks of its notes without duplicates.
+    @MainActor
     public init(note: Note, segments: [TranscriptSegment]) {
+        let isCollection = note.kind == .collection
+        let sourceNotes = isCollection ? Self.sourceNotes(of: note) : []
+        var summary = note.summary
+        if isCollection {
+            summary?.actionItems = NoteCollections.tasks(of: sourceNotes).map(\.item)
+        }
         self.init(
             id: note.id,
             title: note.title,
             createdAt: note.createdAt,
             duration: note.duration,
             participants: note.participants,
-            summary: note.summary,
+            summary: summary,
             markers: note.markers,
             segments: segments,
-            bodyText: note.bodyText,
+            bodyText: isCollection ? "" : note.bodyText,
             audioSource: note.audioSourceDescription,
-            keywords: note.summary?.keywords ?? []
+            keywords: note.summary?.keywords ?? [],
+            labels: note.labels,
+            sources: sourceNotes.map { "\($0.title) · \($0.createdAt.formatted(date: .abbreviated, time: .omitted))" }
         )
+    }
+
+    @MainActor
+    private static func sourceNotes(of collection: Note) -> [Note] {
+        let ids = collection.sourceNoteIDs
+        let descriptor = FetchDescriptor<Note>(predicate: #Predicate { ids.contains($0.id) }, sortBy: [SortDescriptor(\.createdAt)])
+        return (try? collection.modelContext?.fetch(descriptor)) ?? []
     }
 }

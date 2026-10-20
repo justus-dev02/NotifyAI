@@ -26,11 +26,13 @@ struct NoteList: View {
     private let isSearching: Bool
     private let showsTaskRow: Bool
 
-    init(filter: LibraryFilter, searchText: String, selection: Binding<LibrarySelection?>) {
+    init(filter: LibraryFilter, label: String?, searchText: String, selection: Binding<LibrarySelection?>) {
         _selection = selection
-        _notes = Query(filter: NoteQueries.library(filter: filter.listFilter, searchText: searchText), sort: \Note.createdAt, order: .reverse)
+        var listFilter = filter.listFilter
+        listFilter.label = label
+        _notes = Query(filter: NoteQueries.library(filter: listFilter, searchText: searchText), sort: \Note.createdAt, order: .reverse)
         isSearching = !searchText.trimmingCharacters(in: .whitespaces).isEmpty
-        showsTaskRow = filter == .all && !isSearching
+        showsTaskRow = filter == .all && label == nil && !isSearching
     }
 
     var body: some View {
@@ -233,6 +235,12 @@ private struct NoteRow: View {
         var parts = [note.createdAt.formatted(date: .omitted, time: .shortened)]
         if note.duration > 0 {
             parts.append(TimeFormatting.duration(note.duration))
+        }
+        if note.kind == .collection {
+            parts.append(String(localized: "Aus \(note.sourceNoteIDs.count) Notizen"))
+        }
+        if !note.labels.isEmpty {
+            parts.append(note.labels.joined(separator: ", "))
         }
         if !note.summaryOverview.isEmpty {
             parts.append(note.summaryOverview)

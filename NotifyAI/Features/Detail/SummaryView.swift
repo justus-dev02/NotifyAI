@@ -46,8 +46,11 @@ struct SummaryView: View {
                     }
                 }
 
-                // A template without tasks shows the section only for tasks the user added.
-                if !note.tasks.isEmpty || templates.template(for: note)?.sections.contains(.actionItems) != false {
+                if note.kind == .collection {
+                    // The tasks of the collection's notes, without duplicates.
+                    CollectionTasksSection(collection: note)
+                } else if !note.tasks.isEmpty || templates.template(for: note)?.sections.contains(.actionItems) != false {
+                    // A template without tasks shows the section only for tasks the user added.
                     NoteTasksSection(note: note, onOpen: onOpenTime)
                 }
 

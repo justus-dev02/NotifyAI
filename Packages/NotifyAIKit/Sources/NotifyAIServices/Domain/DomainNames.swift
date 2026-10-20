@@ -18,6 +18,7 @@ extension NoteKind {
         case .audioImport: String(localized: "Audiodatei", bundle: .module)
         case .document: String(localized: "PDF", bundle: .module)
         case .image: String(localized: "Bild", bundle: .module)
+        case .collection: String(localized: "Sammelzusammenfassung", bundle: .module)
         }
     }
 }

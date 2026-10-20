@@ -9,6 +9,8 @@ import NotifyAICore
 /// Restrictions a question implies, e.g. "letzte Woche" or "mit Anna".
 struct SearchFilters: Equatable, Sendable {
     var dateRange: DateInterval?
+    /// Notes must carry one of these labels.
+    var labels: [String] = []
     /// Notes must mention or involve one of these people.
     var persons: [String] = []
     var kinds: Set<NoteKind>?
@@ -17,7 +19,7 @@ struct SearchFilters: Equatable, Sendable {
     var preferredFocus: RecordingFocus?
 
     var isEmpty: Bool {
-        dateRange == nil && persons.isEmpty && kinds == nil && !favoritesOnly && preferredFocus == nil
+        dateRange == nil && labels.isEmpty && persons.isEmpty && kinds == nil && !favoritesOnly && preferredFocus == nil
     }
 }
 
@@ -51,6 +53,8 @@ struct SearchResult: Sendable {
     var notes: [NoteHit] = []
     /// Set when a person filter matched no note and was dropped to still find something.
     var relaxedPersons: [String] = []
+    /// Set when a label filter matched no note and was dropped to still find something.
+    var relaxedLabels: [String] = []
     /// Notes left after applying the filters.
     var candidateCount = 0
 }
@@ -84,8 +88,24 @@ struct HybridRetriever: Sendable {
     static let semanticWeight = 0.5
 
     func search(_ request: SearchRequest, passageLimit: Int = 12, noteLimit: Int = 10) -> SearchResult {
+        var request = request
         var result = SearchResult()
         let candidates = candidates(for: request.filters, result: &result)
+        if !result.relaxedLabels.isEmpty {
+            // The label was meant as a filter; without its notes it becomes a search term again.
+            request.text = ([request.text] + result.relaxedLabels).joined(separator: " ")
+        }
+        return search(request, candidates: candidates, result: result, passageLimit: passageLimit, noteLimit: noteLimit)
+    }
+
+    private func search(
+        _ request: SearchRequest,
+        candidates: [IndexedNote],
+        result: SearchResult,
+        passageLimit: Int,
+        noteLimit: Int
+    ) -> SearchResult {
+        var result = result
         result.candidateCount = candidates.count
         guard !candidates.isEmpty else { return result }
 
@@ -114,10 +134,20 @@ struct HybridRetriever: Sendable {
 
     // MARK: - Steps
 
-    /// The notes the filters allow. A person filter that matches no note is dropped and
-    /// reported in `result.relaxedPersons`, so the search still finds something.
+    /// The notes the filters allow. A label or person filter that matches no note is dropped
+    /// and reported in `result.relaxedLabels` / `relaxedPersons`, so the search still finds
+    /// something.
     private func candidates(for filters: SearchFilters, result: inout SearchResult) -> [IndexedNote] {
-        let candidates = index.notes.values.filter { matches($0, filters, includePersons: false) }
+        var candidates = index.notes.values.filter { matches($0, filters, includePersons: false) }
+        if !filters.labels.isEmpty {
+            let keys = Set(filters.labels.map(NoteLabel.key))
+            let labeled = candidates.filter { note in note.labels.contains { keys.contains(NoteLabel.key($0)) } }
+            if labeled.isEmpty {
+                result.relaxedLabels = filters.labels
+            } else {
+                candidates = labeled
+            }
+        }
         guard !filters.persons.isEmpty else { return Array(candidates) }
         let withPersons = candidates.filter { mentions($0, anyOf: filters.persons) }
         if withPersons.isEmpty {
@@ -307,6 +337,8 @@ struct HybridRetriever: Sendable {
     /// Why a note matched, in words the user understands.
     private func reasons(for note: IndexedNote, matchedTerms: Set<String>, filters: SearchFilters) -> [String] {
         var reasons: [String] = []
+        let labelKeys = Set(filters.labels.map(NoteLabel.key))
+        reasons += note.labels.filter { labelKeys.contains(NoteLabel.key($0)) }.map { String(localized: "Label: \($0)", bundle: .module) }
         for person in filters.persons {
             if let match = note.persons.first(where: { Self.name($0, matches: person) }) {
                 reasons.append(String(localized: "Person: \(match)", bundle: .module))

@@ -34,6 +34,7 @@ struct RecordingNoteWriter {
             audioFileName: NoteStore.recordingFileName(for: id)
         )
         note.summaryTemplateID = draft.templateID
+        note.setLabels(draft.labels.split(separator: ",").map(String.init))
         note.audioSource = configuration.source
         if configuration.source.usesSystemAudio, case .app(_, let name) = configuration.systemAudioTarget {
             note.sourceAppName = name

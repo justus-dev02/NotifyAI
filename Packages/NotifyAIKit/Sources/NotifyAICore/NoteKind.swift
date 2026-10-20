@@ -11,6 +11,8 @@ public enum NoteKind: String, Codable, CaseIterable, Sendable {
     case audioImport
     case document
     case image
+    /// A summary across several notes, made from their summaries.
+    case collection
 
     public var symbolName: String {
         switch self {
@@ -18,6 +20,7 @@ public enum NoteKind: String, Codable, CaseIterable, Sendable {
         case .audioImport: "music.note"
         case .document: "doc.text"
         case .image: "text.viewfinder"
+        case .collection: "square.stack.3d.up"
         }
     }
 

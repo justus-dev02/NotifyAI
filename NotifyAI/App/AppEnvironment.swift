@@ -83,6 +83,8 @@ extension View {
             .environment(services.knowledge)
             .environment(services.tasks)
             .environment(services.library)
+            .environment(services.labels)
+            .environment(services.collections)
             .environment(services.importer)
             .environment(services.storage)
             .environment(services.audioSession)

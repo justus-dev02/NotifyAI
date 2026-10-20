@@ -42,7 +42,7 @@ public final class NoteStore {
 
     public init(locations: StorageLocations, inMemory: Bool = false) throws {
         self.locations = locations
-        let schema = Schema(versionedSchema: NotifyAISchemaV6.self)
+        let schema = Schema(versionedSchema: NotifyAISchemaV7.self)
         let configuration: ModelConfiguration = if inMemory {
             ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         } else {

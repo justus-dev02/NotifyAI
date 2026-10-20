@@ -11,10 +11,10 @@ enum NotifyAIMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [
             NotifyAISchemaV1.self, NotifyAISchemaV2.self, NotifyAISchemaV3.self,
-            NotifyAISchemaV4.self, NotifyAISchemaV5.self, NotifyAISchemaV6.self,
+            NotifyAISchemaV4.self, NotifyAISchemaV5.self, NotifyAISchemaV6.self, NotifyAISchemaV7.self,
         ]
     }
-    static var stages: [MigrationStage] { [v1ToV2, v2ToV3, v3ToV4, v4ToV5, v5ToV6] }
+    static var stages: [MigrationStage] { [v1ToV2, v2ToV3, v3ToV4, v4ToV5, v5ToV6, v6ToV7] }
 
     /// V2 only adds optional attributes, which SwiftData migrates without custom code.
     static var v1ToV2: MigrationStage {
@@ -61,6 +61,11 @@ enum NotifyAIMigrationPlan: SchemaMigrationPlan {
     /// V6 only adds an optional attribute and one with a default value.
     static var v5ToV6: MigrationStage {
         .lightweight(fromVersion: NotifyAISchemaV5.self, toVersion: NotifyAISchemaV6.self)
+    }
+
+    /// V7 only adds attributes with default values.
+    static var v6ToV7: MigrationStage {
+        .lightweight(fromVersion: NotifyAISchemaV6.self, toVersion: NotifyAISchemaV7.self)
     }
 
     /// The new entity and relationship are inferred; afterwards the tasks move out of every

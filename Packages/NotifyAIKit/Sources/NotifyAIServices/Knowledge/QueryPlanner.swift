@@ -53,9 +53,11 @@ struct QueryPlan: Equatable, Sendable {
     var filterDescriptions: [String] = []
     /// The user wants a list of notes ("Zeig mir alle Meetings mit Anna") rather than an answer.
     var wantsList = false
+    /// The user wants one summary across the notes found ("Fasse alle Samsung-Meetings zusammen").
+    var wantsCollectionSummary = false
 }
 
-/// Understands dates, people, note kinds and focus in questions with deterministic rules.
+/// Understands dates, labels, people, note kinds and focus in questions with deterministic rules.
 ///
 /// Works without Apple Intelligence and is also used to check the language model's plan:
 /// rules win where they are certain (explicit time expressions, known names).
@@ -63,10 +65,21 @@ struct RuleBasedQueryParser: Sendable {
     var now: Date = .now
     var calendar: Calendar = .current
 
-    func plan(for question: String, knownPersons: [String]) -> QueryPlan {
+    func plan(for question: String, knownPersons: [String], knownLabels: [String] = []) -> QueryPlan {
         let folded = " " + TextAnalysis.normalizedWords(in: question).joined(separator: " ") + " "
         var plan = QueryPlan(searchText: question)
         var removable: [String] = []
+
+        // Labels the user gave notes ("Samsung: Was wurde zum Budget entschieden?"). A label
+        // limits the search to its notes and is no search term: a note labeled "Samsung"
+        // rarely says "Samsung".
+        let labels = Self.labels(in: folded, knownLabels: knownLabels)
+        if !labels.isEmpty {
+            plan.filters.labels = labels
+            plan.filterDescriptions += labels.map { String(localized: "Label: \($0)", bundle: .module) }
+            removable += labels
+        }
+        let labelWords = Set(labels.flatMap(TextAnalysis.normalizedWords(in:)))
 
         // Time.
         if let (range, title, phrase) = dateRange(in: folded) {
@@ -75,8 +88,8 @@ struct RuleBasedQueryParser: Sendable {
             removable.append(phrase)
         }
 
-        // People known from the notes.
-        let words = Set(TextAnalysis.normalizedWords(in: question))
+        // People known from the notes; a word that names a label is no person.
+        let words = Set(TextAnalysis.normalizedWords(in: question)).subtracting(labelWords)
         let persons = knownPersons.filter { person in
             let personWords = TextAnalysis.normalizedWords(in: person)
             // A first name alone ("Anna") is enough; very short tokens are ignored.
@@ -116,10 +129,50 @@ struct RuleBasedQueryParser: Sendable {
         // Listing requests.
         plan.wantsList = folded.containsAny([" zeig", " liste", " welche notizen", " welche aufnahmen", " alle ", " show ", " list "])
             && !folded.containsAny([" was ", " wie ", " warum ", " what ", " how ", " why "])
+        plan.wantsCollectionSummary = Self.asksForCollectionSummary(folded)
+        if plan.wantsCollectionSummary {
+            removable += Self.collectionWords
+        }
 
         plan.searchText = Self.removing(removable, from: question)
         return plan
     }
+
+    /// The known labels the question names, as whole words, longest first ("Projekt Atlas"
+    /// before "Atlas").
+    static func labels(in folded: String, knownLabels: [String]) -> [String] {
+        var found: [String] = []
+        var remaining = folded
+        for label in knownLabels.sorted(by: { $0.count > $1.count }) {
+            let words = TextAnalysis.normalizedWords(in: label)
+            guard !words.isEmpty else { continue }
+            let phrase = " " + words.joined(separator: " ") + " "
+            guard remaining.contains(phrase) else { continue }
+            found.append(label)
+            remaining = remaining.replacingOccurrences(of: phrase, with: " ")
+        }
+        return found
+    }
+
+    /// "Fasse alle Meetings mit Anna zusammen", "Zusammenfassung aller Samsung-Notizen",
+    /// "Überblick über die letzten Vorlesungen".
+    static func asksForCollectionSummary(_ folded: String) -> Bool {
+        let summarizing = folded.containsAny([" zusammenfass", " fasse ", " fass ", " summarize ", " summarise ", " summary of ", " uberblick uber "])
+        let several = folded.containsAny([
+            " alle", " aller ", " samtliche", " meetings ", " notizen ", " aufnahmen ", " gesprache ", " vorlesungen ",
+            " letzten ", " all ", " notes ", " recordings ",
+        ])
+        return summarizing && several
+    }
+
+    /// Words of a request for a summary that are no search terms: the request itself and what
+    /// it is about in general ("alle Meetings"). What remains is the topic ("zum Budget").
+    static let collectionWords = [
+        "fasse", "fass", "zusammen", "zusammenfassung", "zusammenfassen", "aller", "alle", "sämtliche", "überblick über",
+        "summarize", "summarise", "summary of", "all",
+        "meetings", "meeting", "notizen", "notiz", "aufnahmen", "aufnahme", "gespräche", "gespräch", "besprechungen",
+        "besprechung", "vorlesungen", "vorlesung", "termine", "calls", "notes", "recordings",
+    ]
 
     /// For "Anna" in the question and "Anna Schmidt" in the notes, the filter uses what the
     /// user wrote, which matches both.
@@ -190,10 +243,32 @@ struct RuleBasedQueryParser: Sendable {
         return nil
     }
 
-    private static func removing(_ phrases: [String], from question: String) -> String {
+    /// The question without the phrases, as whole words; a colon or dash after a removed
+    /// label ("Samsung: …") goes with it.
+    ///
+    /// Phrases come from the accent-free question ("marz" removes "März"), so they are matched
+    /// in a folded copy. Folding keeps the length of precomposed letters, so the positions found
+    /// there are valid in the question; otherwise plain replacement is used.
+    static func removing(_ phrases: [String], from question: String) -> String {
+        let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
         var text = question
         for phrase in phrases where !phrase.isEmpty {
-            text = text.replacingOccurrences(of: phrase, with: " ", options: [.caseInsensitive, .diacriticInsensitive])
+            let folded = text.folding(options: options, locale: nil)
+            let words = phrase.folding(options: options, locale: nil)
+                .split(whereSeparator: \.isWhitespace)
+                .map { NSRegularExpression.escapedPattern(for: String($0)) }
+            let pattern = #"(?<![\p{L}\p{N}])"# + words.joined(separator: #"\s+"#) + #"(?![\p{L}\p{N}])[:\-–]?"#
+            guard folded.utf16.count == text.utf16.count, !words.isEmpty,
+                  let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+            else {
+                text = text.replacingOccurrences(of: phrase, with: " ", options: options)
+                continue
+            }
+            let mutable = NSMutableString(string: text)
+            for match in expression.matches(in: folded, range: NSRange(location: 0, length: folded.utf16.count)).reversed() {
+                mutable.replaceCharacters(in: match.range, with: " ")
+            }
+            text = mutable as String
         }
         return text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }

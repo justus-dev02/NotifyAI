@@ -23,6 +23,8 @@ extension RecordingController {
         /// A template of the user's own; it replaces the guidance of `focus`.
         public var templateID: UUID?
         public var participants = ""
+        /// Labels for the note, separated by commas ("Samsung, Projekt Atlas").
+        public var labels = ""
         public var consentConfirmed = false
 
         public init() {}

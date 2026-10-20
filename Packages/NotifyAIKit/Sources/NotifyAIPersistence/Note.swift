@@ -7,11 +7,11 @@ import Foundation
 import NotifyAICore
 import SwiftData
 
-public typealias Note = NotifyAISchemaV6.Note
-public typealias NoteContent = NotifyAISchemaV6.NoteContent
-public typealias NoteTask = NotifyAISchemaV6.NoteTask
-public typealias VoiceProfile = NotifyAISchemaV6.VoiceProfile
-public typealias SummaryTemplate = NotifyAISchemaV6.SummaryTemplate
+public typealias Note = NotifyAISchemaV7.Note
+public typealias NoteContent = NotifyAISchemaV7.NoteContent
+public typealias NoteTask = NotifyAISchemaV7.NoteTask
+public typealias VoiceProfile = NotifyAISchemaV7.VoiceProfile
+public typealias SummaryTemplate = NotifyAISchemaV7.SummaryTemplate
 
 // MARK: - Typed accessors
 
@@ -254,6 +254,18 @@ extension Note {
         for (position, task) in sortedTasks.enumerated() {
             task.position = position
         }
+        contentRevision += 1
+    }
+
+    // MARK: Labels
+
+    /// Replaces the note's labels. They are part of what the search index and the summary
+    /// know about the note.
+    package func setLabels(_ labels: [String]) {
+        let unique = NoteLabel.unique(labels)
+        guard unique != self.labels else { return }
+        self.labels = unique
+        labelKeys = NoteLabel.keyList(of: unique)
         contentRevision += 1
     }
 

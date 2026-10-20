@@ -65,17 +65,15 @@ public struct ExportDocument: Equatable, Sendable {
         if let summary = note.summary {
             blocks += Self.summaryBlocks(summary)
         }
+        if !note.sources.isEmpty {
+            blocks += [.heading(String(localized: "Zusammengefasste Notizen", bundle: .module), level: 1), .bullets(note.sources)]
+        }
         blocks += Self.markerBlocks(of: note)
         if options.includesTranscript {
             blocks += Self.textBlocks(of: note)
         }
         let document = Self(title: note.title, metadata: Self.metadata(of: note), blocks: blocks)
         self = options.redactsPersonalData ? document.redacted() : document
-    }
-
-    /// The plain text of the whole document, e.g. for a preview or a webhook.
-    public var plainText: String {
-        MarkdownExporter().render(self)
     }
 
     // MARK: - Sections
@@ -90,6 +88,9 @@ public struct ExportDocument: Equatable, Sendable {
         }
         if !note.participants.isEmpty {
             metadata.append(String(localized: "Teilnehmende: \(note.participants.joined(separator: ", "))", bundle: .module))
+        }
+        if !note.labels.isEmpty {
+            metadata.append(String(localized: "Labels: \(note.labels.joined(separator: ", "))", bundle: .module))
         }
         return metadata
     }

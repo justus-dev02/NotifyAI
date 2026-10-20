@@ -45,6 +45,9 @@ struct MainView: View {
             }
         }
         .animation(.snappy, value: recording.isActive)
+        .sheet(item: $navigation.collectionRequest) { request in
+            CollectionSheet(request: request)
+        }
         .sheet(isPresented: $navigation.isChatPresented) {
             NoteChatView()
                 #if os(macOS)

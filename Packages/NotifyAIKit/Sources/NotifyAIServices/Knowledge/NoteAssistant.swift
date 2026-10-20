@@ -13,6 +13,8 @@ struct AssistantSource: Sendable {
     let number: Int
     let noteTitle: String
     let noteDate: Date
+    /// The user's labels of the note ("Samsung"): its context.
+    let labels: [String]
     let start: TimeInterval?
     let text: String
 }
@@ -101,6 +103,7 @@ struct FoundationModelNoteAssistant: NoteAssistant {
         - Put the source number after every statement, for example [2] or [1][3].
         - In transcripts, "\(SourceSpeakerAttribution.userLabel)" is the user. Address the user directly and informally \
         (German: "du"). Other labels are people in the conversation.
+        - Labels name the context of a note, such as the company, project or course the user gave it.
         - Every source has the date of its note. Relative dates in a source ("Freitag", "next week") refer to \
         that date; state the actual date when it matters.
         - Be concrete: names, numbers, amounts, dates and deadlines.
@@ -116,6 +119,9 @@ struct FoundationModelNoteAssistant: NoteAssistant {
         prompt += "Sources:\n"
         for source in sources {
             var header = "[\(source.number)] Note \"\(source.noteTitle)\" from \(Self.dateText(source.noteDate))"
+            if !source.labels.isEmpty {
+                header += " (labels: \(source.labels.joined(separator: ", ")))"
+            }
             if let start = source.start {
                 header += ", at minute \(TimeFormatting.timestamp(start))"
             }

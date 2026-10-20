@@ -58,6 +58,10 @@ enum LibrarySelection: Hashable {
 final class AppNavigation {
     var selection: LibrarySelection?
     var filter: LibraryFilter = .all
+    /// Only notes with this label; `nil` for all.
+    var labelFilter: String?
+    /// The summary across several notes being chosen; `nil` while none is.
+    var collectionRequest: CollectionRequest?
     var searchText = ""
     var isRecorderPresented = false
     var isSettingsPresented = false
@@ -80,6 +84,15 @@ final class AppNavigation {
         selectedNoteID = noteID
         transcriptFocus = time.map { TranscriptFocus(noteID: noteID, time: $0) }
     }
+}
+
+/// Asks to choose notes for a summary across several notes.
+struct CollectionRequest: Identifiable {
+    let id = UUID()
+    /// Notes chosen elsewhere, e.g. found by a question; `nil` chooses with filters.
+    var noteIDs: [UUID]?
+    /// The label to start with.
+    var label: String?
 }
 
 struct TranscriptFocus: Equatable {

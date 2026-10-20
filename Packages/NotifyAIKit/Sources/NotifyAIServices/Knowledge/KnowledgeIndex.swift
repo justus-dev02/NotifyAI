@@ -41,6 +41,8 @@ public struct IndexedNote: Codable, Hashable, Sendable, Identifiable {
     let languageCode: String
     let isFavorite: Bool
     let participants: [String]
+    /// The user's labels ("Samsung"); a question can be limited to them.
+    let labels: [String]
     let entities: NamedEntities
     let keywords: [String]
     let topics: [String]
@@ -61,7 +63,8 @@ public struct KnowledgeIndex: Codable, Sendable {
     /// Bump when the indexing changes, so existing indexes are rebuilt.
     /// 4: fingerprints based on `contentRevision`, vectors stored as Float16.
     /// 5: named speakers count as persons of the note.
-    static let formatVersion = 5
+    /// 6: labels; summaries across several notes index only their summary.
+    static let formatVersion = 6
 
     var formatVersion = Self.formatVersion
     public var notes: [UUID: IndexedNote] = [:]
@@ -72,6 +75,11 @@ public struct KnowledgeIndex: Codable, Sendable {
     var knownPersons: [String] {
         var seen = Set<String>()
         return notes.values.flatMap(\.persons).filter { seen.insert(TextAnalysis.key($0)).inserted }
+    }
+
+    /// All distinct labels, for recognizing them in questions.
+    var knownLabels: [String] {
+        NoteLabel.unique(notes.values.sorted { $0.createdAt < $1.createdAt }.flatMap(\.labels))
     }
 }
 
@@ -89,6 +97,7 @@ struct IndexableNote: Sendable {
     let languageCode: String
     let isFavorite: Bool
     let participants: [String]
+    let labels: [String]
     let bodyText: String
     let transcriptData: Data?
     let summary: NoteSummary?
@@ -104,6 +113,7 @@ struct IndexableNote: Sendable {
         languageCode = note.language.languageCode
         isFavorite = note.isFavorite
         participants = note.participants
+        labels = note.labels
         bodyText = note.bodyText
         transcriptData = note.transcriptData
         summary = note.summary
@@ -118,6 +128,7 @@ struct IndexableNote: Sendable {
         languageCode: String = "de",
         isFavorite: Bool = false,
         participants: [String] = [],
+        labels: [String] = [],
         bodyText: String,
         segments: [TranscriptSegment] = [],
         summary: NoteSummary? = nil
@@ -130,6 +141,7 @@ struct IndexableNote: Sendable {
         self.languageCode = languageCode
         self.isFavorite = isFavorite
         self.participants = participants
+        self.labels = labels
         self.bodyText = bodyText
         self.transcriptData = segments.isEmpty ? nil : try? Transcript.encode(segments)
         self.summary = summary
@@ -150,6 +162,7 @@ struct IndexableNote: Sendable {
             String(note.contentRevision),
             note.title,
             note.participants.joined(separator: "\u{1F}"),
+            note.labelKeys,
             note.focusRawValue,
             note.languageID,
             note.kindRawValue,
@@ -176,9 +189,15 @@ struct KnowledgeIndexBuilder: Sendable {
 
     func entry(for note: IndexableNote) -> IndexedNote {
         let segments = note.transcriptData.flatMap { try? Transcript.decode($0) } ?? []
-        var passages = segments.isEmpty
-            ? textPassages(for: note)
-            : transcriptPassages(for: note, segments: segments)
+        // A summary across several notes is made from their summaries: indexing its source
+        // text would find the same statements twice.
+        var passages = if note.kind == .collection {
+            [IndexedPassage]()
+        } else if segments.isEmpty {
+            textPassages(for: note)
+        } else {
+            transcriptPassages(for: note, segments: segments)
+        }
         passages += summaryPassages(for: note)
 
         // Entities and keywords come from the content only: section labels such as
@@ -204,6 +223,7 @@ struct KnowledgeIndexBuilder: Sendable {
             languageCode: note.languageCode,
             isFavorite: note.isFavorite,
             participants: note.participants,
+            labels: note.labels,
             entities: entities,
             keywords: unique(summaryKeywords + textKeywords),
             topics: note.summary?.topics.map(\.title) ?? [],
@@ -268,6 +288,9 @@ struct KnowledgeIndexBuilder: Sendable {
     /// are often answered best by the condensed version.
     private func summaryPassages(for note: IndexableNote) -> [IndexedPassage] {
         var parts = ["Titel: \(note.title)"]
+        if !note.labels.isEmpty {
+            parts.append("Labels: " + note.labels.joined(separator: ", "))
+        }
         if let summary = note.summary {
             parts.append(Self.summaryText(summary))
         }
@@ -288,7 +311,7 @@ struct KnowledgeIndexBuilder: Sendable {
         }
     }
 
-    private static let sectionLabels = ["Titel", "Zusammenfassung", "Kernpunkte", "Entscheidungen", "Aufgaben", "Offene Fragen", "Stichworte"]
+    private static let sectionLabels = ["Titel", "Labels", "Zusammenfassung", "Kernpunkte", "Entscheidungen", "Aufgaben", "Offene Fragen", "Stichworte"]
 
     static func removingLabels(from text: String) -> String {
         text.split(separator: "\n").map { line in
