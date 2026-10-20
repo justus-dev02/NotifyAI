@@ -7,11 +7,11 @@ import Foundation
 import NotifyAICore
 import SwiftData
 
-public typealias Note = NotifyAISchemaV5.Note
-public typealias NoteContent = NotifyAISchemaV5.NoteContent
-public typealias NoteTask = NotifyAISchemaV5.NoteTask
-public typealias VoiceProfile = NotifyAISchemaV5.VoiceProfile
-public typealias SummaryTemplate = NotifyAISchemaV5.SummaryTemplate
+public typealias Note = NotifyAISchemaV6.Note
+public typealias NoteContent = NotifyAISchemaV6.NoteContent
+public typealias NoteTask = NotifyAISchemaV6.NoteTask
+public typealias VoiceProfile = NotifyAISchemaV6.VoiceProfile
+public typealias SummaryTemplate = NotifyAISchemaV6.SummaryTemplate
 
 // MARK: - Typed accessors
 
@@ -145,7 +145,7 @@ extension Note {
         transcriptionEngine = engine
     }
 
-    /// Removes the transcript and its speakers, e.g. before transcribing again.
+    /// Removes the transcript and its speakers. The summary and the tasks stay.
     package func clearTranscript() {
         transcriptData = nil
         transcriptionEngine = nil
@@ -159,24 +159,36 @@ extension Note {
         statusMessage = message
     }
 
-    /// Makes the task rows match the tasks of `summary`: rows of tasks that remain are
-    /// updated in place (a task keeps its identity and its row), the others are deleted, new
-    /// tasks are inserted. Each spoken deadline is resolved relative to the day the note was
-    /// recorded.
+    /// Makes the task rows match the tasks of `summary`.
+    ///
+    /// A row is reused for the same task (same identifier, or the same task worded anew in a
+    /// summary made again, see `TaskIdentity`), so it keeps its identity and whether it is
+    /// done. Tasks the user added or changed are never replaced: they stay where the summary
+    /// mentions them, or at the end, and a generated task that matches one of them is left
+    /// out. The other rows are deleted, new tasks inserted. Each spoken deadline is resolved
+    /// relative to the day the note was recorded.
     private func replaceTasks(with summary: NoteSummary?, dueDates resolver: DueDateResolver) {
         let items = summary?.actionItems ?? []
-        var existing = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var userTasks = sortedTasks.filter(\.isUserEdited)
+        var generated = sortedTasks.filter { !$0.isUserEdited }
         var updated: [NoteTask] = []
-        for (position, item) in items.enumerated() {
+        for item in items {
+            if let index = userTasks.firstIndex(where: { $0.id == item.id || TaskIdentity.matches($0.task, item.task) }) {
+                // The user's wording wins over the model's.
+                updated.append(userTasks.remove(at: index))
+                continue
+            }
             let dueDate = item.due.flatMap { resolver.resolve($0, relativeTo: createdAt) }
             let sourceTime = summary?.sourceTimes[item.task]
-            if let task = existing.removeValue(forKey: item.id) {
+            let match = generated.firstIndex { $0.id == item.id } ?? generated.firstIndex { TaskIdentity.matches($0.task, item.task) }
+            if let match {
+                let task = generated.remove(at: match)
+                // Only an update of the same task carries its state; a new wording keeps the user's tick.
+                task.isDone = task.id == item.id ? item.isDone : task.isDone || item.isDone
                 task.task = item.task
                 task.owner = item.owner
                 task.due = item.due
                 task.dueDate = dueDate
-                task.isDone = item.isDone
-                task.position = position
                 task.sourceTime = sourceTime
                 updated.append(task)
             } else {
@@ -187,17 +199,73 @@ extension Note {
                     due: item.due,
                     dueDate: dueDate,
                     isDone: item.isDone,
-                    position: position,
+                    position: 0,
                     sourceTime: sourceTime
                 )
                 modelContext?.insert(task)
                 updated.append(task)
             }
         }
-        for removed in existing.values {
+        updated += userTasks
+        for removed in generated {
             modelContext?.delete(removed)
         }
+        for (position, task) in updated.enumerated() {
+            task.position = position
+        }
         tasks = updated
+    }
+
+    // MARK: Tasks of the user's own
+
+    /// Adds a task of the user's own after the others.
+    package func appendTask(_ task: String, owner: String?, due: String?, dueDate: Date?) -> NoteTask {
+        let row = NoteTask(
+            id: UUID(),
+            task: task,
+            owner: owner,
+            due: due,
+            dueDate: dueDate,
+            isDone: false,
+            position: (tasks.map(\.position).max() ?? -1) + 1,
+            sourceTime: nil,
+            isUserEdited: true
+        )
+        modelContext?.insert(row)
+        tasks.append(row)
+        // Tasks are part of what the search index knows about the note.
+        contentRevision += 1
+        return row
+    }
+
+    /// Changes a task; from now on it is the user's and summarizing again keeps it.
+    package func editTask(_ row: NoteTask, task: String, owner: String?, due: String?, dueDate: Date?) {
+        row.task = task
+        row.owner = owner
+        row.due = due
+        row.dueDate = dueDate
+        row.isUserEdited = true
+        contentRevision += 1
+    }
+
+    package func removeTask(_ row: NoteTask) {
+        tasks.removeAll { $0.id == row.id }
+        modelContext?.delete(row)
+        for (position, task) in sortedTasks.enumerated() {
+            task.position = position
+        }
+        contentRevision += 1
+    }
+
+    // MARK: Audio
+
+    /// Whether the note's audio file still exists, so it can be played and transcribed again.
+    public var hasAudioFile: Bool { audioFileName != nil }
+
+    /// Forgets the audio file; the caller deletes the file once this is saved.
+    package func removeAudio() {
+        audioFileName = nil
+        audioRemovedAt = .now
     }
 }
 

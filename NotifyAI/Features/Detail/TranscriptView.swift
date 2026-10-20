@@ -18,16 +18,21 @@ struct TranscriptView: View {
     let note: Note
     @Bindable var model: NoteDetailModel
     let scrollProxy: ScrollViewProxy
+    /// Whether the text is being corrected; the note's menu can start it too.
+    @Binding var isCorrecting: Bool
     @State private var naming: SpeakerNamingRequest?
-    /// The corrected texts while correcting, by segment; `nil` otherwise.
-    @State private var drafts: [TranscriptSegment.ID: String]?
+    /// The corrected texts while correcting, by segment.
+    @State private var drafts: [TranscriptSegment.ID: String] = [:]
+    /// The corrected text of a document while correcting; `nil` until it is changed.
+    @State private var documentDraft: String?
     @State private var isSaving = false
     @Environment(TranscriptEditor.self) private var editor
     @Environment(UserNotices.self) private var notices
+    @Environment(ProcessingCoordinator.self) private var processing
 
     var body: some View {
         if !note.kind.hasAudio {
-            documentText
+            DocumentTextView(note: note, isCorrecting: $isCorrecting, draft: $documentDraft, isSaving: isSaving, onSave: saveDocument)
         } else if model.segments.isEmpty {
             emptyState
         } else {
@@ -48,6 +53,11 @@ struct TranscriptView: View {
                             draft: draftBinding(for: segment)
                         ) {
                             model.play(from: segment.start)
+                        }
+                        .contextMenu {
+                            if !isCorrecting {
+                                rowActions(for: segment)
+                            }
                         }
                         .id(segment.id)
                     }
@@ -76,7 +86,7 @@ struct TranscriptView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
-            if drafts != nil {
+            if isCorrecting {
                 correctionBar
             }
             HStack(spacing: Theme.Spacing.large) {
@@ -89,9 +99,9 @@ struct TranscriptView: View {
                         Label("Mitlesen", systemImage: "text.line.first.and.arrowtriangle.forward")
                     }
                 }
-                if drafts == nil {
+                if !isCorrecting {
                     Button("Korrigieren", systemImage: "pencil") {
-                        drafts = [:]
+                        isCorrecting = true
                     }
                     .disabled(!note.isEditable)
                 }
@@ -129,7 +139,7 @@ struct TranscriptView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
             Spacer()
-            Button("Verwerfen", role: .cancel) { drafts = nil }
+            Button("Verwerfen", role: .cancel) { endCorrecting() }
             Button("Fertig", action: saveCorrections)
                 .buttonStyle(.borderedProminent)
                 .disabled(isSaving)
@@ -140,42 +150,90 @@ struct TranscriptView: View {
 
     /// The editable text of a segment while correcting.
     private func draftBinding(for segment: TranscriptSegment) -> Binding<String>? {
-        guard drafts != nil else { return nil }
+        guard isCorrecting else { return nil }
         return Binding(
-            get: { drafts?[segment.id] ?? segment.text },
-            set: { drafts?[segment.id] = $0 }
+            get: { drafts[segment.id] ?? segment.text },
+            set: { drafts[segment.id] = $0 }
         )
     }
 
+    private func endCorrecting() {
+        drafts = [:]
+        documentDraft = nil
+        isCorrecting = false
+    }
+
     private func saveCorrections() {
-        guard let drafts else { return }
+        save { _ = try await editor.apply(drafts, to: note) }
+    }
+
+    private func saveDocument() {
+        guard let documentDraft else {
+            endCorrecting()
+            return
+        }
+        save { try editor.setText(documentDraft, of: note) }
+    }
+
+    private func save(_ change: @escaping () async throws -> Void) {
         isSaving = true
         Task {
             defer { isSaving = false }
             do {
-                try await editor.apply(drafts, to: note)
-                self.drafts = nil
+                try await change()
+                endCorrecting()
             } catch {
                 notices.post(UserNotice(title: String(localized: "Korrektur nicht gesichert"), message: error.localizedDescription))
             }
         }
     }
 
-    // MARK: States
+    // MARK: Passages
 
-    private var documentText: some View {
-        Text(note.bodyText)
-            .textSelection(.enabled)
-            .lineSpacing(4)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    @ViewBuilder
+    private func rowActions(for segment: TranscriptSegment) -> some View {
+        if model.player.isLoaded {
+            Button("Ab hier abspielen", systemImage: "play") { model.play(from: segment.start) }
+        }
+        Button("Text kopieren", systemImage: "doc.on.doc") { Clipboard.copy(segment.text) }
+        if note.isEditable {
+            Divider()
+            Button("Mit vorherigem Abschnitt verbinden", systemImage: "arrow.up.to.line") {
+                edit { _ = try await editor.mergeWithPrevious(segment.id, in: note) }
+            }
+            .disabled(model.segments.first?.id == segment.id)
+            Button("Abschnitt löschen", systemImage: "trash", role: .destructive) {
+                edit { try await editor.delete(segment.id, from: note) }
+            }
+        }
+    }
+
+    private func edit(_ change: @escaping () async throws -> Void) {
+        Task {
+            do {
+                try await change()
+            } catch {
+                notices.post(UserNotice(title: String(localized: "Nicht geändert"), message: error.localizedDescription))
+            }
+        }
     }
 
     @ViewBuilder
     private var emptyState: some View {
         if note.status.isProcessing || note.status == .recording {
             ContentUnavailableView("Transkript folgt", systemImage: "waveform", description: Text("Das Transkript wird gerade erstellt."))
+        } else if note.hasAudioFile {
+            ContentUnavailableView {
+                Label("Kein Transkript", systemImage: "waveform.slash")
+            } description: {
+                Text("Für diese Aufnahme gibt es noch kein Transkript.")
+            } actions: {
+                // A new transcript brings a new summary; tasks of the user's own stay.
+                Button("Transkript erstellen") { processing.enqueue(.process(note.id)) }
+                    .disabled(!note.isEditable)
+            }
         } else {
-            ContentUnavailableView("Kein Transkript", systemImage: "waveform.slash", description: Text("Für diese Aufnahme gibt es noch kein Transkript."))
+            ContentUnavailableView("Kein Transkript", systemImage: "waveform.slash", description: Text("Das Transkript und die Aufnahme wurden gelöscht."))
         }
     }
 
@@ -192,6 +250,61 @@ struct TranscriptView: View {
         }
         if model.player.isLoaded {
             model.play(from: max(0, marker.time - Marker.highlightPadding))
+        }
+    }
+}
+
+// MARK: - Document
+
+/// The text of an imported document, which the user can correct (text recognition makes
+/// mistakes as well).
+private struct DocumentTextView: View {
+    let note: Note
+    @Binding var isCorrecting: Bool
+    /// The corrected text; `nil` until the user changes it.
+    @Binding var draft: String?
+    let isSaving: Bool
+    let onSave: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
+            HStack(spacing: Theme.Spacing.medium) {
+                if isCorrecting {
+                    Label("Text direkt bearbeiten.", systemImage: "pencil")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Verwerfen", role: .cancel) {
+                        draft = nil
+                        isCorrecting = false
+                    }
+                    Button("Fertig", action: onSave)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isSaving)
+                        .keyboardShortcut(.defaultAction)
+                } else {
+                    Button("Text bearbeiten", systemImage: "pencil") { isCorrecting = true }
+                        .disabled(!note.isEditable)
+                    Spacer()
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            if isCorrecting {
+                TextEditor(text: Binding(get: { draft ?? note.bodyText }, set: { draft = $0 }))
+                    .font(.body)
+                    .lineSpacing(4)
+                    .frame(minHeight: 320)
+                    .scrollContentBackground(.hidden)
+                    .padding(6)
+                    .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
+            } else {
+                Text(note.bodyText)
+                    .textSelection(.enabled)
+                    .lineSpacing(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }

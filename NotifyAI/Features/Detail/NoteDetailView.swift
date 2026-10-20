@@ -45,8 +45,10 @@ struct NoteDetailView: View {
     @State private var tab: Tab = .summary
     @State private var isRenaming = false
     @State private var draftTitle = ""
-    @State private var isConfirmingDelete = false
+    @State private var deletion: NoteDeletion?
     @State private var isConfirmingRetranscription = false
+    @State private var isCorrecting = false
+    @State private var isReplacing = false
     /// The file the user is saving, while the save panel is open.
     @State private var fileToSave: ExportFileDocument?
 
@@ -78,7 +80,7 @@ struct NoteDetailView: View {
                         }
                     case .transcript:
                         if let model {
-                            TranscriptView(note: note, model: model, scrollProxy: proxy)
+                            TranscriptView(note: note, model: model, scrollProxy: proxy, isCorrecting: $isCorrecting)
                         }
                     }
                 }
@@ -136,16 +138,15 @@ struct NoteDetailView: View {
         } message: {
             Text("Du hast dieses Transkript korrigiert. Beim neuen Transkribieren gehen deine Korrekturen und benannten Sprecher verloren; gemerkte Stimmen werden wieder erkannt.")
         }
-        .confirmationDialog("Notiz löschen?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
-            Button("Löschen", role: .destructive) { delete() }
-        } message: {
-            Text("Die Aufnahme, das Transkript und die Zusammenfassung werden endgültig entfernt.")
+        .noteDeletionConfirmation(for: note, request: $deletion, onDeleteNote: delete)
+        .sheet(isPresented: $isReplacing) {
+            TranscriptReplaceSheet(note: note)
         }
     }
 
     /// Changes whenever the model needs to re-read the note.
     private var updateKey: String {
-        "\(note.statusRawValue)|\(note.contentRevision)|\(note.markersData?.count ?? -1)"
+        "\(note.statusRawValue)|\(note.contentRevision)|\(note.markersData?.count ?? -1)|\(note.audioFileName ?? "")"
     }
 
     // MARK: Toolbar
@@ -181,6 +182,16 @@ struct NoteDetailView: View {
                 }
                 .disabled(note.status.isProcessing || !note.hasText)
                 ResummarizeWithTemplateMenu(note: note)
+                Divider()
+                Button(note.kind.hasAudio ? String(localized: "Transkript korrigieren") : String(localized: "Text bearbeiten"), systemImage: "pencil") {
+                    tab = .transcript
+                    isCorrecting = true
+                }
+                .disabled(!note.isEditable || (note.kind.hasAudio ? !note.hasTranscript : !note.hasText))
+                Button("Suchen und ersetzen …", systemImage: "text.magnifyingglass") {
+                    isReplacing = true
+                }
+                .disabled(!note.isEditable || !note.hasText)
                 if note.kind.hasAudio {
                     Button("Füllwörter entfernen", systemImage: "text.badge.minus") {
                         removeFillerWords()
@@ -193,13 +204,10 @@ struct NoteDetailView: View {
                             processing.enqueue(.retranscribe(note.id))
                         }
                     }
-                    .disabled(note.status.isProcessing || note.status == .recording)
+                    .disabled(note.status.isProcessing || note.status == .recording || !note.hasAudioFile)
                 }
                 Divider()
-                Button("Löschen …", systemImage: "trash", role: .destructive) {
-                    isConfirmingDelete = true
-                }
-                .disabled(note.status == .recording)
+                NoteDeletionMenu(note: note, request: $deletion)
             }
         }
     }
@@ -270,17 +278,31 @@ private struct NoteHeader: View {
                 if note.duration > 0 {
                     Tag(text: TimeFormatting.duration(note.duration), systemImage: "clock")
                 }
-                if let template = templates.template(for: note) {
-                    Tag(text: template.name, systemImage: template.symbolName)
-                } else {
-                    Tag(text: note.focus.title, systemImage: note.focus.symbolName)
+                // The template: choosing another one summarizes the note again.
+                Menu {
+                    TemplateChoiceButtons(note: note)
+                } label: {
+                    if let template = templates.template(for: note) {
+                        Tag(text: template.name, systemImage: template.symbolName)
+                    } else {
+                        Tag(text: note.focus.title, systemImage: note.focus.symbolName)
+                    }
                 }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .disabled(note.status.isProcessing || !note.hasText)
+                .help("Vorlage wechseln und neu zusammenfassen")
                 Tag(text: note.language.displayName, systemImage: "globe")
                 if let source = note.audioSourceDescription {
                     Tag(text: source, systemImage: note.audioSource.symbolName)
                 }
                 if let engine = note.transcriptionEngine {
                     Tag(text: engine.displayName, systemImage: "waveform")
+                }
+                if note.audioRemovedAt != nil {
+                    Tag(text: String(localized: "Aufnahme gelöscht"), systemImage: "waveform.slash")
                 }
                 if !note.markers.isEmpty {
                     Tag(text: String(localized: "\(note.markers.count) markiert"), systemImage: "star.fill")

@@ -42,7 +42,7 @@ public final class NoteStore {
 
     public init(locations: StorageLocations, inMemory: Bool = false) throws {
         self.locations = locations
-        let schema = Schema(versionedSchema: NotifyAISchemaV5.self)
+        let schema = Schema(versionedSchema: NotifyAISchemaV6.self)
         let configuration: ModelConfiguration = if inMemory {
             ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         } else {
@@ -188,6 +188,25 @@ public final class NoteStore {
             events.send(.saved(changedNoteIDs: changed))
         }
         events.send(.deleted(ids))
+    }
+
+    /// Deletes the audio files of notes and keeps everything else: transcript, summary, tasks
+    /// and speakers. The files are removed only after the change was saved, so a failed save
+    /// never leaves a note pointing to a deleted file.
+    package func removeAudio(of notes: [Note]) throws {
+        let withAudio = notes.filter(\.hasAudioFile)
+        guard !withAudio.isEmpty else { return }
+        let urls = withAudio.compactMap(audioURL(for:))
+        for note in withAudio {
+            note.removeAudio()
+        }
+        do {
+            try save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        urls.forEach(removeFileIfPresent(at:))
     }
 
     /// Copies an external audio file into the recordings directory.

@@ -94,11 +94,16 @@ struct SummaryInput: Sendable {
     let languageCode: String
     let isAudio: Bool
     let isRecording: Bool
+    /// Participants and speakers, the people a task can belong to.
+    let people: [String]
 
     @MainActor
     init(note: Note, segments: [TranscriptSegment], template: TemplateGuidance? = nil) {
         noteID = note.id
         self.segments = segments
+        var seen = Set<String>()
+        people = (note.participants + note.speakers.map(\.label) + segments.compactMap(\.speaker))
+            .filter { seen.insert($0).inserted }
         markers = note.markers
         duration = note.duration
         createdAt = note.createdAt
@@ -127,17 +132,30 @@ struct SummaryInput: Sendable {
     }
 }
 
-/// Work after summarizing that does not need the main actor: source positions and title keywords.
+/// Work after summarizing that does not need the main actor: checking the tasks, source
+/// positions and title keywords.
 private struct SummaryFinishing: Sendable {
-    /// The summary without items the text does not support.
+    /// The summary without items the text does not support, with precise tasks.
     let summary: NoteSummary
     let sourceTimes: [String: TimeInterval]
     let titleKeywords: [String]
 
     init(summary generated: NoteSummary, input: SummaryInput, embedder: any SentenceEmbedding) {
-        summary = SummaryGrounding(text: input.request.text, languageCode: input.languageCode).apply(to: generated)
+        var summary = SummaryGrounding(text: input.request.text, languageCode: input.languageCode).apply(to: generated)
+        let tasks = ActionItemRefiner(
+            text: input.request.text,
+            segments: input.segments,
+            languageCode: input.languageCode,
+            people: input.people,
+            recordedAt: input.createdAt
+        )
+        .refine(summary.actionItems)
+        summary.actionItems = tasks.items
+        self.summary = summary
+        // The passage a task was quoted from is a more precise source than a similar one.
         sourceTimes = SummaryEvidenceLinker(embedder: embedder)
             .sourceTimes(for: summary, segments: input.segments, languageCode: input.languageCode)
+            .merging(tasks.sourceTimes) { _, quoted in quoted }
         titleKeywords = input.isRecording
             ? AutomaticTitle.keywords(
                 summary: summary,

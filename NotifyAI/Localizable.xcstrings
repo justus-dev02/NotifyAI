@@ -41,6 +41,16 @@
         }
       }
     },
+    "„%@“ steht schon im eigenen Vokabular." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is already in your custom vocabulary."
+          }
+        }
+      }
+    },
     "„%@“ vergessen?" : {
       "localizations" : {
         "en" : {
@@ -229,6 +239,16 @@
         }
       }
     },
+    "%lld Aufnahmen sind schon älter und verlieren sofort ihre Audiodatei. Transkripte, Zusammenfassungen und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld recordings are already older and lose their audio file right away. Transcripts, summaries and tasks are kept; favorites keep their recording."
+          }
+        }
+      }
+    },
     "%lld Begriffe" : {
       "localizations" : {
         "en" : {
@@ -335,12 +355,32 @@
         }
       }
     },
+    "Ab hier abspielen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play from here"
+          }
+        }
+      }
+    },
     "Abbrechen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Abschnitt löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete passage"
           }
         }
       }
@@ -415,6 +455,22 @@
         }
       }
     },
+    "Alle Aufnahmen (%lld · %@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Alle Aufnahmen (%1$lld · %2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All recordings (%1$lld · %2$@)"
+          }
+        }
+      }
+    },
     "Alle Aufnahmen, Transkripte und Zusammenfassungen werden endgültig gelöscht." : {
       "localizations" : {
         "en" : {
@@ -431,6 +487,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "All data is kept exclusively in this app’s protected storage. Without backup sharing, it is also not part of iCloud or computer backups."
+          }
+        }
+      }
+    },
+    "Alle ersetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace All"
           }
         }
       }
@@ -505,6 +571,16 @@
         }
       }
     },
+    "Als eigene Vorlage anpassen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize as Own Template …"
+          }
+        }
+      }
+    },
     "Als erledigt markieren" : {
       "localizations" : {
         "en" : {
@@ -541,6 +617,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mark as Open"
+          }
+        }
+      }
+    },
+    "Als Standard verwenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use as Default"
+          }
+        }
+      }
+    },
+    "Älter als 30 Tage (%lld · %@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Älter als 30 Tage (%1$lld · %2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Older than 30 days (%1$lld · %2$@)"
+          }
+        }
+      }
+    },
+    "Älter als 90 Tage (%lld · %@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Älter als 90 Tage (%1$lld · %2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Older than 90 days (%1$lld · %2$@)"
+          }
+        }
+      }
+    },
+    "Ältere Aufnahmen jetzt löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete older recordings now?"
           }
         }
       }
@@ -725,6 +853,36 @@
         }
       }
     },
+    "Aufgabe bearbeiten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Task"
+          }
+        }
+      }
+    },
+    "Aufgabe hinzufügen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Task"
+          }
+        }
+      }
+    },
+    "Aufgabe löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Task"
+          }
+        }
+      }
+    },
     "Aufgaben" : {
       "localizations" : {
         "en" : {
@@ -761,6 +919,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filter tasks by person and due date"
+          }
+        }
+      }
+    },
+    "Aufgaben, die du hinzufügst oder änderst, bleiben erhalten, wenn die Notiz neu zusammengefasst wird." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks you add or change are kept when the note is summarized again."
           }
         }
       }
@@ -805,12 +973,32 @@
         }
       }
     },
+    "Aufnahme gelöscht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording deleted"
+          }
+        }
+      }
+    },
     "Aufnahme läuft" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Recording"
           }
         }
       }
@@ -901,6 +1089,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recordings of 20 minutes or longer are divided into chapters of about 10 minutes. Finished chapters are condensed while you are still recording, so the summary is ready seconds after you stop. Pauses automatically when the device gets warm or Low Power Mode is on. Requires the live transcript."
+          }
+        }
+      }
+    },
+    "Aufnahmen behalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Recordings"
+          }
+        }
+      }
+    },
+    "Aufnahmen löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Recordings"
+          }
+        }
+      }
+    },
+    "Aufnahmen löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Recordings …"
           }
         }
       }
@@ -1025,6 +1243,16 @@
         }
       }
     },
+    "Bearbeiten …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit …"
+          }
+        }
+      }
+    },
     "Beenden" : {
       "localizations" : {
         "en" : {
@@ -1071,6 +1299,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The first time, macOS asks whether NotifyAI may record system audio."
+          }
+        }
+      }
+    },
+    "Beim Löschen von Aufnahmen bleiben Transkript, Zusammenfassung, Aufgaben und Sprecher erhalten; nur das Abspielen und neu Transkribieren entfällt. Automatisch gelöscht werden nur Aufnahmen, die keine Favoriten sind. Modelle lassen sich jederzeit erneut laden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleting recordings keeps the transcript, summary, tasks and speakers; only playback and transcribing again are no longer possible. Only recordings that are not favorites are deleted automatically. Models can be downloaded again at any time."
           }
         }
       }
@@ -1161,6 +1399,36 @@
         }
       }
     },
+    "Das Transkript und die Aufnahme wurden gelöscht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript and the recording have been deleted."
+          }
+        }
+      }
+    },
+    "Das Transkript und die Sprecher werden endgültig gelöscht. Zusammenfassung, Aufgaben und Markierungen bleiben erhalten. Da die Aufnahme bereits gelöscht ist, lässt sich das Transkript nicht wiederherstellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript and the speakers are deleted permanently. Summary, tasks and markers are kept. Because the recording has already been deleted, the transcript cannot be restored."
+          }
+        }
+      }
+    },
+    "Das Transkript und die Sprecher werden gelöscht. Zusammenfassung, Aufgaben, Markierungen und die Aufnahme bleiben erhalten; aus der Aufnahme lässt sich jederzeit ein neues Transkript erstellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The transcript and the speakers are deleted. Summary, tasks, markers and the recording are kept; a new transcript can be created from the recording at any time."
+          }
+        }
+      }
+    },
     "Das Transkript wird gerade erstellt." : {
       "localizations" : {
         "en" : {
@@ -1237,6 +1505,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Privacy Settings…"
+          }
+        }
+      }
+    },
+    "Datum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
           }
         }
       }
@@ -1321,12 +1599,48 @@
         }
       }
     },
+    "Die Audiodatei (%@) wird endgültig gelöscht. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Die Audiodatei (%1$@) wird endgültig gelöscht. %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file (%1$@) is deleted permanently. %2$@"
+          }
+        }
+      }
+    },
     "Die Audiodatei konnte nicht weiter geschrieben werden (%@). Alles bis zu diesem Zeitpunkt Aufgenommene ist gespeichert." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The audio file could not be written anymore (%@). Everything recorded up to this point has been saved."
+          }
+        }
+      }
+    },
+    "Die Audiodatei wird endgültig gelöscht. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file is deleted permanently. %@"
+          }
+        }
+      }
+    },
+    "Die Audiodatei wird endgültig gelöscht. Transkript, Zusammenfassung, Aufgaben und Sprecher bleiben erhalten. Abspielen und neu transkribieren sind danach nicht mehr möglich." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file is deleted permanently. Transcript, summary, tasks and speakers are kept. Playback and transcribing again are no longer possible afterwards."
           }
         }
       }
@@ -1491,6 +1805,16 @@
         }
       }
     },
+    "Die Spracherkennung bevorzugt dann diese Schreibweise in neuen Transkripten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition then prefers this spelling in new transcripts."
+          }
+        }
+      }
+    },
     "Die Spracherkennung kommt auf diesem Gerät nicht hinterher. Das Transkript wird nach der Aufnahme aus der Audiodatei erstellt." : {
       "localizations" : {
         "en" : {
@@ -1561,12 +1885,22 @@
         }
       }
     },
-    "Eigene Vorlagen legen fest, worauf die Zusammenfassung achtet, welche Abschnitte sie hat und welche eigenen Überschriften sie füllt. Du wählst sie vor der Aufnahme bei „Art des Gesprächs“ oder später in der Notiz." : {
+    "Eigene Vorlagen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Custom templates define what the summary focuses on, which sections it has and which headings of your own it fills. Choose them before recording under “Kind of conversation” or later in the note."
+            "value" : "Custom Templates"
+          }
+        }
+      }
+    },
+    "Eigene Vorlagen legen fest, worauf die Zusammenfassung achtet, welche Abschnitte sie hat und welche eigenen Überschriften sie füllt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom templates define what the summary focuses on, which sections it has and which headings of your own it fills."
           }
         }
       }
@@ -1577,6 +1911,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Custom Vocabulary"
+          }
+        }
+      }
+    },
+    "Eine Aufnahme ist schon älter und verliert sofort ihre Audiodatei. Transkript, Zusammenfassung und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One recording is already older and loses its audio file right away. Transcript, summary and tasks are kept; favorites keep their recording."
           }
         }
       }
@@ -1731,6 +2075,16 @@
         }
       }
     },
+    "Ersetzen durch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace with"
+          }
+        }
+      }
+    },
     "Erstellt mit Apple Intelligence auf diesem Gerät. Prüfe wichtige Details im Transkript." : {
       "localizations" : {
         "en" : {
@@ -1747,6 +2101,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Due"
+          }
+        }
+      }
+    },
+    "Fällig am" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due on"
           }
         }
       }
@@ -1942,6 +2306,16 @@
         }
       }
     },
+    "Ganze Wörter werden ersetzt; die Zeitstempel bleiben erhalten. Bleibt „Ersetzen durch“ leer, wird das Wort entfernt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole words are replaced; timestamps are kept. If “Replace with” is empty, the word is removed."
+          }
+        }
+      }
+    },
     "Geheimnis sichern" : {
       "localizations" : {
         "en" : {
@@ -1992,6 +2366,16 @@
         }
       }
     },
+    "Gelöscht werden nur die Audiodateien, auch die von Favoriten. Transkripte, Zusammenfassungen und Aufgaben bleiben erhalten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the audio files are deleted, including those of favorites. Transcripts, summaries and tasks are kept."
+          }
+        }
+      }
+    },
     "Gemerkte Stimmen" : {
       "localizations" : {
         "en" : {
@@ -2038,6 +2422,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Applies to Notion and webhooks; the Obsidian folder always gets the transcript. “Remove personal data” replaces e-mail addresses, phone numbers and IBANs, in Obsidian too."
+          }
+        }
+      }
+    },
+    "Groß- und Kleinschreibung beachten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match Case"
           }
         }
       }
@@ -2132,6 +2526,16 @@
         }
       }
     },
+    "In diesem Gespräch wurden keine Aufgaben vereinbart." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tasks were agreed in this conversation."
+          }
+        }
+      }
+    },
     "In dieser Version sind keine Updates eingerichtet. Neue Versionen findest du auf GitHub." : {
       "localizations" : {
         "en" : {
@@ -2178,6 +2582,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Integrations"
+          }
+        }
+      }
+    },
+    "Jede Notiz wird mit einer Vorlage zusammengefasst. Du wählst sie vor der Aufnahme bei „Art des Gesprächs“ oder später in der Notiz. Eine mitgelieferte Vorlage kannst du als eigene anpassen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every note is summarized with a template. You choose it before recording under “Kind of conversation” or later in the note. You can customize a built-in template as your own."
           }
         }
       }
@@ -2338,6 +2752,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Key Points"
+          }
+        }
+      }
+    },
+    "Kommt %lld-mal vor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occurs %lld times."
+          }
+        }
+      }
+    },
+    "Kommt einmal vor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occurs once."
+          }
+        }
+      }
+    },
+    "Kommt im Text nicht vor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Does not occur in the text."
           }
         }
       }
@@ -2582,6 +3026,16 @@
         }
       }
     },
+    "Mit vorherigem Abschnitt verbinden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join with Previous Passage"
+          }
+        }
+      }
+    },
     "Mit Vorlage neu zusammenfassen" : {
       "localizations" : {
         "en" : {
@@ -2618,16 +3072,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Models"
-          }
-        }
-      }
-    },
-    "Modelle lassen sich jederzeit erneut laden. Laufende Aufnahmen und Transkriptionen müssen dafür abgeschlossen sein." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Models can be downloaded again at any time. Running recordings and transcriptions must be finished first."
           }
         }
       }
@@ -2748,6 +3192,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summarize Again"
+          }
+        }
+      }
+    },
+    "Neue Aufgabe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Task"
           }
         }
       }
@@ -3042,6 +3496,16 @@
         }
       }
     },
+    "Notiz löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Note …"
+          }
+        }
+      }
+    },
     "Notiz löschen?" : {
       "localizations" : {
         "en" : {
@@ -3128,6 +3592,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing notes for search…"
+          }
+        }
+      }
+    },
+    "Nur Aufnahme löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Recording Only …"
+          }
+        }
+      }
+    },
+    "Nur die Aufnahme löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete only the recording?"
           }
         }
       }
@@ -3282,6 +3766,16 @@
         }
       }
     },
+    "Optionen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Options"
+          }
+        }
+      }
+    },
     "Ordner" : {
       "localizations" : {
         "en" : {
@@ -3388,6 +3882,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Person"
+          }
+        }
+      }
+    },
+    "Person wählen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Person"
           }
         }
       }
@@ -3692,6 +4196,26 @@
         }
       }
     },
+    "Standard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default"
+          }
+        }
+      }
+    },
+    "Standard für neue Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default for New Notes"
+          }
+        }
+      }
+    },
     "Starte eine Aufnahme oder importiere eine Audiodatei, ein PDF oder ein Foto." : {
       "localizations" : {
         "en" : {
@@ -3772,6 +4296,36 @@
         }
       }
     },
+    "Suchen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find"
+          }
+        }
+      }
+    },
+    "Suchen und ersetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find and Replace"
+          }
+        }
+      }
+    },
+    "Suchen und ersetzen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find and Replace …"
+          }
+        }
+      }
+    },
     "Suchindex" : {
       "localizations" : {
         "en" : {
@@ -3848,6 +4402,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Text"
+          }
+        }
+      }
+    },
+    "Text bearbeiten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Text"
+          }
+        }
+      }
+    },
+    "Text direkt bearbeiten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit the text directly."
           }
         }
       }
@@ -3962,12 +4536,62 @@
         }
       }
     },
+    "Transkript erstellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Transcript"
+          }
+        }
+      }
+    },
     "Transkript folgt" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transcript Coming"
+          }
+        }
+      }
+    },
+    "Transkript korrigieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct Transcript"
+          }
+        }
+      }
+    },
+    "Transkript löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Transcript"
+          }
+        }
+      }
+    },
+    "Transkript löschen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Transcript …"
+          }
+        }
+      }
+    },
+    "Transkript löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete transcript?"
           }
         }
       }
@@ -3998,6 +4622,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finishing transcript…"
+          }
+        }
+      }
+    },
+    "Transkript, Zusammenfassung, Aufgaben und Sprecher bleiben erhalten. Abspielen und neu transkribieren sind danach nicht mehr möglich." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcript, summary, tasks and speakers are kept. Playback and transcribing again are no longer possible afterwards."
           }
         }
       }
@@ -4072,6 +4706,16 @@
         }
       }
     },
+    "Verantwortlich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owner"
+          }
+        }
+      }
+    },
     "Vergessen" : {
       "localizations" : {
         "en" : {
@@ -4142,6 +4786,16 @@
         }
       }
     },
+    "Vorlage wechseln und neu zusammenfassen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change template and summarize again"
+          }
+        }
+      }
+    },
     "Vorlagen für Zusammenfassungen" : {
       "localizations" : {
         "en" : {
@@ -4172,6 +4826,16 @@
         }
       }
     },
+    "Was ist zu tun?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What needs to be done?"
+          }
+        }
+      }
+    },
     "Webhook" : {
       "localizations" : {
         "en" : {
@@ -4198,6 +4862,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More Matching Notes"
+          }
+        }
+      }
+    },
+    "Welche Aufnahmen löschen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which recordings should be deleted?"
           }
         }
       }
@@ -4302,6 +4976,16 @@
         }
       }
     },
+    "Wird gezählt …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Counting …"
+          }
+        }
+      }
+    },
     "Wird importiert …" : {
       "localizations" : {
         "en" : {
@@ -4378,6 +5062,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For example: “Pay attention to the customer’s wishes and objections, budget and schedule.”"
+          }
+        }
+      }
+    },
+    "Zum eigenen Vokabular hinzufügen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Custom Vocabulary"
           }
         }
       }

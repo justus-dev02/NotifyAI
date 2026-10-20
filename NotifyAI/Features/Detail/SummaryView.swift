@@ -17,8 +17,8 @@ struct SummaryView: View {
     /// Jumps to a position in the transcript (marked passage or source of a summary item).
     let onOpenTime: (TimeInterval) -> Void
 
-    @Environment(NoteLibrary.self) private var library
     @Environment(ProcessingCoordinator.self) private var processing
+    @Environment(SummaryTemplates.self) private var templates
 
     var body: some View {
         if let summary = note.summary {
@@ -46,14 +46,9 @@ struct SummaryView: View {
                     }
                 }
 
-                if !summary.actionItems.isEmpty {
-                    ContentSection(title: "Aufgaben", systemImage: "checklist", tint: .blue) {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
-                            ForEach(summary.actionItems) { item in
-                                ActionItemRow(item: item, sourceTime: summary.sourceTimes[item.task], onOpen: onOpenTime) { toggle(item) }
-                            }
-                        }
-                    }
+                // A template without tasks shows the section only for tasks the user added.
+                if !note.tasks.isEmpty || templates.template(for: note)?.sections.contains(.actionItems) != false {
+                    NoteTasksSection(note: note, onOpen: onOpenTime)
                 }
 
                 if !summary.decisions.isEmpty {
@@ -181,50 +176,6 @@ struct SummaryView: View {
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
-    }
-
-    private func toggle(_ item: ActionItem) {
-        library.setTask(item.id, isDone: !item.isDone)
-    }
-}
-
-private struct ActionItemRow: View {
-    let item: ActionItem
-    let sourceTime: TimeInterval?
-    let onOpen: (TimeInterval) -> Void
-    let onToggle: () -> Void
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
-            Button(action: onToggle) {
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
-                    Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(item.isDone ? Color.green : Color.secondary)
-                        .font(.title3)
-                        .contentTransition(.symbolEffect(.replace))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.task)
-                            .strikethrough(item.isDone)
-                            .foregroundStyle(item.isDone ? .secondary : .primary)
-                            .multilineTextAlignment(.leading)
-                        let details = [item.owner, item.due.map { String(localized: "bis \($0)") }].compactMap { $0 }
-                        if !details.isEmpty {
-                            Text(details.joined(separator: " · "))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(item.isDone ? .isSelected : [])
-
-            if let sourceTime {
-                SourceTimeButton(time: sourceTime) { onOpen(sourceTime) }
-            }
-        }
     }
 }
 

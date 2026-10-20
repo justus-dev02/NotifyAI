@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ (angepasst)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (customized)"
+          }
+        }
+      }
+    },
     "%@ ist noch nicht eingerichtet. Du findest die Einstellung unter „Integrationen“." : {
       "localizations" : {
         "en" : {
@@ -98,6 +108,56 @@
         }
       }
     },
+    "Achtet auf Begriffe, Definitionen, Erklärungen und alles, was prüfungsrelevant klingt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on concepts, definitions, explanations and anything that sounds exam-relevant."
+          }
+        }
+      }
+    },
+    "Achtet auf die Aussagen der befragten Person, ihre Bedürfnisse, Probleme und bemerkenswerte Zitate." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on the interviewee's statements, needs, pain points and notable quotes."
+          }
+        }
+      }
+    },
+    "Achtet auf Entscheidungen, vereinbarte nächste Schritte mit Verantwortlichen und Fristen sowie offene Punkte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on decisions, agreed next steps with owners and deadlines, and open issues."
+          }
+        }
+      }
+    },
+    "Achtet auf Feedback, Ziele, Themen der persönlichen Entwicklung und vereinbarte Unterstützung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on feedback, goals, personal development topics and agreed support."
+          }
+        }
+      }
+    },
+    "Achtet auf Wünsche und Einwände des Kunden, Budget, Zeitplan und vereinbarte nächste Schritte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on the customer's needs and objections, budget, timeline and agreed next steps."
+          }
+        }
+      }
+    },
     "Aggregate-Gerät anlegen" : {
       "localizations" : {
         "en" : {
@@ -158,18 +218,18 @@
         }
       }
     },
-    "App-Sperre: %@, Backup: %@" : {
+    "App-Sperre: %@, Backup: %@, Audio behalten: %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "App-Sperre: %1$@, Backup: %2$@"
+            "value" : "App-Sperre: %1$@, Backup: %2$@, Audio behalten: %3$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App lock: %1$@, backup: %2$@"
+            "value" : "App lock: %1$@, backup: %2$@, keep audio: %3$@"
           }
         }
       }
@@ -926,6 +986,16 @@
         }
       }
     },
+    "Fasst die wichtigsten Punkte in der Reihenfolge zusammen, in der sie besprochen wurden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarizes the main points in the order they were discussed."
+          }
+        }
+      }
+    },
     "Favoriten" : {
       "localizations" : {
         "en" : {
@@ -1102,6 +1172,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In the Dock and Menu Bar"
+          }
+        }
+      }
+    },
+    "Immer behalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Forever"
           }
         }
       }
@@ -1374,6 +1454,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Microphone + System Audio"
+          }
+        }
+      }
+    },
+    "Nach 30 Tagen löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After 30 Days"
+          }
+        }
+      }
+    },
+    "Nach 90 Tagen löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After 90 Days"
+          }
+        }
+      }
+    },
+    "Nach einem Jahr löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After One Year"
           }
         }
       }

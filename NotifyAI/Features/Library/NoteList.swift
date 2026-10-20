@@ -21,6 +21,8 @@ struct NoteList: View {
     @Environment(TaskBoard.self) private var tasks
     /// Identifier of the note awaiting delete confirmation.
     @State private var noteIDToDelete: UUID?
+    /// Identifier of the note whose recording awaits delete confirmation.
+    @State private var noteIDToDeleteAudio: UUID?
     private let isSearching: Bool
     private let showsTaskRow: Bool
 
@@ -94,6 +96,17 @@ struct NoteList: View {
         } message: { _ in
             Text("Die Aufnahme, das Transkript und die Zusammenfassung werden endgültig entfernt.")
         }
+        .confirmationDialog(
+            "Nur die Aufnahme löschen?",
+            isPresented: Binding(presenting: $noteIDToDeleteAudio),
+            titleVisibility: .visible,
+            presenting: noteIDToDeleteAudio
+        ) { noteID in
+            Button("Aufnahme löschen", role: .destructive) { deleteAudio(noteID: noteID) }
+            Button("Abbrechen", role: .cancel) { noteIDToDeleteAudio = nil }
+        } message: { _ in
+            Text("Die Audiodatei wird endgültig gelöscht. Transkript, Zusammenfassung, Aufgaben und Sprecher bleiben erhalten. Abspielen und neu transkribieren sind danach nicht mehr möglich.")
+        }
     }
 
     @ViewBuilder
@@ -102,6 +115,11 @@ struct NoteList: View {
             toggleFavorite(note)
         }
         Divider()
+        if library.canDeleteAudio(of: note) {
+            Button("Nur Aufnahme löschen …", systemImage: "waveform.slash") {
+                noteIDToDeleteAudio = note.id
+            }
+        }
         Button("Löschen …", systemImage: "trash", role: .destructive) {
             noteIDToDelete = note.id
         }
@@ -118,6 +136,13 @@ struct NoteList: View {
         }
         if let note = notes.first(where: { $0.id == noteID }) {
             library.delete(note)
+        }
+    }
+
+    private func deleteAudio(noteID: UUID) {
+        noteIDToDeleteAudio = nil
+        if let note = notes.first(where: { $0.id == noteID }) {
+            library.deleteAudio(of: [note])
         }
     }
 

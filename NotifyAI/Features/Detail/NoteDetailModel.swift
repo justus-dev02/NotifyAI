@@ -49,6 +49,9 @@ final class NoteDetailModel {
            FileManager.default.fileExists(atPath: audioURL.path(percentEncoded: false)) {
             loadedAudioURL = audioURL
             player.load(url: audioURL)
+        } else if audioURL == nil, loadedAudioURL != nil {
+            // The user deleted the recording; the text stays, playback ends.
+            stop()
         }
 
         // Comparing the revision avoids loading the transcript file on every update.

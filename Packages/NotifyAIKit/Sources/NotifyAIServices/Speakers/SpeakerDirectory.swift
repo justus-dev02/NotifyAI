@@ -61,7 +61,8 @@ public final class SpeakerDirectory {
 
     // MARK: - Naming speakers in a note
 
-    /// Renames a speaker everywhere in the note. Renaming to an existing speaker merges both.
+    /// Renames a speaker everywhere in the note, the owners of its tasks included. Renaming to
+    /// an existing speaker merges both.
     /// - Parameter remembersVoice: Learns the voice under the new name for later recordings.
     public func rename(_ label: String, to name: String, in note: Note, remembersVoice: Bool) async throws {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -91,6 +92,10 @@ public final class SpeakerDirectory {
             var segment = segment
             if segment.speaker == label { segment.speaker = target }
             return segment
+        }
+        // Tasks name their owner as the transcript did ("Sprecher 2"); they follow the new name.
+        for task in note.tasks where task.owner == label {
+            task.owner = target
         }
         try await writer.save(segments, speakers: speakers, to: note, edited: true)
     }

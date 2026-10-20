@@ -114,6 +114,7 @@ public final class RecordingController {
         self.liveActivity = devices.activity
         self.liveChapters = liveChapters
         noteWriter = RecordingNoteWriter(store: store)
+        draft = Draft(template: settings.analysis.defaultTemplate)
 
         audioSession.interruptions.subscribe { [weak self] interruption in
             self?.handleInterruption(interruption)
@@ -414,7 +415,7 @@ public final class RecordingController {
         interruptions = InterruptionPolicy()
         audioSource = .microphone
         systemAudioTarget = .allApps
-        draft = Draft()
+        draft = Draft(template: settings.analysis.defaultTemplate)
         phase = .idle
     }
 }

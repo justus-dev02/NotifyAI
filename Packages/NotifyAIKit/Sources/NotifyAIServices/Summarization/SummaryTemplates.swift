@@ -37,6 +37,29 @@ struct TemplateGuidance: Equatable, Sendable {
 public enum SummaryTemplateChoice: Hashable, Sendable {
     case focus(RecordingFocus)
     case custom(UUID)
+
+    /// "focus.meeting" or "custom.<UUID>", for the settings.
+    var storageValue: String {
+        switch self {
+        case .focus(let focus): "focus.\(focus.rawValue)"
+        case .custom(let id): "custom.\(id.uuidString)"
+        }
+    }
+
+    init?(storageValue: String) {
+        let parts = storageValue.split(separator: ".", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        switch parts[0] {
+        case "focus":
+            guard let focus = RecordingFocus(rawValue: parts[1]) else { return nil }
+            self = .focus(focus)
+        case "custom":
+            guard let id = UUID(uuidString: parts[1]) else { return nil }
+            self = .custom(id)
+        default:
+            return nil
+        }
+    }
 }
 
 /// Errors when saving a template, shown to the user.
@@ -77,18 +100,29 @@ public final class SummaryTemplates {
         }
     }
 
-    /// Symbols the user can choose for a template.
+    /// Symbols the user can choose for a template; the built-in templates' symbols included.
     public static let symbols = [
-        "doc.text", "person.3", "briefcase", "graduationcap", "stethoscope", "hammer",
-        "chart.bar", "lightbulb", "cart", "phone", "building.2", "heart",
+        "doc.text", "text.bubble", "person.3", "person.line.dotted.person", "person.2.wave.2", "briefcase",
+        "graduationcap", "stethoscope", "hammer", "chart.bar", "lightbulb", "cart", "phone", "building.2", "heart",
     ]
 
     @ObservationIgnored private let store: NoteStore
     @ObservationIgnored private let processing: ProcessingCoordinator
+    @ObservationIgnored private let settings: AnalysisSettings
 
-    init(store: NoteStore, processing: ProcessingCoordinator) {
+    init(store: NoteStore, processing: ProcessingCoordinator, settings: AnalysisSettings) {
         self.store = store
         self.processing = processing
+        self.settings = settings
+    }
+
+    /// A built-in template as the start of one of the user's own, to adapt it.
+    public static func draft(basedOn focus: RecordingFocus) -> Draft {
+        var draft = Draft()
+        draft.name = String(localized: "\(focus.title) (angepasst)", bundle: .module)
+        draft.symbolName = focus.symbolName
+        draft.instructions = focus.summaryDescription
+        return draft
     }
 
     @discardableResult
@@ -117,9 +151,14 @@ public final class SummaryTemplates {
     }
 
     /// Deletes a template. Notes that used it keep their summary; summarized again, they use
-    /// their kind of conversation.
+    /// their kind of conversation. If it was the default for new recordings, "Allgemein"
+    /// takes its place.
     public func delete(_ template: SummaryTemplate) throws {
+        let id = template.id
         try store.deleteModel(template)
+        if settings.defaultTemplate == .custom(id) {
+            settings.defaultTemplate = .focus(.general)
+        }
     }
 
     /// The template a note uses.

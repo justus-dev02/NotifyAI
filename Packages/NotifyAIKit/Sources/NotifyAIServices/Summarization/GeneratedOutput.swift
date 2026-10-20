@@ -29,7 +29,7 @@ struct PartialNotes {
         FoundationModelSummarizer.notesText(
             keyPoints: keyPoints,
             decisions: decisions,
-            actionItems: actionItems.map { ActionItem(task: $0.task, owner: $0.owner.nilIfEmpty, due: $0.due.nilIfEmpty) },
+            actionItems: actionItems.compactMap(\.actionItem),
             openQuestions: openQuestions
         )
     }
@@ -37,14 +37,25 @@ struct PartialNotes {
 
 @Generable(description: "A concrete action a person explicitly committed to or was asked to do")
 struct GeneratedActionItem {
-    @Guide(description: "The task, phrased as a short instruction")
+    // The quote comes first: the model finds the place before it phrases the task.
+    @Guide(description: "The sentence of the text in which the task was agreed, copied word for word")
+    var quote: String
+
+    @Guide(description: "The task as a self-contained instruction that starts with a verb and names the object, e.g. \"Send the revised offer to Ms. Berger\"; never just \"Do it\" or \"Discuss next steps\"")
     var task: String
 
-    @Guide(description: "Name of the responsible person as it was said; an empty string if nobody was named")
+    @Guide(description: "Who will do it: the name or the speaker label at the start of the line, as written in the text; an empty string if nobody was named")
     var owner: String
 
     @Guide(description: "The deadline as it was said; an empty string if no deadline was mentioned")
     var due: String
+
+    /// The task with empty fields removed; `nil` without a task.
+    var actionItem: ActionItem? {
+        let task = task.cleaned
+        guard !task.isEmpty else { return nil }
+        return ActionItem(task: task, owner: owner.cleaned.nilIfEmpty, due: due.cleaned.nilIfEmpty, evidence: quote.cleaned.nilIfEmpty)
+    }
 }
 
 @Generable(description: "A topic that was discussed")
@@ -82,11 +93,7 @@ struct GeneratedChapterDigest {
             overview: overview.cleaned,
             keyPoints: keyPoints.cleaned,
             decisions: decisions.cleaned,
-            actionItems: actionItems.compactMap { item in
-                let task = item.task.cleaned
-                guard !task.isEmpty else { return nil }
-                return ActionItem(task: task, owner: item.owner.cleaned.nilIfEmpty, due: item.due.cleaned.nilIfEmpty)
-            },
+            actionItems: actionItems.compactMap(\.actionItem),
             openQuestions: openQuestions.cleaned,
             source: .appleIntelligence
         )
@@ -125,11 +132,7 @@ struct GeneratedSummary {
             overview: overview.cleaned,
             keyPoints: keyPoints.cleaned,
             decisions: decisions.cleaned,
-            actionItems: actionItems.compactMap { item in
-                let task = item.task.cleaned
-                guard !task.isEmpty else { return nil }
-                return ActionItem(task: task, owner: item.owner.cleaned.nilIfEmpty, due: item.due.cleaned.nilIfEmpty)
-            },
+            actionItems: actionItems.compactMap(\.actionItem),
             openQuestions: openQuestions.cleaned,
             topics: topics.compactMap { topic in
                 let title = topic.title.cleaned

@@ -33,7 +33,7 @@ final class TemplateResponder: LanguageModelResponder {
             overview: "Der Kunde wünscht einen Relaunch der Website.",
             keyPoints: ["Der Kunde wünscht einen Relaunch."],
             decisions: ["Das Budget liegt bei 18.000 Euro."],
-            actionItems: [GeneratedActionItem(task: "Angebot an den Kunden schicken", owner: "Anna", due: "")],
+            actionItems: [GeneratedActionItem(quote: "", task: "Angebot an den Kunden schicken", owner: "Anna", due: "")],
             openQuestions: ["Wer pflegt die Website?"],
             topics: [GeneratedTopic(title: "Website", points: ["Relaunch"])],
             keywords: ["Relaunch"]
@@ -155,7 +155,7 @@ struct TemplateLibraryTests {
             summarization: SummarizationService(languageModel: MockSummarizer(), fallback: MockSummarizer(), availability: { _ in .available }),
             diarizer: SpeakerDiarizer()
         )
-        templates = SummaryTemplates(store: store, processing: processing)
+        templates = SummaryTemplates(store: store, processing: processing, settings: settings.analysis)
     }
 
     @Test("A template needs a name and something to summarize")

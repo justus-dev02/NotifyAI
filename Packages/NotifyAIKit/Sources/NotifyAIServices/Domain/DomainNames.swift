@@ -47,6 +47,24 @@ extension RecordingFocus {
         case .oneOnOne: String(localized: "1:1-Gespräch", bundle: .module)
         }
     }
+
+    /// What the summary of this kind of conversation pays attention to, in the user's words.
+    public var summaryDescription: String {
+        switch self {
+        case .general:
+            String(localized: "Fasst die wichtigsten Punkte in der Reihenfolge zusammen, in der sie besprochen wurden.", bundle: .module)
+        case .meeting:
+            String(localized: "Achtet auf Entscheidungen, vereinbarte nächste Schritte mit Verantwortlichen und Fristen sowie offene Punkte.", bundle: .module)
+        case .lecture:
+            String(localized: "Achtet auf Begriffe, Definitionen, Erklärungen und alles, was prüfungsrelevant klingt.", bundle: .module)
+        case .interview:
+            String(localized: "Achtet auf die Aussagen der befragten Person, ihre Bedürfnisse, Probleme und bemerkenswerte Zitate.", bundle: .module)
+        case .sales:
+            String(localized: "Achtet auf Wünsche und Einwände des Kunden, Budget, Zeitplan und vereinbarte nächste Schritte.", bundle: .module)
+        case .oneOnOne:
+            String(localized: "Achtet auf Feedback, Ziele, Themen der persönlichen Entwicklung und vereinbarte Unterstützung.", bundle: .module)
+        }
+    }
 }
 
 extension RecordingAudioSource {

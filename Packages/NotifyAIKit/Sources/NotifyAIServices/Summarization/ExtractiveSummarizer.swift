@@ -16,9 +16,8 @@ struct ExtractiveSummarizer: Summarizer {
     private let keyPointCount = 5
 
     func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
-        let sentences = TextChunker.sentences(in: request.text)
-            .map { Self.removingSpeakerLabel(from: $0) }
-            .filter { $0.count >= 12 }
+        let spoken = Self.sentences(in: request.text).filter { $0.text.count >= 12 }
+        let sentences = spoken.map(\.text)
         guard !sentences.isEmpty else {
             throw SummarizationError.emptyInput
         }
@@ -30,19 +29,7 @@ struct ExtractiveSummarizer: Summarizer {
 
         let decisions = sentences.filter { cues.matches($0, in: cues.decision) }
         let questions = sentences.filter { $0.hasSuffix("?") || cues.matches($0, in: cues.openQuestion) }
-        // A commitment ("ich kümmere mich", "Ben übernimmt") is a task on its own. An obligation
-        // ("wir müssen", "das soll") only with a person or a deadline: otherwise "das muss man
-        // sagen" would become a task.
-        let actionItems = sentences
-            .filter { !$0.hasSuffix("?") }
-            .compactMap { sentence -> ActionItem? in
-                let owner = Self.owner(in: sentence)
-                let isCommitment = cues.matches(sentence, in: cues.commitment)
-                let isAssignedObligation = cues.matches(sentence, in: cues.obligation)
-                    && (owner != nil || cues.matches(sentence, in: cues.deadline))
-                guard isCommitment || isAssignedObligation else { return nil }
-                return ActionItem(task: sentence, owner: owner)
-            }
+        let actionItems = spoken.compactMap { actionItem(in: $0, cues: cues, recordedAt: request.recordedAt) }
 
         progress(1)
         return NoteSummary(
@@ -55,6 +42,42 @@ struct ExtractiveSummarizer: Summarizer {
             source: .extractive,
             keywords: TextAnalysis.keywords(in: request.text, languageCode: request.language.languageCode, limit: 3)
         )
+    }
+
+    // MARK: - Tasks
+
+    /// The task a sentence states, if any.
+    ///
+    /// A commitment ("ich kümmere mich", "Ben übernimmt") is a task on its own, and so is
+    /// something the speaker will do by a day ("Ich schicke es bis Freitag"). An obligation
+    /// ("wir müssen", "das soll") only with a person or a deadline: otherwise "das muss man
+    /// sagen" would become a task. Questions, hedged or conditional statements ("vielleicht",
+    /// "falls", "könnten wir") and things already done are no tasks. A commitment in the first
+    /// person belongs to the speaker of the line.
+    private func actionItem(in sentence: SpokenSentence, cues: CueWords, recordedAt: Date) -> ActionItem? {
+        let text = sentence.text
+        guard !text.hasSuffix("?"), !cues.matches(text, in: cues.hedge), !cues.matches(text, in: cues.completed) else { return nil }
+        let named = Self.owner(in: text)
+        let isFirstPerson = cues.matches(text, in: cues.firstPerson)
+        let hasDeadline = DeadlinePhrase.phrase(in: text, relativeTo: recordedAt) != nil
+        let isCommitment = cues.matches(text, in: cues.commitment) || isFirstPerson && hasDeadline
+        let isAssignedObligation = cues.matches(text, in: cues.obligation)
+            && (named != nil || hasDeadline || cues.matches(text, in: cues.deadline))
+        guard isCommitment || isAssignedObligation else { return nil }
+        // "Ich schicke Frau Berger das Angebot": the speaker does it, not the person named.
+        let owner = isFirstPerson ? sentence.speaker ?? named : named
+        return ActionItem(task: Self.withoutLeadingFillers(text, cues: cues), owner: owner, evidence: text)
+    }
+
+    /// "Also, ja, ich schicke …" → "Ich schicke …".
+    private static func withoutLeadingFillers(_ sentence: String, cues: CueWords) -> String {
+        var words = sentence.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        while words.count > 3, let first = words.first,
+              cues.leadingFillers.contains(first.lowercased().trimmingCharacters(in: .punctuationCharacters)) {
+            words.removeFirst()
+        }
+        let text = words.joined(separator: " ")
+        return text.prefix(1).uppercased() + text.dropFirst()
     }
 
     // MARK: - Ranking
@@ -124,12 +147,29 @@ struct ExtractiveSummarizer: Summarizer {
             .filter { !$0.isEmpty }
     }
 
-    /// Removes a leading "Sprecher 1: " label added by speaker detection.
-    private static func removingSpeakerLabel(from sentence: String) -> String {
-        guard let colon = sentence.firstIndex(of: ":"), sentence.distance(from: sentence.startIndex, to: colon) <= 20 else {
-            return sentence
+    /// A sentence of the text with the speaker of its line.
+    struct SpokenSentence {
+        let text: String
+        let speaker: String?
+    }
+
+    /// The sentences of the text. A line of a transcript with speakers starts with the
+    /// speaker's label ("Anna: …"); every sentence of that line belongs to that speaker.
+    static func sentences(in text: String) -> [SpokenSentence] {
+        text.split(whereSeparator: \.isNewline).flatMap { line -> [SpokenSentence] in
+            let (speaker, rest) = speakerLabel(of: String(line))
+            return TextChunker.sentences(in: rest).map { SpokenSentence(text: $0, speaker: speaker) }
         }
-        return String(sentence[sentence.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Splits off a leading "Sprecher 1: " label added by speaker detection.
+    private static func speakerLabel(of line: String) -> (speaker: String?, rest: String) {
+        guard let colon = line.firstIndex(of: ":"), line.distance(from: line.startIndex, to: colon) <= 20 else {
+            return (nil, line)
+        }
+        let label = line[..<colon].trimmingCharacters(in: .whitespaces)
+        let rest = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
+        return (label.isEmpty ? nil : label, rest)
     }
 
     /// The first person name in the sentence, detected with the system's named entity recognizer.
@@ -162,6 +202,14 @@ private struct CueWords {
     let obligation: [String]
     let deadline: [String]
     let openQuestion: [String]
+    /// The speaker talks about themselves ("ich", "mache ich").
+    let firstPerson: [String]
+    /// Hedged or conditional: an idea, not a task.
+    let hedge: [String]
+    /// Already done: no longer a task.
+    let completed: [String]
+    /// Words a spoken sentence often starts with that belong to no task.
+    let leadingFillers: Set<String>
 
     init(languageCode: String) {
         if languageCode == "de" {
@@ -176,6 +224,13 @@ private struct CueWords {
                 "mittwoch", "donnerstag", "freitag", "samstag", "sonntag", "ende der woche", "monatsende",
             ]
             openQuestion = ["unklar", "offen", "klären", "prüfen", "risiko", "problem", "bedenken"]
+            firstPerson = ["ich", "mich", "mir"]
+            hedge = [
+                "vielleicht", "eventuell", "evtl", "könnte", "könnten", "würde", "würden", "falls", "irgendwann",
+                "möglicherweise", "theoretisch", "überlegen",
+            ]
+            completed = ["schon erledigt", "bereits erledigt", "ist erledigt", "habe ich schon", "hab ich schon", "haben wir schon", "wurde schon"]
+            leadingFillers = ["also", "ja", "okay", "ok", "gut", "genau", "und", "dann", "so", "na", "naja", "äh", "ähm"]
         } else {
             decision = ["decided", "agreed", "decision", "concluded", "approved", "settled"]
             commitment = [
@@ -188,6 +243,10 @@ private struct CueWords {
                 "friday", "saturday", "sunday", "end of the week", "end of the month",
             ]
             openQuestion = ["unclear", "open question", "not sure", "risk", "issue", "concern", "clarify"]
+            firstPerson = ["i", "i'll", "i'm", "me", "myself"]
+            hedge = ["maybe", "perhaps", "might", "could", "would", "someday", "possibly"]
+            completed = ["already done", "already did", "already sent", "have already", "has already", "is done"]
+            leadingFillers = ["so", "okay", "ok", "well", "yeah", "yes", "and", "then", "alright", "right", "um", "uh"]
         }
     }
 

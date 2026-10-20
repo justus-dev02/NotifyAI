@@ -5,11 +5,14 @@
 
 import DesignSystem
 import NotifyAICore
+import NotifyAIPersistence
 import NotifyAIServices
 import SwiftUI
 
-/// Disk usage, downloaded models, the search index and deleting all notes.
+/// Disk usage, how long recordings keep their audio, downloaded models, the search index and
+/// deleting all notes.
 struct StorageSettingsSection: View {
+    @Environment(AppSettings.self) private var settings
     @Environment(WhisperModelManager.self) private var whisperModels
     @Environment(NeuralModelManager.self) private var neuralModels
     @Environment(RecordingController.self) private var recording
@@ -24,6 +27,11 @@ struct StorageSettingsSection: View {
     @State private var isConfirmingDeleteModels = false
     @State private var isDeletingModels = false
     @State private var modelMessage: String?
+    /// Recordings whose audio can be deleted, by age.
+    @State private var audioScopes: [AudioScope] = []
+    @State private var isChoosingAudioScope = false
+    /// A retention the user chose that deletes audio right away, awaiting confirmation.
+    @State private var pendingRetention: AudioRetention?
 
     var body: some View {
         Section {
@@ -34,6 +42,15 @@ struct StorageSettingsSection: View {
                     ProgressView().controlSize(.small)
                 }
             }
+            Picker("Aufnahmen behalten", selection: retentionBinding) {
+                ForEach(AudioRetention.allCases) { retention in
+                    Text(retention.title).tag(retention)
+                }
+            }
+            Button("Aufnahmen löschen …", role: .destructive) {
+                isChoosingAudioScope = true
+            }
+            .disabled(audioScopes.isEmpty)
             LabeledContent("Geladene Modelle") {
                 Text(modelSummary)
             }
@@ -59,10 +76,29 @@ struct StorageSettingsSection: View {
         } header: {
             Text("Speicher")
         } footer: {
-            Text("Modelle lassen sich jederzeit erneut laden. Laufende Aufnahmen und Transkriptionen müssen dafür abgeschlossen sein.")
+            Text("Beim Löschen von Aufnahmen bleiben Transkript, Zusammenfassung, Aufgaben und Sprecher erhalten; nur das Abspielen und neu Transkribieren entfällt. Automatisch gelöscht werden nur Aufnahmen, die keine Favoriten sind. Modelle lassen sich jederzeit erneut laden.")
         }
         .task {
             await refreshStorage()
+        }
+        .confirmationDialog("Welche Aufnahmen löschen?", isPresented: $isChoosingAudioScope, titleVisibility: .visible) {
+            ForEach(audioScopes) { scope in
+                Button(scope.title, role: .destructive) { deleteAudio(scope) }
+            }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Gelöscht werden nur die Audiodateien, auch die von Favoriten. Transkripte, Zusammenfassungen und Aufgaben bleiben erhalten.")
+        }
+        .confirmationDialog(
+            "Ältere Aufnahmen jetzt löschen?",
+            isPresented: Binding(presenting: $pendingRetention),
+            titleVisibility: .visible,
+            presenting: pendingRetention
+        ) { retention in
+            Button("Aufnahmen löschen", role: .destructive) { apply(retention) }
+            Button("Abbrechen", role: .cancel) { pendingRetention = nil }
+        } message: { retention in
+            Text(retentionMessage(for: retention))
         }
         .confirmationDialog("Alle Notizen löschen?", isPresented: $isConfirmingDeleteAll, titleVisibility: .visible) {
             Button("Alle löschen", role: .destructive, action: deleteAll)
@@ -111,6 +147,46 @@ struct StorageSettingsSection: View {
         }
     }
 
+    // MARK: Audio
+
+    /// The retention setting; a choice that deletes audio right away asks first.
+    private var retentionBinding: Binding<AudioRetention> {
+        Binding(
+            get: { settings.storage.audioRetention },
+            set: { retention in
+                if retentionCandidates(for: retention).isEmpty {
+                    settings.storage.audioRetention = retention
+                } else {
+                    pendingRetention = retention
+                }
+            }
+        )
+    }
+
+    private func retentionCandidates(for retention: AudioRetention) -> [Note] {
+        guard let cutoff = retention.cutoff() else { return [] }
+        return library.notesWithAudio(recordedBefore: cutoff, includingFavorites: false)
+    }
+
+    private func retentionMessage(for retention: AudioRetention) -> String {
+        let count = retentionCandidates(for: retention).count
+        return count == 1
+            ? String(localized: "Eine Aufnahme ist schon älter und verliert sofort ihre Audiodatei. Transkript, Zusammenfassung und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme.")
+            : String(localized: "\(count) Aufnahmen sind schon älter und verlieren sofort ihre Audiodatei. Transkripte, Zusammenfassungen und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme.")
+    }
+
+    private func apply(_ retention: AudioRetention) {
+        pendingRetention = nil
+        settings.storage.audioRetention = retention
+        storage.applyAudioRetention()
+        Task { await refreshStorage() }
+    }
+
+    private func deleteAudio(_ scope: AudioScope) {
+        library.deleteAudio(of: library.notesWithAudio(recordedBefore: scope.cutoff))
+        Task { await refreshStorage() }
+    }
+
     private func deleteAll() {
         do {
             try library.deleteAll()
@@ -126,5 +202,39 @@ struct StorageSettingsSection: View {
         await neuralModels.refresh()
         reservedSpeechPacks = await AppleSpeechEngine.reservedLocales.count
         recordingsSize = await storage.recordingsDiskUsage()
+        audioScopes = await AudioScope.available(in: library)
+    }
+}
+
+/// A group of recordings whose audio can be deleted at once: older than a month, older than
+/// three months, or all.
+private struct AudioScope: Identifiable {
+    let id: Int
+    /// Recordings made before this moment; `nil` for all.
+    let cutoff: Date?
+    let count: Int
+    let bytes: Int64
+
+    var title: String {
+        let size = TimeFormatting.byteCount(bytes)
+        return switch id {
+        case 30: String(localized: "Älter als 30 Tage (\(count) · \(size))")
+        case 90: String(localized: "Älter als 90 Tage (\(count) · \(size))")
+        default: String(localized: "Alle Aufnahmen (\(count) · \(size))")
+        }
+    }
+
+    /// The scopes that contain recordings, oldest first; a scope with the same recordings as a
+    /// wider one is left out.
+    @MainActor
+    static func available(in library: NoteLibrary, now: Date = .now) async -> [Self] {
+        var scopes: [Self] = []
+        for days in [0, 30, 90] {
+            let cutoff = days > 0 ? Calendar.current.date(byAdding: .day, value: -days, to: now) : nil
+            let notes = library.notesWithAudio(recordedBefore: cutoff)
+            guard !notes.isEmpty, !scopes.contains(where: { $0.count == notes.count }) else { continue }
+            scopes.append(Self(id: days, cutoff: cutoff, count: notes.count, bytes: await library.audioSize(of: notes)))
+        }
+        return scopes.reversed()
     }
 }

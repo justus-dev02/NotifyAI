@@ -259,6 +259,9 @@ struct FoundationModelSummarizer: Summarizer {
         return notesText(keyPoints: summary.keyPoints, decisions: summary.decisions, actionItems: summary.actionItems, openQuestions: summary.openQuestions)
     }
 
+    /// At most this many characters of a task's quote are passed on between requests.
+    static let quoteLength = 140
+
     /// The compact text representation of notes that is fed into the next request.
     static func notesText(keyPoints: [String], decisions: [String], actionItems: [ActionItem], openQuestions: [String]) -> String {
         var lines: [String] = []
@@ -268,6 +271,8 @@ struct FoundationModelSummarizer: Summarizer {
             var line = "Task: \(item.task)"
             if let owner = item.owner { line += " (owner: \(owner))" }
             if let due = item.due { line += " (due: \(due))" }
+            // The quote travels with the task, so the final summary can still cite the text.
+            if let evidence = item.evidence { line += " (quote: \"\(evidence.prefix(Self.quoteLength))\")" }
             return line
         }
         lines += openQuestions.map { "Open: \($0)" }
@@ -370,9 +375,14 @@ struct FoundationModelSummarizer: Summarizer {
         Only use information that is stated in the text. Never invent names, numbers, dates or facts. \
         Many recordings are plain minutes, lectures or conversations without tasks, decisions or open \
         questions: then leave those lists empty. A task is only a concrete action that a person in the \
-        text explicitly committed to or was asked to do; never turn topics, decisions or general \
-        "next steps" into tasks. Leave the owner and deadline of a task empty when they were not said; \
-        never write placeholders such as "not specified". \
+        text explicitly committed to ("I'll send it", "Anna takes care of the budget") or was asked to do \
+        ("Could you check the contract by Friday?"). Not tasks: topics, decisions, ideas, wishes, \
+        hypothetical or conditional actions ("we could", "maybe", "if"), things already done, and \
+        general "next steps". Write each task as a self-contained instruction that starts with a verb \
+        and says what exactly is to be done, so it is clear without the conversation. List each task \
+        once, even when it was mentioned several times. The owner is the person who will do it: when \
+        someone says "I will", it is the label at the start of their line. Leave the owner and deadline \
+        empty when they were not said; never write placeholders such as "not specified". \
         Transcripts can contain recognition errors; interpret them sensibly and do not quote them verbatim.
         Be concrete: keep names, numbers, amounts, dates, deadlines and product or project names. \
         Avoid generic statements such as "various topics were discussed". \

@@ -98,21 +98,23 @@ public final class ServiceContainer {
         )
         speakers = SpeakerDirectory(store: store, detection: speakerDetection)
         transcriptEditor = TranscriptEditor(store: store)
-        templates = SummaryTemplates(store: store, processing: processing)
+        templates = SummaryTemplates(store: store, processing: processing, settings: settings.analysis)
         let integrationState = inMemory ? nil : locations.integrationStateURL
         integrations = IntegrationService(store: store, settings: settings.integrations, processing: processing, stateURL: integrationState)
         importer = ImportService(store: store, settings: settings, processing: processing)
         library = NoteLibrary(store: store, processing: processing)
         tasks = TaskBoard(store: store, library: library)
-        storage = StorageMaintenance(locations: locations, settings: settings)
+        storage = StorageMaintenance(locations: locations, settings: settings, library: library)
         appLock = AppLock(settings: settings.privacy)
         storage.applyBackupPreference()
     }
 
-    /// Starts the work that runs without the user: interrupted processing continues, the
-    /// search index and the task board catch up. Called once, when the first window appears.
+    /// Starts the work that runs without the user: interrupted processing continues, old
+    /// recordings lose their audio as the user chose, the search index and the task board
+    /// catch up. Called once, when the first window appears.
     public func start() async {
         processing.resumePendingWork()
+        storage.applyAudioRetention()
         knowledge.scheduleRefresh()
         tasks.startObserving()
         await whisperModels.refresh()

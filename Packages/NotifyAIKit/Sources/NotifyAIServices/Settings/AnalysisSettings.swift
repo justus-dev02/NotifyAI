@@ -6,7 +6,7 @@
 import Foundation
 import Observation
 
-/// What happens after (and during) a recording: speakers and summaries.
+/// What happens after (and during) a recording: speakers, summaries and their default template.
 @MainActor
 @Observable
 public final class AnalysisSettings {
@@ -14,6 +14,7 @@ public final class AnalysisSettings {
         static let speakerDetection = "processing.speakerDetection"
         static let speakersFromAudioSource = "processing.speakersFromAudioSource"
         static let summarizeWhileRecording = "processing.summarizeWhileRecording"
+        static let defaultTemplate = "processing.defaultTemplate"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -34,8 +35,15 @@ public final class AnalysisSettings {
         didSet { defaults.set(summarizeWhileRecording, forKey: Key.summarizeWhileRecording) }
     }
 
+    /// The template new recordings and imports start with; it can be changed before every
+    /// recording.
+    public var defaultTemplate: SummaryTemplateChoice {
+        didSet { defaults.set(defaultTemplate.storageValue, forKey: Key.defaultTemplate) }
+    }
+
     init(defaults: UserDefaults) {
         self.defaults = defaults
+        defaultTemplate = defaults.string(forKey: Key.defaultTemplate).flatMap(SummaryTemplateChoice.init(storageValue:)) ?? .focus(.general)
         speakerDetection = defaults.bool(forKey: Key.speakerDetection)
         speakersFromAudioSource = defaults.object(forKey: Key.speakersFromAudioSource) as? Bool ?? true
         summarizeWhileRecording = defaults.object(forKey: Key.summarizeWhileRecording) as? Bool ?? Self.summarizesWhileRecordingByDefault

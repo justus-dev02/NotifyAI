@@ -108,13 +108,17 @@ public struct ActionItem: Identifiable, Codable, Hashable, Sendable {
     /// deadlines are often relative or vague.
     public var due: String?
     public var isDone: Bool
+    /// The words of the text in which the task was agreed, as the summarizer quoted them.
+    /// Used to check the task against the text; not stored with the task.
+    public var evidence: String?
 
-    public init(id: UUID = UUID(), task: String, owner: String? = nil, due: String? = nil, isDone: Bool = false) {
+    public init(id: UUID = UUID(), task: String, owner: String? = nil, due: String? = nil, isDone: Bool = false, evidence: String? = nil) {
         self.id = id
         self.task = task
         self.owner = owner
         self.due = due
         self.isDone = isDone
+        self.evidence = evidence
     }
 }
 

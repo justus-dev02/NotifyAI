@@ -19,7 +19,7 @@ struct SummaryGrounding: Sendable {
     /// What models write when nobody or nothing was named, normalized.
     static let placeholders: Set<String> = [
         "nicht angegeben", "keine angabe", "keine angaben", "keine", "keiner", "kein", "niemand", "unbekannt",
-        "unklar", "offen", "ohne", "ka", "na", "none", "nobody", "unknown", "not specified", "unspecified",
+        "unklar", "offen", "ohne", "ka", "k a", "na", "n a", "none", "nobody", "unknown", "not specified", "unspecified",
         "not mentioned", "nicht genannt", "nicht erwähnt", "tbd", "tba",
     ]
 

@@ -45,6 +45,7 @@ public final class ImportService {
             note = Note(title: title, isTitleUserDefined: false, kind: kind, status: .queued, language: settings.transcription.language, bodyText: text)
         }
 
+        applyDefaultTemplate(to: note)
         try store.insert(note)
         processing.enqueue(.process(note.id))
         Logger.importing.info("Imported a \(note.kind.rawValue, privacy: .public) file")
@@ -63,8 +64,19 @@ public final class ImportService {
             language: settings.transcription.language,
             bodyText: text
         )
+        applyDefaultTemplate(to: note)
         try store.insert(note)
         processing.enqueue(.process(note.id))
         return note.id
+    }
+
+    /// Imports are summarized with the template the settings choose for new notes.
+    private func applyDefaultTemplate(to note: Note) {
+        switch settings.analysis.defaultTemplate {
+        case .focus(let focus):
+            note.focus = focus
+        case .custom(let id):
+            note.summaryTemplateID = id
+        }
     }
 }

@@ -26,6 +26,16 @@ extension RecordingController {
         public var consentConfirmed = false
 
         public init() {}
+
+        /// An empty draft with the given template.
+        init(template: SummaryTemplateChoice) {
+            switch template {
+            case .focus(let focus):
+                self.focus = focus
+            case .custom(let id):
+                templateID = id
+            }
+        }
     }
 
     /// The system and hardware a recording uses. The app passes the real implementations.

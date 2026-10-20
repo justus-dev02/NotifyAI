@@ -21,6 +21,7 @@ public final class AppSettings {
     public let privacy: PrivacySettings
     public let general: GeneralSettings
     public let integrations: IntegrationSettings
+    public let storage: StorageSettings
 
     public init(defaults: UserDefaults = .standard) {
         transcription = TranscriptionSettings(defaults: defaults)
@@ -29,6 +30,7 @@ public final class AppSettings {
         privacy = PrivacySettings(defaults: defaults)
         general = GeneralSettings(defaults: defaults)
         integrations = IntegrationSettings(defaults: defaults)
+        storage = StorageSettings(defaults: defaults)
     }
 }
 
@@ -41,7 +43,7 @@ extension AppSettings {
             String(localized: "Live-Transkript: \(String(describing: transcription.liveTranscription)), Füllwörter entfernen: \(String(describing: transcription.removesFillerWords)), Vokabular: \(transcription.vocabulary.count) Begriffe", bundle: .module),
             String(localized: "Audioquelle: \(recording.audioSource.rawValue), Echo-Unterdrückung: \(String(describing: recording.echoCancellation))", bundle: .module),
             String(localized: "Sprechererkennung: \(String(describing: analysis.speakerDetection)), Ich/Andere aus Quelle: \(String(describing: analysis.speakersFromAudioSource)), Kapitel während der Aufnahme: \(String(describing: analysis.summarizeWhileRecording))", bundle: .module),
-            String(localized: "App-Sperre: \(String(describing: privacy.appLockEnabled)), Backup: \(String(describing: privacy.includeInBackup))", bundle: .module),
+            String(localized: "App-Sperre: \(String(describing: privacy.appLockEnabled)), Backup: \(String(describing: privacy.includeInBackup)), Audio behalten: \(storage.audioRetention.rawValue)", bundle: .module),
             String(localized: "Darstellung: \(general.appPresence.rawValue)", bundle: .module),
             String(localized: "Integrationen: Obsidian \(String(describing: integrations.obsidianBookmark != nil)), Notion \(String(describing: !integrations.notionPage.isEmpty)), Webhook \(String(describing: !integrations.webhookURL.isEmpty))", bundle: .module),
         ]
