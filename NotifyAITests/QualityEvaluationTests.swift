@@ -12,9 +12,22 @@
 
 import AVFoundation
 import Foundation
-import NotifyAICore
+@testable import NotifyAIAudio
+@testable import NotifyAICore
+@testable import NotifyAIExport
+@testable import NotifyAIIntegrations
+@testable import NotifyAIKnowledge
+@testable import NotifyAILibrary
+@testable import NotifyAINeuralModels
 @testable import NotifyAIPersistence
+@testable import NotifyAIProcessing
+@testable import NotifyAIRecording
 @testable import NotifyAIServices
+@testable import NotifyAISettings
+@testable import NotifyAISpeakers
+@testable import NotifyAISummarization
+@testable import NotifyAISupport
+@testable import NotifyAITranscription
 import Testing
 
 // MARK: - Shared

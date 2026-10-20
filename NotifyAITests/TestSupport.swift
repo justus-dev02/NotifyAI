@@ -6,8 +6,21 @@
 import AudioCapture
 import Foundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAIAudio
+@testable import NotifyAICore
+@testable import NotifyAIExport
+@testable import NotifyAIIntegrations
+@testable import NotifyAIKnowledge
+@testable import NotifyAILibrary
+@testable import NotifyAINeuralModels
+@testable import NotifyAIProcessing
+@testable import NotifyAIRecording
 @testable import NotifyAIServices
+@testable import NotifyAISettings
+@testable import NotifyAISpeakers
+@testable import NotifyAISummarization
+@testable import NotifyAISupport
+@testable import NotifyAITranscription
 import Synchronization
 
 /// Synthetic audio signals at the app's sample rate.

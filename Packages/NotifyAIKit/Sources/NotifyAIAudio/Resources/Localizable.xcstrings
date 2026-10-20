@@ -1,0 +1,198 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "„%@“ ist nicht geöffnet. Öffne die App oder wähle „Alle Apps“ als Quelle." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is not open. Open the app or choose “All Apps” as the source."
+          }
+        }
+      }
+    },
+    "Aggregate-Gerät anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create aggregate device"
+          }
+        }
+      }
+    },
+    "Audio-Callback anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create audio callback"
+          }
+        }
+      }
+    },
+    "Aufnahme starten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Recording"
+          }
+        }
+      }
+    },
+    "Ausgabegerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output device"
+          }
+        }
+      }
+    },
+    "Das Audioformat des Mikrofons wird nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The microphone’s audio format is not supported."
+          }
+        }
+      }
+    },
+    "Das Audiogerät für den Systemton konnte nicht eingerichtet werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio device for system audio could not be set up."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht angelegt werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be created: %@"
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht gelesen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be read."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht geöffnet werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be opened."
+          }
+        }
+      }
+    },
+    "Die Aufnahme konnte nicht gestartet werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording could not be started: %@"
+          }
+        }
+      }
+    },
+    "Es läuft bereits eine Aufnahme." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A recording is already in progress."
+          }
+        }
+      }
+    },
+    "Es wurde kein Mikrofon gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No microphone was found."
+          }
+        }
+      }
+    },
+    "Mikrofon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
+          }
+        }
+      }
+    },
+    "Nicht genügend freier Speicherplatz (%@ frei). Für eine Aufnahme werden mindestens %@ benötigt." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nicht genügend freier Speicherplatz (%1$@ frei). Für eine Aufnahme werden mindestens %2$@ benötigt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough free storage (%1$@ free). A recording needs at least %2$@."
+          }
+        }
+      }
+    },
+    "Systemton kann auf diesem Gerät nicht aufgenommen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System audio cannot be recorded on this device."
+          }
+        }
+      }
+    },
+    "Systemton konnte nicht aufgenommen werden (%@, Fehler %d)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Systemton konnte nicht aufgenommen werden (%1$@, Fehler %2$d)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System audio could not be recorded (%1$@, error %2$d)."
+          }
+        }
+      }
+    },
+    "Tap anlegen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create tap"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

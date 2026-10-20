@@ -1,0 +1,76 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "ca. 20 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 20 MB"
+          }
+        }
+      }
+    },
+    "ca. 610 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 610 MB"
+          }
+        }
+      }
+    },
+    "Das Modell „%@“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model “%@” has not been downloaded yet. You can download it in Settings."
+          }
+        }
+      }
+    },
+    "Das Modell wird gerade verwendet. Lösche es, sobald die Verarbeitung abgeschlossen ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model is in use right now. Delete it once processing has finished."
+          }
+        }
+      }
+    },
+    "Download fehlgeschlagen. Bitte prüfe die Internetverbindung und versuche es erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download failed. Please check your internet connection and try again."
+          }
+        }
+      }
+    },
+    "Erkennt, wer wann spricht, und merkt sich Stimmen, die du benennst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detects who speaks when and remembers voices you name."
+          }
+        }
+      }
+    },
+    "Sehr schnelle Spracherkennung für 25 europäische Sprachen, auch live." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very fast speech recognition for 25 European languages, also live."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

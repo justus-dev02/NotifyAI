@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Die Audiodatei dieser Notiz fehlt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file of this note is missing."
+          }
+        }
+      }
+    },
+    "Die Notizen dieser Zusammenfassung sind nicht mehr vorhanden oder haben keine Zusammenfassung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The notes of this summary no longer exist or have no summary."
+          }
+        }
+      }
+    },
+    "In der Aufnahme wurde keine Sprache erkannt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speech was detected in the recording."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

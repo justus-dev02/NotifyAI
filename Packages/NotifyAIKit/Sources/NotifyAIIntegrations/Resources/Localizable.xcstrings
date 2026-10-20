@@ -1,0 +1,116 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ ist noch nicht eingerichtet. Du findest die Einstellung unter „Integrationen“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is not set up yet. You can find the setting under “Integrations”."
+          }
+        }
+      }
+    },
+    "Auf den Obsidian-Ordner kann nicht mehr zugegriffen werden. Wähle ihn in den Einstellungen erneut aus." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Obsidian folder can no longer be accessed. Choose it again in Settings."
+          }
+        }
+      }
+    },
+    "Das Ziel wurde nicht gefunden. In Notion muss die Seite über „Verbindungen“ für die Integration freigegeben sein." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The destination was not found. In Notion, the page must be shared with the integration under “Connections”."
+          }
+        }
+      }
+    },
+    "Der Dienst hat mit Fehler %lld geantwortet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service responded with error %lld."
+          }
+        }
+      }
+    },
+    "Der Dienst hat unerwartet geantwortet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service responded unexpectedly."
+          }
+        }
+      }
+    },
+    "Der Dienst hat zu viele Anfragen erhalten. Bitte versuche es in einer Minute erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service received too many requests. Please try again in a minute."
+          }
+        }
+      }
+    },
+    "Der Notion-Link enthält keine Seiten-ID. Kopiere den Link der Seite über „Teilen“ → „Link kopieren“." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Notion link contains no page ID. Copy the page’s link via “Share” → “Copy link”."
+          }
+        }
+      }
+    },
+    "Der Zugang wurde abgelehnt. Prüfe den Schlüssel und ob die Seite für die Integration freigegeben ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access was denied. Check the key and whether the page is shared with the integration."
+          }
+        }
+      }
+    },
+    "Die Webhook-Adresse ist ungültig. Sie muss mit https:// beginnen (http:// nur für localhost)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The webhook address is invalid. It must start with https:// (http:// only for localhost)."
+          }
+        }
+      }
+    },
+    "Keine Sprache an dieser Stelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speech at this point"
+          }
+        }
+      }
+    },
+    "Notiz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -6,9 +6,11 @@
 //
 //  The package manifest already makes the compiler enforce the direction of the modules
 //  (App → Services → Persistence → Core). These tests cover what the compiler cannot see:
-//  which frameworks a layer may use, how the app may touch data, how work leaves the main
-//  actor, where platforms may be told apart and that every text is translated. Each rule
-//  names the files that break it, so a failure says exactly what to fix.
+//  that every service module imports only the modules below it in the layer table (the
+//  manifest could be widened by accident), which frameworks a layer may use, how the app
+//  may touch data, how work leaves the main actor, where platforms may be told apart and
+//  that every text is translated. Each rule names the files that break it, so a failure
+//  says exactly what to fix.
 //
 
 import Foundation
@@ -72,7 +74,42 @@ private let appSources = sources(in: "NotifyAI", "Shared", "NotifyAIWidgets")
 private let coreSources = sources(in: "Packages/NotifyAIKit/Sources/NotifyAICore")
 private let captureSources = sources(in: "Packages/NotifyAIKit/Sources/AudioCapture")
 private let persistenceSources = sources(in: "Packages/NotifyAIKit/Sources/NotifyAIPersistence")
+/// The service modules, bottom to top, with the modules each may import. Mirrors the
+/// dependencies in Package.swift; a module that needs another one is a design decision that
+/// changes both places.
+private let serviceLayers: [(module: String, allowed: Set<String>)] = [
+    ("NotifyAISupport", ["NotifyAICore", "NotifyAIPersistence"]),
+    ("NotifyAIAudio", ["NotifyAICore", "NotifyAIPersistence", "AudioCapture", "NotifyAISupport"]),
+    ("NotifyAINeuralModels", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport"]),
+    ("NotifyAITranscription", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAIAudio", "NotifyAINeuralModels"]),
+    ("NotifyAISpeakers", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAIAudio", "NotifyAINeuralModels"]),
+    ("NotifyAISummarization", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport"]),
+    ("NotifyAISettings", ["NotifyAICore", "NotifyAISupport", "NotifyAIAudio", "NotifyAITranscription"]),
+    ("NotifyAIProcessing", [
+        "NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAITranscription", "NotifyAISpeakers",
+        "NotifyAISummarization", "NotifyAISettings",
+    ]),
+    ("NotifyAIExport", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAISummarization"]),
+    ("NotifyAIKnowledge", ["NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAISummarization", "NotifyAISettings"]),
+    ("NotifyAIIntegrations", [
+        "NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAIExport", "NotifyAIProcessing", "NotifyAISettings",
+    ]),
+    ("NotifyAIRecording", [
+        "NotifyAICore", "NotifyAIPersistence", "AudioCapture", "NotifyAISupport", "NotifyAIAudio", "NotifyAITranscription",
+        "NotifyAISummarization", "NotifyAISettings", "NotifyAIProcessing",
+    ]),
+    ("NotifyAILibrary", [
+        "NotifyAICore", "NotifyAIPersistence", "NotifyAISupport", "NotifyAIAudio", "NotifyAITranscription", "NotifyAISpeakers",
+        "NotifyAISummarization", "NotifyAISettings", "NotifyAIProcessing", "NotifyAIKnowledge",
+    ]),
+]
+
+/// The modules of this repository; other imports are system frameworks or dependencies.
+private let ownModules: Set<String> = Set(serviceLayers.map(\.module))
+    .union(["NotifyAICore", "NotifyAIPersistence", "AudioCapture", "DesignSystem", "NotifyAIServices"])
+
 private let serviceSources = sources(in: "Packages/NotifyAIKit/Sources/NotifyAIServices")
+    + serviceLayers.flatMap { sources(in: "Packages/NotifyAIKit/Sources/\($0.module)") }
 private let designSources = sources(in: "Packages/NotifyAIKit/Sources/DesignSystem")
 private let packageSources = coreSources + captureSources + persistenceSources + serviceSources + designSources
 private let allSources = appSources + packageSources
@@ -91,6 +128,9 @@ struct ArchitectureTests {
     func sourcesExist() {
         #expect(appSources.count > 30)
         #expect(serviceSources.count > 50)
+        for layer in serviceLayers {
+            #expect(!sources(in: "Packages/NotifyAIKit/Sources/\(layer.module)").isEmpty, "\(layer.module) has no sources")
+        }
         #expect(persistenceSources.count > 5)
     }
 
@@ -117,6 +157,23 @@ struct ArchitectureTests {
         #expect(offenders.isEmpty, "Forbidden imports in \(offenders)")
     }
 
+    @Test("Every service module imports only the modules below it", arguments: serviceLayers.map(\.module))
+    func serviceModuleDependencies(module: String) throws {
+        let allowed = try #require(serviceLayers.first { $0.module == module }).allowed
+        let offenders = sources(in: "Packages/NotifyAIKit/Sources/\(module)").compactMap { file -> String? in
+            let forbidden = file.imports.intersection(ownModules).subtracting(allowed)
+            return forbidden.isEmpty ? nil : "\(file.path): \(forbidden.sorted())"
+        }
+        #expect(offenders.isEmpty, "Imports against the layer table in \(offenders)")
+    }
+
+    @Test("Only the composition root re-exports modules")
+    func reexportsOnlyInTheCompositionRoot() {
+        let offenders = violations(of: #"@_exported"#, in: packageSources)
+            .filter { !$0.hasSuffix("/NotifyAIServices/Exports.swift") }
+        #expect(offenders.isEmpty, "@_exported in \(offenders)")
+    }
+
     @Test("Services never use SwiftUI")
     func servicesWithoutSwiftUI() {
         let offenders = serviceSources.filter { $0.imports.contains("SwiftUI") }.map(\.path)
@@ -125,7 +182,7 @@ struct ArchitectureTests {
 
     @Test("Services touch UIKit and AppKit only in platform adapters")
     func platformFrameworksOnlyInAdapters() {
-        let adapters = ["/NotifyAIServices/Platform/", "/NotifyAIServices/Audio/SystemAudio/"]
+        let adapters = ["/NotifyAISupport/Platform/", "/NotifyAIAudio/SystemAudio/"]
         let offenders = serviceSources
             .filter { !$0.imports.isDisjoint(with: ["UIKit", "AppKit"]) }
             .filter { file in !adapters.contains { file.path.contains($0) } }
@@ -135,7 +192,7 @@ struct ArchitectureTests {
 
     @Test("The design system knows nothing about data or services")
     func designSystemIsIndependent() {
-        let forbidden: Set = ["SwiftData", "NotifyAIPersistence", "NotifyAIServices", "AudioCapture"]
+        let forbidden = ownModules.subtracting(["NotifyAICore", "DesignSystem"]).union(["SwiftData"])
         let offenders = designSources.filter { !$0.imports.isDisjoint(with: forbidden) }.map(\.path)
         #expect(offenders.isEmpty, "Forbidden imports in \(offenders)")
     }
@@ -212,10 +269,9 @@ struct ArchitectureTests {
         #expect(offenders.isEmpty, "String(localized:) without bundle: .module in \(offenders)")
     }
 
-    @Test("Every text of the app and the services is translated to English", arguments: [
-        "NotifyAI/Localizable.xcstrings",
-        "Packages/NotifyAIKit/Sources/NotifyAIServices/Resources/Localizable.xcstrings",
-    ])
+    @Test("Every text of the app and the services is translated to English", arguments: ["NotifyAI/Localizable.xcstrings"]
+        + serviceLayers.map { "Packages/NotifyAIKit/Sources/\($0.module)/Resources/Localizable.xcstrings" }
+            .filter { FileManager.default.fileExists(atPath: root.appending(path: $0).path(percentEncoded: false)) })
     func everyTextIsTranslated(catalog: String) throws {
         let data = try Data(contentsOf: root.appending(path: catalog))
         let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

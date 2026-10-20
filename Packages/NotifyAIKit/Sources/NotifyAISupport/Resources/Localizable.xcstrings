@@ -1,0 +1,406 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "1:1-Gespräch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1:1 Conversation"
+          }
+        }
+      }
+    },
+    "Achtet auf Begriffe, Definitionen, Erklärungen und alles, was prüfungsrelevant klingt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on concepts, definitions, explanations and anything that sounds exam-relevant."
+          }
+        }
+      }
+    },
+    "Achtet auf die Aussagen der befragten Person, ihre Bedürfnisse, Probleme und bemerkenswerte Zitate." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on the interviewee's statements, needs, pain points and notable quotes."
+          }
+        }
+      }
+    },
+    "Achtet auf Entscheidungen, vereinbarte nächste Schritte mit Verantwortlichen und Fristen sowie offene Punkte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on decisions, agreed next steps with owners and deadlines, and open issues."
+          }
+        }
+      }
+    },
+    "Achtet auf Feedback, Ziele, Themen der persönlichen Entwicklung und vereinbarte Unterstützung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on feedback, goals, personal development topics and agreed support."
+          }
+        }
+      }
+    },
+    "Achtet auf Wünsche und Einwände des Kunden, Budget, Zeitplan und vereinbarte nächste Schritte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focuses on the customer's needs and objections, budget, timeline and agreed next steps."
+          }
+        }
+      }
+    },
+    "Alle Apps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Apps"
+          }
+        }
+      }
+    },
+    "Allgemein" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        }
+      }
+    },
+    "Andere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Others"
+          }
+        }
+      }
+    },
+    "Audiodatei" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio File"
+          }
+        }
+      }
+    },
+    "Aufnahme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        }
+      }
+    },
+    "Aufnahme läuft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        }
+      }
+    },
+    "Bild" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        }
+      }
+    },
+    "Der Zugangsschlüssel konnte nicht im Schlüsselbund gesichert werden (Fehler %lld)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key could not be saved in the keychain (error %lld)."
+          }
+        }
+      }
+    },
+    "Fasst die wichtigsten Punkte in der Reihenfolge zusammen, in der sie besprochen wurden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarizes the main points in the order they were discussed."
+          }
+        }
+      }
+    },
+    "Fehlgeschlagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        }
+      }
+    },
+    "Fertig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        }
+      }
+    },
+    "Für Online-Meetings: deine Stimme über das Mikrofon, die anderen Teilnehmenden direkt aus der App (z. B. Zoom, Teams, Discord)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For online meetings: your voice through the microphone, the other participants directly from the app (e.g. Zoom, Teams, Discord)."
+          }
+        }
+      }
+    },
+    "Genau und um ein Vielfaches schneller als Whisper, mit präzisen Wortzeiten. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accurate and many times faster than Whisper, with precise word timings. Requires a one-time model download; live text appears phrase by phrase."
+          }
+        }
+      }
+    },
+    "Ich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Me"
+          }
+        }
+      }
+    },
+    "In Warteschlange" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        }
+      }
+    },
+    "Interview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interview"
+          }
+        }
+      }
+    },
+    "Kundengespräch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customer Conversation"
+          }
+        }
+      }
+    },
+    "Meeting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting"
+          }
+        }
+      }
+    },
+    "Mikrofon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
+          }
+        }
+      }
+    },
+    "Mikrofon + %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone + %@"
+          }
+        }
+      }
+    },
+    "Mikrofon + Systemton" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone + System Audio"
+          }
+        }
+      }
+    },
+    "Nimmt auf, was im Raum gesprochen wird." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records what is said in the room."
+          }
+        }
+      }
+    },
+    "Nimmt nur den Ton von Apps auf, z. B. Webinare oder Videos. Das Mikrofon bleibt aus." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records only the audio of apps, e.g. webinars or videos. The microphone stays off."
+          }
+        }
+      }
+    },
+    "Nur Systemton" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Audio Only"
+          }
+        }
+      }
+    },
+    "PDF" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF"
+          }
+        }
+      }
+    },
+    "Sammelzusammenfassung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summary Across Notes"
+          }
+        }
+      }
+    },
+    "Schnell und sparsam. Der Text erscheint live, das Sprachpaket stellt das System bereit." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast and efficient. Text appears live; the system provides the language pack."
+          }
+        }
+      }
+    },
+    "Sehr genau, auch bei Fachbegriffen. Benötigt ein einmal geladenes Modell; live erscheint der Text abschnittsweise." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very accurate, even with technical terms. Requires a one-time model download; live text appears in sections."
+          }
+        }
+      }
+    },
+    "Sprecher %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker %lld"
+          }
+        }
+      }
+    },
+    "Sprecher werden erkannt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifying Speakers"
+          }
+        }
+      }
+    },
+    "Systemton · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Audio · %@"
+          }
+        }
+      }
+    },
+    "Vorlesung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "Wird transkribiert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribing"
+          }
+        }
+      }
+    },
+    "Wird zusammengefasst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarizing"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

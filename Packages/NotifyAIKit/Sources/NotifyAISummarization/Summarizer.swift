@@ -1,0 +1,430 @@
+//
+//  Summarizer.swift
+//  NotifyAISummarization
+//
+
+import Foundation
+import FoundationModels
+import NotifyAICore
+import NotifyAISupport
+import OSLog
+
+/// Everything a summarizer needs to know about a note.
+package struct SummaryRequest: Sendable {
+    package var text: String
+    package var language: TranscriptionLanguage
+    var focus: RecordingFocus
+    var kind: NoteKind
+    /// Transcript passages the user marked as important.
+    var markedPassages: [String]
+    /// When the note was recorded or imported; resolves "bis Freitag" and similar.
+    package var recordedAt: Date = .now
+    /// Names the user entered before recording.
+    var participants: [String] = []
+    /// Labels the user gave the note ("Samsung"): its context, which the text often omits.
+    var labels: [String] = []
+    /// The user's own template; `nil` uses the guidance of `focus`.
+    package var template: TemplateGuidance?
+
+    package init(
+        text: String,
+        language: TranscriptionLanguage,
+        focus: RecordingFocus,
+        kind: NoteKind,
+        markedPassages: [String],
+        recordedAt: Date = .now,
+        participants: [String] = [],
+        labels: [String] = [],
+        template: TemplateGuidance? = nil
+    ) {
+        self.text = text
+        self.language = language
+        self.focus = focus
+        self.kind = kind
+        self.markedPassages = markedPassages
+        self.recordedAt = recordedAt
+        self.participants = participants
+        self.labels = labels
+        self.template = template
+    }
+}
+
+package protocol Summarizer: Sendable {
+    func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary
+
+    /// Condenses one chapter of a long recording.
+    func digest(_ chapter: ChapterRequest) async throws -> ChapterDigest
+
+    /// Turns the chapter digests of a long recording into the summary of the whole.
+    func combine(_ chapters: [TimedDigest], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary
+
+    /// One summary across several notes, made from their summaries.
+    func summarizeCollection(_ sources: [CollectionSource], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary
+}
+
+/// One chapter to condense, with the context of the whole note.
+package struct ChapterRequest: Sendable {
+    let number: Int
+    let count: Int
+    package let start: TimeInterval
+    package let end: TimeInterval
+    package let text: String
+    /// Language, focus, date and participants of the note; `text` of the note is not used.
+    let context: SummaryRequest
+    let markedPassages: [String]
+
+    package init(
+        number: Int,
+        count: Int,
+        start: TimeInterval,
+        end: TimeInterval,
+        text: String,
+        context: SummaryRequest,
+        markedPassages: [String]
+    ) {
+        self.number = number
+        self.count = count
+        self.start = start
+        self.end = end
+        self.text = text
+        self.context = context
+        self.markedPassages = markedPassages
+    }
+}
+
+package struct TimedDigest: Sendable {
+    package let start: TimeInterval
+    package let end: TimeInterval
+    package let digest: ChapterDigest
+}
+
+extension Summarizer {
+    /// Default: summarize the chapter like a short note.
+    package func digest(_ chapter: ChapterRequest) async throws -> ChapterDigest {
+        var request = chapter.context
+        request.text = chapter.text
+        request.markedPassages = chapter.markedPassages
+        let summary = try await summarize(request) { _ in }
+        return ChapterDigest(
+            title: summary.suggestedTitle ?? summary.topics.first?.title ?? summary.keywords.first
+                ?? String(localized: "Kapitel \(chapter.number)", bundle: .module),
+            overview: summary.overview,
+            keyPoints: summary.keyPoints,
+            decisions: summary.decisions,
+            actionItems: summary.actionItems,
+            openQuestions: summary.openQuestions,
+            source: summary.source
+        )
+    }
+
+    /// Default: merge the chapters without a language model.
+    package func combine(_ chapters: [TimedDigest], request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        progress(1)
+        return ChapterMerger.merge(chapters)
+    }
+
+    /// Default: the notes' summaries merged without a language model, like chapters.
+    package func summarizeCollection(
+        _ sources: [CollectionSource],
+        request: SummaryRequest,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> NoteSummary {
+        progress(1)
+        var summary = ChapterMerger.merge(sources.map { TimedDigest(start: 0, end: 0, digest: $0.digest) })
+        summary.suggestedTitle = nil
+        return summary
+    }
+}
+
+/// Combines chapter digests without a language model: lists are concatenated and
+/// de-duplicated, key points are taken evenly from all chapters.
+enum ChapterMerger {
+    static func merge(_ chapters: [TimedDigest]) -> NoteSummary {
+        let digests = chapters.map(\.digest)
+        var keyPoints: [String] = []
+        var round = 0
+        while keyPoints.count < 8, digests.contains(where: { $0.keyPoints.count > round }) {
+            for digest in digests where digest.keyPoints.count > round && keyPoints.count < 8 {
+                keyPoints.append(digest.keyPoints[round])
+            }
+            round += 1
+        }
+        let overview = digests.prefix(3).map(\.overview).filter { !$0.isEmpty }.joined(separator: " ")
+        return NoteSummary(
+            suggestedTitle: digests.first?.title,
+            overview: overview,
+            keyPoints: keyPoints,
+            decisions: unique(digests.flatMap(\.decisions), limit: 8),
+            actionItems: Array(digests.flatMap(\.actionItems).prefix(15)),
+            openQuestions: unique(digests.flatMap(\.openQuestions), limit: 6),
+            topics: digests.map { SummaryTopic(title: $0.title, points: Array($0.keyPoints.prefix(3))) },
+            source: digests.allSatisfy { $0.source == .appleIntelligence } ? .appleIntelligence : .extractive
+        )
+    }
+
+    private static func unique(_ values: [String], limit: Int) -> [String] {
+        var seen = Set<String>()
+        return Array(values.filter { seen.insert(TextAnalysis.key($0)).inserted }.prefix(limit))
+    }
+}
+
+/// What a summary could only process with limitations. Becomes
+/// `NoteSummary.processingNotes`, so the user sees what is missing or simplified.
+struct SummaryLimitations {
+    /// Excerpts of a long text and how many of them the model could not process.
+    var excerptCount = 0
+    var failedExcerpts = 0
+    /// The notes had to be cut to fit into the final request.
+    var isShortened = false
+    /// Marked passages that did not fit into the request.
+    var omittedMarkedPassages = 0
+    /// Chapters of a long recording with excerpts the model could not process.
+    var chaptersWithFailedExcerpts = 0
+    /// Chapters of a long recording whose notes had to be cut.
+    var shortenedChapters = 0
+
+    package init() {}
+
+    /// The limitations the chapters of a long recording report.
+    package init(chapters: [TimedDigest]) {
+        chaptersWithFailedExcerpts = chapters.count(where: { $0.digest.failedExcerpts > 0 })
+        shortenedChapters = chapters.count(where: { $0.digest.wasShortened })
+    }
+
+    var messages: [String] {
+        var messages: [String] = []
+        if failedExcerpts > 0 {
+            messages.append(String(localized: "Apple Intelligence konnte \(failedExcerpts) von \(excerptCount) Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen.", bundle: .module))
+        }
+        if chaptersWithFailedExcerpts > 0 {
+            messages.append(String(localized: "In \(chaptersWithFailedExcerpts) Kapiteln konnte Apple Intelligence einzelne Abschnitte nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen.", bundle: .module))
+        }
+        if isShortened {
+            messages.append(String(localized: "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen.", bundle: .module))
+        }
+        if shortenedChapters > 0 {
+            messages.append(String(localized: "In \(shortenedChapters) Kapiteln waren die Notizen zu umfangreich und wurden gekürzt; dort können Details fehlen.", bundle: .module))
+        }
+        if omittedMarkedPassages > 0 {
+            messages.append(String(localized: "\(omittedMarkedPassages) markierte Stellen passten nicht mehr in die Anfrage und wurden nicht gesondert berücksichtigt.", bundle: .module))
+        }
+        return messages
+    }
+}
+
+/// Whether Apple's on-device language model can be used right now.
+public enum LanguageModelAvailability: Equatable, Sendable {
+    case available
+    case unavailable(reason: String)
+
+    public static func current(for language: TranscriptionLanguage) -> Self {
+        let model = SystemLanguageModel.default
+        switch model.availability {
+        case .available:
+            guard model.supportsLocale(language.locale) else {
+                return .unavailable(reason: String(localized: "Apple Intelligence unterstützt \(language.displayName) noch nicht.", bundle: .module))
+            }
+            return .available
+        case .unavailable(.deviceNotEligible):
+            return .unavailable(reason: String(localized: "Dieses Gerät unterstützt Apple Intelligence nicht.", bundle: .module))
+        case .unavailable(.appleIntelligenceNotEnabled):
+            return .unavailable(reason: String(localized: "Apple Intelligence ist in den Systemeinstellungen deaktiviert.", bundle: .module))
+        case .unavailable(.modelNotReady):
+            return .unavailable(reason: String(localized: "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut.", bundle: .module))
+        case .unavailable:
+            return .unavailable(reason: String(localized: "Apple Intelligence ist derzeit nicht verfügbar.", bundle: .module))
+        }
+    }
+}
+
+/// Chooses the best available summarizer and falls back to extraction when the
+/// language model is unavailable or refuses the content.
+package struct SummarizationService: Sendable {
+    private let languageModel: any Summarizer
+    private let fallback: any Summarizer
+    private let availability: @Sendable (TranscriptionLanguage) -> LanguageModelAvailability
+
+    package init(
+        languageModel: any Summarizer = FoundationModelSummarizer(),
+        fallback: any Summarizer = ExtractiveSummarizer(),
+        availability: @escaping @Sendable (TranscriptionLanguage) -> LanguageModelAvailability = LanguageModelAvailability.current
+    ) {
+        self.languageModel = languageModel
+        self.fallback = fallback
+        self.availability = availability
+    }
+
+    /// Whether chapters are condensed with the language model (otherwise extractively).
+    package func usesLanguageModel(for language: TranscriptionLanguage) -> Bool {
+        availability(language) == .available
+    }
+
+    static func isTooThin(_ request: SummaryRequest) -> Bool {
+        Set(TextAnalysis.terms(in: request.text, languageCode: request.language.languageCode)).count < minimumDistinctTermsForModel
+    }
+
+    /// The text's own sentences instead of a generated summary, marked as such.
+    private func thinSummary(of request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        var summary: NoteSummary
+        do {
+            summary = try await fallback.summarize(request, progress: progress)
+        } catch SummarizationError.emptyInput {
+            let text = request.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            summary = NoteSummary(overview: text, source: .extractive)
+            progress(1)
+        }
+        summary.processingNotes.append(String(localized: "Die Aufnahme enthält zu wenig Inhalt für eine ausführliche Zusammenfassung.", bundle: .module))
+        return summary
+    }
+
+    /// Condenses a single chapter, e.g. while the recording is still running.
+    package func digest(_ chapter: ChapterRequest) async throws -> ChapterDigest {
+        guard usesLanguageModel(for: chapter.context.language) else {
+            return try await fallback.digest(chapter)
+        }
+        do {
+            return try await languageModel.digest(chapter)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            Logger.summarization.error("Language model chapter digest failed: \(error.localizedDescription, privacy: .public)")
+            return try await fallback.digest(chapter)
+        }
+    }
+
+    /// Summarizes a long recording chapter by chapter.
+    ///
+    /// Every digest is stored in `digests` right away and reused on the next attempt, so an
+    /// interrupted summary continues where it stopped. Between chapters the work pauses
+    /// while the device is hot. Progress: chapters take 85 %, the final summary the rest.
+    package func summarize(
+        _ request: SummaryRequest,
+        chapters: [ChapterRequest],
+        keys: [String],
+        storedIn digests: NoteDigests,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> NoteSummary {
+        let usesModel = usesLanguageModel(for: request.language)
+        let expectedSource: NoteSummary.Source = usesModel ? .appleIntelligence : .extractive
+        var timed: [TimedDigest] = []
+
+        for (index, chapter) in chapters.enumerated() {
+            try Task.checkCancellation()
+            let key = keys[index]
+            let digest: ChapterDigest
+            if let stored = await digests.digest(key: key), stored.source == expectedSource {
+                digest = stored
+            } else {
+                await DeviceLoad.waitWhileHot()
+                try Task.checkCancellation()
+                do {
+                    digest = try await self.digest(chapter)
+                } catch SummarizationError.emptyInput {
+                    // A chapter without speech (a long break) must not fail the whole summary.
+                    digest = ChapterDigest(title: String(localized: "Kapitel \(chapter.number)", bundle: .module), overview: "", source: expectedSource)
+                }
+                await digests.save(digest, key: key)
+            }
+            timed.append(TimedDigest(start: chapter.start, end: chapter.end, digest: digest))
+            progress(0.85 * Double(index + 1) / Double(chapters.count))
+        }
+
+        await DeviceLoad.waitWhileHot()
+        var summary: NoteSummary
+        if usesModel {
+            do {
+                summary = try await languageModel.combine(timed, request: request) { fraction in
+                    progress(0.85 + 0.15 * fraction)
+                }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.summarization.error("Combining chapters failed: \(error.localizedDescription, privacy: .public)")
+                summary = ChapterMerger.merge(timed)
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt.", bundle: .module)
+            }
+        } else {
+            summary = try await fallback.combine(timed, request: request, progress: progress)
+            if case .unavailable(let reason) = availability(request.language) {
+                summary.fallbackReason = reason
+            }
+        }
+        summary.chapters = timed.map {
+            SummaryChapter(start: $0.start, end: $0.end, title: $0.digest.title, overview: $0.digest.overview)
+        }
+        summary.processingNotes += SummaryLimitations(chapters: timed).messages
+        progress(1)
+        return Self.applyingTemplate(of: request, to: summary)
+    }
+
+    /// Below this many different content words, a text is too thin for a language model:
+    /// it would fill overview, decisions and tasks with statements that were never made.
+    static let minimumDistinctTermsForModel = 8
+
+    package func summarize(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        Self.applyingTemplate(of: request, to: try await summarizeWithoutTemplate(request, progress: progress))
+    }
+
+    /// One summary across several notes. Without Apple Intelligence, or when it fails, the
+    /// notes' summaries are merged instead and the summary says so. Tasks stay out of it: the
+    /// collection lists the tasks of its notes themselves, without duplicates.
+    package func summarizeCollection(
+        _ request: SummaryRequest,
+        sources: [CollectionSource],
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> NoteSummary {
+        guard !sources.isEmpty else { throw SummarizationError.emptyInput }
+        var summary: NoteSummary
+        switch availability(request.language) {
+        case .available:
+            do {
+                summary = try await languageModel.summarizeCollection(sources, request: request, progress: progress)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.summarization.error("Summarizing several notes failed: \(error.localizedDescription, privacy: .public)")
+                summary = try await fallback.summarizeCollection(sources, request: request, progress: progress)
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte die Notizen nicht zusammenführen; die Zusammenfassung wurde aus ihren Zusammenfassungen zusammengestellt.", bundle: .module)
+            }
+        case .unavailable(let reason):
+            summary = try await fallback.summarizeCollection(sources, request: request, progress: progress)
+            summary.fallbackReason = reason
+        }
+        summary.actionItems = []
+        return Self.applyingTemplate(of: request, to: summary)
+    }
+
+    /// A template's sections: the ones it leaves out are removed after every summarizer (the
+    /// extractive fallback has no instructions to follow), and a missing part is noted.
+    static func applyingTemplate(of request: SummaryRequest, to summary: NoteSummary) -> NoteSummary {
+        guard let template = request.template else { return summary }
+        var summary = summary.restricted(to: template.sections)
+        if !template.headings.isEmpty, summary.templateSections.isEmpty, summary.source == .extractive {
+            summary.processingNotes.append(String(localized: "Die eigenen Abschnitte der Vorlage „\(template.name)“ werden nur mit Apple Intelligence ausgefüllt.", bundle: .module))
+        }
+        return summary
+    }
+
+    private func summarizeWithoutTemplate(_ request: SummaryRequest, progress: @escaping @Sendable (Double) -> Void) async throws -> NoteSummary {
+        if Self.isTooThin(request) {
+            return try await thinSummary(of: request, progress: progress)
+        }
+        switch availability(request.language) {
+        case .available:
+            do {
+                return try await languageModel.summarize(request, progress: progress)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.summarization.error("Language model summary failed: \(error.localizedDescription, privacy: .public)")
+                var summary = try await fallback.summarize(request, progress: progress)
+                summary.fallbackReason = String(localized: "Apple Intelligence konnte diesen Text nicht zusammenfassen.", bundle: .module)
+                return summary
+            }
+        case .unavailable(let reason):
+            var summary = try await fallback.summarize(request, progress: progress)
+            summary.fallbackReason = reason
+            return summary
+        }
+    }
+}

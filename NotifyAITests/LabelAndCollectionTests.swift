@@ -9,11 +9,24 @@
 
 import Foundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAIAudio
+@testable import NotifyAICore
+@testable import NotifyAIExport
+@testable import NotifyAIIntegrations
+@testable import NotifyAIKnowledge
+@testable import NotifyAILibrary
+@testable import NotifyAINeuralModels
 @testable import NotifyAIPersistence
+@testable import NotifyAIProcessing
+@testable import NotifyAIRecording
 @testable import NotifyAIServices
-import Synchronization
+@testable import NotifyAISettings
+@testable import NotifyAISpeakers
+@testable import NotifyAISummarization
+@testable import NotifyAISupport
+@testable import NotifyAITranscription
 import SwiftData
+import Synchronization
 import Testing
 
 /// Wednesday, 30 September 2026.

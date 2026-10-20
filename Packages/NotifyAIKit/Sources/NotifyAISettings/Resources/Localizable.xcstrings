@@ -1,0 +1,182 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "App-Sperre: %@, Backup: %@, Audio behalten: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "App-Sperre: %1$@, Backup: %2$@, Audio behalten: %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App lock: %1$@, backup: %2$@, keep audio: %3$@"
+          }
+        }
+      }
+    },
+    "Audioquelle: %@, Echo-Unterdrückung: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Audioquelle: %1$@, Echo-Unterdrückung: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio source: %1$@, echo cancellation: %2$@"
+          }
+        }
+      }
+    },
+    "Darstellung: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance: %@"
+          }
+        }
+      }
+    },
+    "Im Dock und in der Menüleiste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the Dock and Menu Bar"
+          }
+        }
+      }
+    },
+    "Immer behalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Forever"
+          }
+        }
+      }
+    },
+    "Integrationen: Obsidian %@, Notion %@, Webhook %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Integrationen: Obsidian %1$@, Notion %2$@, Webhook %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrations: Obsidian %1$@, Notion %2$@, webhook %3$@"
+          }
+        }
+      }
+    },
+    "Live-Transkript: %@, Füllwörter entfernen: %@, Vokabular: %lld Begriffe" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Live-Transkript: %1$@, Füllwörter entfernen: %2$@, Vokabular: %3$lld Begriffe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live transcript: %1$@, remove filler words: %2$@, vocabulary: %3$lld terms"
+          }
+        }
+      }
+    },
+    "Nach 30 Tagen löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After 30 Days"
+          }
+        }
+      }
+    },
+    "Nach 90 Tagen löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After 90 Days"
+          }
+        }
+      }
+    },
+    "Nach einem Jahr löschen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete After One Year"
+          }
+        }
+      }
+    },
+    "Nur im Dock" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Only"
+          }
+        }
+      }
+    },
+    "Nur in der Menüleiste" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu Bar Only"
+          }
+        }
+      }
+    },
+    "Spracherkennung: %@, Sprache: %@, Whisper-Modell: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Spracherkennung: %1$@, Sprache: %2$@, Whisper-Modell: %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition: %1$@, language: %2$@, Whisper model: %3$@"
+          }
+        }
+      }
+    },
+    "Sprechererkennung: %@, Ich/Andere aus Quelle: %@, Kapitel während der Aufnahme: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sprechererkennung: %1$@, Ich/Andere aus Quelle: %2$@, Kapitel während der Aufnahme: %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker detection: %1$@, Me/Others from source: %2$@, chapters while recording: %3$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

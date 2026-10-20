@@ -9,7 +9,7 @@
 @testable import AudioCapture
 import AVFoundation
 import Foundation
-import NotifyAICore
+@testable import NotifyAICore
 import Testing
 
 /// Device input of a meeting without headphones.

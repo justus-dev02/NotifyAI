@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NotifyAICore
+@testable import NotifyAICore
 import Observation
 
 /// Waits until `condition` holds. Driven by Observation: the wait wakes up when observable

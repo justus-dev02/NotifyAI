@@ -269,6 +269,16 @@ extension Note {
         contentRevision += 1
     }
 
+    // MARK: Summaries across several notes
+
+    /// For a summary across several notes: its notes that still exist, oldest first.
+    package func sourceNotes() -> [Note] {
+        let ids = sourceNoteIDs
+        guard !ids.isEmpty, let modelContext else { return [] }
+        let descriptor = FetchDescriptor<Note>(predicate: #Predicate { ids.contains($0.id) }, sortBy: [SortDescriptor(\.createdAt)])
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
     // MARK: Audio
 
     /// Whether the note's audio file still exists, so it can be played and transcribed again.

@@ -5,9 +5,22 @@
 
 import AVFoundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAIAudio
+@testable import NotifyAICore
+@testable import NotifyAIExport
+@testable import NotifyAIIntegrations
+@testable import NotifyAIKnowledge
+@testable import NotifyAILibrary
+@testable import NotifyAINeuralModels
 @testable import NotifyAIPersistence
+@testable import NotifyAIProcessing
+@testable import NotifyAIRecording
 @testable import NotifyAIServices
+@testable import NotifyAISettings
+@testable import NotifyAISpeakers
+@testable import NotifyAISummarization
+@testable import NotifyAISupport
+@testable import NotifyAITranscription
 import Testing
 
 @Suite("Recording file format")
@@ -31,7 +44,7 @@ struct RecordingFileTests {
             }
         }
 
-        let decoded = try SpeakerDiarizer.readMonoSamples(from: url)
+        let decoded = try MonoAudioFile.readSamples(from: url)
         // AAC adds encoder priming and padding of a few thousand samples at most.
         #expect(abs(decoded.count - samples.count) < 4_096)
         #expect(decoded.contains { abs($0) > 0.05 })

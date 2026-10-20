@@ -11,7 +11,7 @@
 import AVFoundation
 import Foundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAICore
 import Synchronization
 import Testing
 

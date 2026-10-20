@@ -1,0 +1,182 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%lld markierte Stellen passten nicht mehr in die Anfrage und wurden nicht gesondert berücksichtigt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld marked passages no longer fit into the request and were not given special weight."
+          }
+        }
+      }
+    },
+    "Apple Intelligence ist derzeit nicht verfügbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence is currently unavailable."
+          }
+        }
+      }
+    },
+    "Apple Intelligence ist in den Systemeinstellungen deaktiviert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence is turned off in System Settings."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte %lld von %lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple Intelligence konnte %1$lld von %2$lld Abschnitten nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not process %lld of %lld excerpts. Only their most important sentences were included."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte die Kapitel nicht zusammenführen; die Zusammenfassung wurde aus den Kapiteln zusammengestellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not merge the chapters; the summary was assembled from the chapters."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte die Notizen nicht zusammenführen; die Zusammenfassung wurde aus ihren Zusammenfassungen zusammengestellt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not combine the notes; the summary was compiled from their summaries."
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte diesen Text nicht zusammenfassen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not summarize this text."
+          }
+        }
+      }
+    },
+    "Apple Intelligence unterstützt %@ noch nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence does not support %@ yet."
+          }
+        }
+      }
+    },
+    "Das Sprachmodell von Apple Intelligence wird noch geladen. Bitte versuche es später erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Apple Intelligence language model is still loading. Please try again later."
+          }
+        }
+      }
+    },
+    "Der Inhalt war für eine vollständige Zusammenfassung zu umfangreich. Die Notizen wurden gekürzt; Details aus späteren Teilen können fehlen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The content was too long for a complete summary. The notes were shortened; details from later parts may be missing."
+          }
+        }
+      }
+    },
+    "Die Aufnahme enthält zu wenig Inhalt für eine ausführliche Zusammenfassung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording contains too little content for a detailed summary."
+          }
+        }
+      }
+    },
+    "Die eigenen Abschnitte der Vorlage „%@“ konnten nicht ausgefüllt werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The custom sections of the template “%@” could not be filled in."
+          }
+        }
+      }
+    },
+    "Die eigenen Abschnitte der Vorlage „%@“ werden nur mit Apple Intelligence ausgefüllt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The custom sections of the template “%@” are only filled in with Apple Intelligence."
+          }
+        }
+      }
+    },
+    "Dieses Gerät unterstützt Apple Intelligence nicht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device does not support Apple Intelligence."
+          }
+        }
+      }
+    },
+    "In %lld Kapiteln konnte Apple Intelligence einzelne Abschnitte nicht verarbeiten. Diese Abschnitte sind nur mit ihren wichtigsten Sätzen eingeflossen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %lld chapters, Apple Intelligence could not process some excerpts. Only their most important sentences were included."
+          }
+        }
+      }
+    },
+    "In %lld Kapiteln waren die Notizen zu umfangreich und wurden gekürzt; dort können Details fehlen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %lld chapters, the notes were too long and were shortened; details may be missing there."
+          }
+        }
+      }
+    },
+    "Kapitel %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %lld"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -4,12 +4,24 @@
 //
 
 import Foundation
+import NotifyAIAudio
 import NotifyAICore
+import NotifyAIIntegrations
+import NotifyAIKnowledge
+import NotifyAILibrary
+import NotifyAINeuralModels
 import NotifyAIPersistence
+import NotifyAIProcessing
+import NotifyAIRecording
+import NotifyAISettings
+import NotifyAISpeakers
+import NotifyAISummarization
+import NotifyAISupport
+import NotifyAITranscription
 
 /// Creates every service once and wires their dependencies.
 ///
-/// The services' initializers are internal to this module: the app cannot build a second
+/// The services' initializers are `package`: the app cannot build a second
 /// store or a processing queue next to the real one, it receives exactly this graph. What
 /// only the app can provide (presenting a recording outside the app needs ActivityKit and the
 /// widget's attributes) is passed in as a protocol.

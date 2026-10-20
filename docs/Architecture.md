@@ -1,27 +1,67 @@
 # Architektur
 
-NotifyAI besteht aus einer schlanken App und einem lokalen Swift-Paket (`Packages/NotifyAIKit`) mit
-fünf Modulen. Die Richtung der Abhängigkeiten erzwingt der Compiler; was er nicht sehen kann, prüfen
-die Architekturtests (`Packages/NotifyAIKit/Tests/ArchitectureTests`).
+NotifyAI besteht aus einer schlanken App und einem lokalen Swift-Paket (`Packages/NotifyAIKit`). Das
+Paket hat vier Basismodule und dreizehn Service-Module, jedes mit einer klaren Aufgabe. Die Richtung
+der Abhängigkeiten erzwingt der Compiler über `Package.swift`; die Architekturtests
+(`Packages/NotifyAIKit/Tests/ArchitectureTests`) prüfen zusätzlich die Imports jeder Datei gegen
+dieselbe Schichttabelle, damit ein versehentlich erweitertes Manifest auffällt.
 
 ```
 App (Szenen, Views, View-Models, Plattform-Adapter)
- ├─ DesignSystem ───────────────┐
- └─ NotifyAIServices            │
-      ├─ NotifyAIPersistence ───┤
-      ├─ AudioCapture ──────────┤
-      ├─ WhisperKit             └─ NotifyAICore
-      └─ FluidAudio
+ ├─ DesignSystem
+ └─ NotifyAIServices ─ Composition Root: baut und verdrahtet alle Services, re-exportiert die Module
+      ├─ NotifyAILibrary ─────── Use Cases der Screens
+      ├─ NotifyAIRecording ───── Aufnahme mit Live-Transkript und Live-Kapiteln
+      ├─ NotifyAIIntegrations ── Obsidian, Notion, Webhooks
+      ├─ NotifyAIKnowledge ───── Suchindex, „Notizen fragen“, verwandte Notizen
+      ├─ NotifyAIExport ──────── Markdown, PDF, Word, Untertitel
+      └─ NotifyAIProcessing ──── Warteschlange: Transkription → Bereinigung → Sprecher → Zusammenfassung
+           ├─ NotifyAISettings ─────── Einstellungen
+           ├─ NotifyAISummarization ── Apple Intelligence, extraktiv, Kapitel, Aufgaben, Sammelzusammenfassung
+           ├─ NotifyAISpeakers ─────── Sprechertrennung, Stimmprofile, Zuordnung
+           ├─ NotifyAITranscription ── Apple Speech, Whisper (WhisperKit), Parakeet (FluidAudio)
+           │    └─ NotifyAINeuralModels ─ Download und Prüfung der Core-ML-Modelle
+           └─ NotifyAIAudio ────────── Rekorder, Wiedergabe, Audio-Session, Geräte, Systemton, Audiodateien
+                └─ NotifyAISupport ─── Textanalyse, Satz-Embeddings, Plattform, Anzeigenamen, Sprecher-Labels, Schlüsselbund
+                     ├─ NotifyAIPersistence ─┐
+                     ├─ AudioCapture ────────┤
+                     └───────────────────────┴─ NotifyAICore
 ```
+
+Die vollständige Liste, wer wen importieren darf, steht in `Package.swift` und in `serviceLayers`
+der Architekturtests. Ein Modul sieht nur die Module unter sich: Die Transkription kennt keine
+Zusammenfassung, die Zusammenfassung keine Warteschlange, die Suche keine Aufnahme.
 
 | Modul | Inhalt | Darf nicht |
 |---|---|---|
-| `NotifyAICore` | Werttypen (Transkript, Zusammenfassung, Marker, Fristen), Logging, `EventChannel`, `BackgroundWork` | UI, Daten, Services kennen |
-| `AudioCapture` | Echtzeit-Aufnahme: lock-freie Ringpuffer, Konvertieren, Mischen, Schreiben | UI, Daten |
-| `NotifyAIPersistence` | SwiftData-Schema V1–V5 mit Migrationen, `NoteStore`, `NoteQueries`, Dateiablage | UI, Services |
-| `NotifyAIServices` | Aufnahme, Verarbeitung, Transkription, Sprecher, Zusammenfassung, Suche, Aufgaben, Import/Export, Einstellungen, Use Cases (`NoteLibrary`, `SpeakerDirectory`, `StorageMaintenance`), `ServiceContainer` | SwiftUI; UIKit/AppKit nur in `Platform/` und `Audio/SystemAudio/` |
+| `NotifyAICore` | Werttypen (Transkript, Zusammenfassung, Marker, Fristen, Labels, Vorlagenwahl), Logging, `EventChannel`, `BackgroundWork` | UI, Daten, Services kennen |
+| `AudioCapture` | Echtzeit-Aufnahme: lock-freie Ringpuffer, Konvertieren, Mischen, Echo-Unterdrückung, Schreiben | UI, Daten |
+| `NotifyAIPersistence` | SwiftData-Schema V1–V7 mit Migrationen, `NoteStore`, `NoteQueries`, Dateiablage | UI, Services |
+| `NotifyAISupport` | `TextAnalysis`, `SentenceEmbedder`, `DeviceLoad`, Plattform-Adapter, Anzeigenamen, `SpeakerLabels`, Schlüsselbund | andere Services; UIKit/AppKit nur in `Platform/` |
+| `NotifyAIAudio` | `AudioRecorder`, `AudioPlayer`, Audio-Session, Mikrofon, Systemton, `MonoAudioFile` | höhere Services; UIKit/AppKit nur in `SystemAudio/` |
+| `NotifyAINeuralModels` | `NeuralModelManager`, `NeuralModelStore`, `LoadedModel`; kennt Parakeet und Sprechererkennung nur über `NeuralModelUsage` | Transkription, Sprecher |
+| `NotifyAITranscription` | Engines, Live-Sitzungen, Prüfung gegen das Audio, Füllwörter, Vokabular, Whisper-Modelle | Zusammenfassung, Verarbeitung |
+| `NotifyAISpeakers` | Sprechertrennung (neuronal und spektral), `VoiceRecognition`, `SpeakerAttribution`, Stimmprofile | Transkription, Zusammenfassung |
+| `NotifyAISummarization` | Summarizer, Kapitel, Verdichtung, `ActionItemRefiner`, Grounding, Vorlagen-Anweisungen, Sammelquellen | Einstellungen, Verarbeitung |
+| `NotifyAISettings` | `AppSettings` und ihre Gruppen | Verarbeitung, UI |
+| `NotifyAIProcessing` | `ProcessingCoordinator` und Pipeline-Schritte | Aufnahme, Suche, Use Cases |
+| `NotifyAIExport` | `ExportDocument` und die Formate | Verarbeitung, Integrationen |
+| `NotifyAIKnowledge` | `KnowledgeIndex`, `HybridRetriever`, `QueryPlanner`, `NoteChatModel`, `NoteQuestionAnswering` | Aufnahme, Use Cases |
+| `NotifyAIIntegrations` | `IntegrationService`, Obsidian, Notion, Webhooks | Aufnahme, Use Cases |
+| `NotifyAIRecording` | `RecordingController`, Live-Transkript, Live-Kapitel, Wiederherstellung | Suche, Use Cases |
+| `NotifyAILibrary` | `NoteLibrary`, `NoteLabels`, `NoteCollections`, `TaskBoard`, `SummaryTemplates`, `SpeakerDirectory`, `TranscriptEditor`, Import, Speicher, Diagnose, App-Sperre | Aufnahme |
+| `NotifyAIServices` | `ServiceContainer`, Re-Export aller Service-Module | eigene Logik |
 | `DesignSystem` | Theme und wiederverwendbare SwiftUI-Komponenten | Daten, Services |
 | App | Szenen, Views, `NoteDetailModel`, Composition Root, Plattform-Adapter (Live Activity, Hintergrundaufgaben) | die Datenbank selbst schreiben |
+
+**Sichtbarkeit zwischen Modulen.** `public` ist, was die App braucht. `package` ist, was ein
+Service-Modul den anderen anbietet (z. B. `TextAnalysis`, `SummaryRequest`, `ProcessingCoordinator.enqueue`).
+Alles andere bleibt modulintern. Die App-Tests gehören über `-package-name notifyaikit` zum Paket und
+sehen deshalb auch dessen `package`-Schnittstellen.
+
+**Texte pro Modul.** Jedes Service-Modul mit Texten hat seinen eigenen String-Katalog
+(`Sources/<Modul>/Resources/Localizable.xcstrings`) und schlägt mit `bundle: .module` nach;
+`scripts/check-localization.py` prüft jeden Katalog.
 
 ## Regeln
 
@@ -31,7 +71,7 @@ nur über Use Cases wie `NoteLibrary`. So kann keine View ein Modell ändern und
 vergessen, und jede Änderung erreicht die Empfänger der Store-Ereignisse.
 
 **Abhängigkeiten werden übergeben, nicht geholt.** `ServiceContainer` baut den Service-Graphen
-(die Initialisierer der Services sind modulintern), `AppEnvironment` ergänzt die App-Objekte und
+(die Initialisierer der Services sind `package`, die App kann sie nicht aufrufen), `AppEnvironment` ergänzt die App-Objekte und
 injiziert jedes Objekt einzeln über seinen Typ (`@Environment(NoteLibrary.self)`). Es gibt keinen
 Service Locator und keinen globalen veränderlichen Zustand. AppKit-Callbacks erreichen die App über
 den App-Delegate, der `AppLaunch` besitzt; Live-Activity-Intents über `@Dependency`.

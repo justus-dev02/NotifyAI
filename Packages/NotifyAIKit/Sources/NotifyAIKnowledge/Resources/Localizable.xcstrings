@@ -1,0 +1,336 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ Ohne Apple Intelligence zeige ich die passenden Stellen statt einer formulierten Antwort." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Without Apple Intelligence, I show the matching passages instead of a written answer."
+          }
+        }
+      }
+    },
+    "Ähnlicher Inhalt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Similar Content"
+          }
+        }
+      }
+    },
+    "Apple Intelligence konnte keine Antwort formulieren." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not write an answer."
+          }
+        }
+      }
+    },
+    "Das sind die passendsten Stellen in deinen Notizen:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These are the most relevant passages in your notes:"
+          }
+        }
+      }
+    },
+    "Dazu habe ich in deinen Notizen nichts gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found nothing about that in your notes."
+          }
+        }
+      }
+    },
+    "Die passendsten Notizen findest du unten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll find the most relevant notes below."
+          }
+        }
+      }
+    },
+    "Diese Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Week"
+          }
+        }
+      }
+    },
+    "Dieser Monat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Month"
+          }
+        }
+      }
+    },
+    "Dieses Jahr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Year"
+          }
+        }
+      }
+    },
+    "Es gibt noch keine fertigen Notizen, die ich durchsuchen kann. Sobald eine Aufnahme oder ein Import verarbeitet ist, kannst du hier Fragen dazu stellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no processed notes I can search yet. As soon as a recording or import has been processed, you can ask questions about it here."
+          }
+        }
+      }
+    },
+    "Favoriten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        }
+      }
+    },
+    "Für diese Filter gibt es keine Notizen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no notes for these filters."
+          }
+        }
+      }
+    },
+    "Gestern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        }
+      }
+    },
+    "Gleiche Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same Week"
+          }
+        }
+      }
+    },
+    "Heute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "Ich habe %lld passende Notizen gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found %lld matching notes."
+          }
+        }
+      }
+    },
+    "Ich habe %lld passende Notizen gefunden. Eine Zusammenfassung über alle liest jede Notiz vollständig, nicht nur einzelne Stellen; prüfe die Auswahl und starte sie unten." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found %lld matching notes. A summary across all of them reads every note in full, not just individual passages; check the selection and start it below."
+          }
+        }
+      }
+    },
+    "Ich habe eine passende Notiz gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I found one matching note."
+          }
+        }
+      }
+    },
+    "Inhaltlich passend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Similar content"
+          }
+        }
+      }
+    },
+    "Keine Notiz erwähnt %@. Ich habe ohne diesen Filter gesucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No note mentions %@. I searched without this filter."
+          }
+        }
+      }
+    },
+    "Keine Notiz hat das Label %@. Ich habe danach im Text gesucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No note has the label %@. I searched for it in the text instead."
+          }
+        }
+      }
+    },
+    "Label: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label: %@"
+          }
+        }
+      }
+    },
+    "Letzte %lld Tage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last %lld Days"
+          }
+        }
+      }
+    },
+    "Letzte Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Week"
+          }
+        }
+      }
+    },
+    "Letzter Monat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Month"
+          }
+        }
+      }
+    },
+    "Letztes Jahr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Year"
+          }
+        }
+      }
+    },
+    "Person: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Person: %@"
+          }
+        }
+      }
+    },
+    "Thema: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic: %@"
+          }
+        }
+      }
+    },
+    "Vorgestern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day Before Yesterday"
+          }
+        }
+      }
+    },
+    "Was wurde zuletzt entschieden?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What was decided most recently?"
+          }
+        }
+      }
+    },
+    "Welche Aufgaben habe ich diese Woche übernommen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which tasks did I take on this week?"
+          }
+        }
+      }
+    },
+    "Welche Fragen sind noch offen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which questions are still open?"
+          }
+        }
+      }
+    },
+    "Zeig mir alle Aufnahmen von letzter Woche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show me all recordings from last week"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

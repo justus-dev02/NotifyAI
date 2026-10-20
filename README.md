@@ -127,12 +127,23 @@ Ausführlich in [docs/Architecture.md](docs/Architecture.md).
 ```
 Packages/NotifyAIKit/     Lokales Swift Package, vom Compiler erzwungene Schichten
 ├── NotifyAICore          Werte und Regeln, Logging, EventChannel, BackgroundWork
-├── AudioCapture          Echtzeit-Aufnahmepfad: lock-freie Ringpuffer, Mischen, Schreiben     (→ Core)
-├── NotifyAIPersistence   SwiftData-Schema V1–V5 mit Migrationen, NoteStore, Abfragen, Ablage (→ Core)
-├── NotifyAIServices      Aufnahme, Verarbeitung, Transkription, Sprecher, Zusammenfassung, Suche, Aufgaben,
-│                         Import/Export, Einstellungen, Use Cases, ServiceContainer
-│                         (→ Persistence, AudioCapture, WhisperKit, FluidAudio)
-└── DesignSystem          Theme, Komponenten, Sichtbarkeits-Modifier                        (→ Core)
+├── AudioCapture          Echtzeit-Aufnahmepfad: lock-freie Ringpuffer, Mischen, Echo, Schreiben  (→ Core)
+├── NotifyAIPersistence   SwiftData-Schema V1–V7 mit Migrationen, NoteStore, Abfragen, Ablage  (→ Core)
+├── NotifyAISupport       Textanalyse, Embeddings, Plattform, Anzeigenamen, Schlüsselbund      (→ Persistence)
+├── NotifyAIAudio         Rekorder, Wiedergabe, Session, Geräte, Systemton, Audiodateien
+├── NotifyAINeuralModels  Download und Prüfung der Core-ML-Modelle
+├── NotifyAITranscription Apple Speech, Whisper, Parakeet
+├── NotifyAISpeakers      Sprechertrennung, Stimmprofile, Zuordnung
+├── NotifyAISummarization Zusammenfassungen, Kapitel, Aufgaben, Sammelzusammenfassung
+├── NotifyAISettings      Einstellungen
+├── NotifyAIProcessing    Verarbeitungs-Warteschlange und Pipeline
+├── NotifyAIExport        Markdown, PDF, Word, Untertitel
+├── NotifyAIKnowledge     Suchindex, „Notizen fragen“, verwandte Notizen
+├── NotifyAIIntegrations  Obsidian, Notion, Webhooks
+├── NotifyAIRecording     Aufnahme mit Live-Transkript und Live-Kapiteln
+├── NotifyAILibrary       Use Cases der Screens: Notizen, Labels, Aufgaben, Vorlagen, Sprecher, Import
+├── NotifyAIServices      Composition Root (ServiceContainer), re-exportiert die Service-Module
+└── DesignSystem          Theme, Komponenten, Sichtbarkeits-Modifier                          (→ Core)
 NotifyAI/
 ├── App/            Einstieg, AppLaunch (Datenbank-Wiederherstellung), Composition Root, Lebenszyklus, Hinweise
 │   ├── Platform/   Live Activity, Hintergrundaufgaben (iOS), Audio-Umgebung (macOS)

@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ wird von der gewählten Spracherkennung nicht unterstützt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is not supported by the selected speech recognition."
+          }
+        }
+      }
+    },
+    "ca. 150 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 150 MB"
+          }
+        }
+      }
+    },
+    "ca. 500 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 500 MB"
+          }
+        }
+      }
+    },
+    "ca. 630 MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approx. 630 MB"
+          }
+        }
+      }
+    },
+    "Das Sprachpaket für Apple Speech ist nicht verfügbar. Bitte prüfe die Internetverbindung für den einmaligen Download." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Apple Speech language pack is not available. Please check your internet connection for the one-time download."
+          }
+        }
+      }
+    },
+    "Das Whisper-Modell „%@“ ist noch nicht geladen. Du kannst es in den Einstellungen herunterladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Whisper model “%@” has not been downloaded yet. You can download it in Settings."
+          }
+        }
+      }
+    },
+    "Die Audiodatei konnte nicht gelesen werden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio file could not be read."
+          }
+        }
+      }
+    },
+    "Download fehlgeschlagen. Bitte prüfe die Internetverbindung und versuche es erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download failed. Please check your internet connection and try again."
+          }
+        }
+      }
+    },
+    "Guter Kompromiss aus Genauigkeit und Geschwindigkeit auf dem iPhone." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A good balance of accuracy and speed on iPhone."
+          }
+        }
+      }
+    },
+    "Höchste Genauigkeit. Empfohlen für Mac und neuere iPhones (Pro-Modelle)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highest accuracy. Recommended for Mac and newer iPhones (Pro models)."
+          }
+        }
+      }
+    },
+    "Sehr schnell, für klare Sprache in ruhiger Umgebung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very fast, for clear speech in a quiet environment."
+          }
+        }
+      }
+    },
+    "Whisper wird gerade für eine Aufnahme oder Transkription verwendet. Lösche das Modell, sobald sie abgeschlossen ist." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisper is currently being used for a recording or transcription. Delete the model once it has finished."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

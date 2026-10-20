@@ -6,9 +6,22 @@
 import AVFoundation
 import Foundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAIAudio
+@testable import NotifyAICore
+@testable import NotifyAIExport
+@testable import NotifyAIIntegrations
+@testable import NotifyAIKnowledge
+@testable import NotifyAILibrary
+@testable import NotifyAINeuralModels
 @testable import NotifyAIPersistence
+@testable import NotifyAIProcessing
+@testable import NotifyAIRecording
 @testable import NotifyAIServices
+@testable import NotifyAISettings
+@testable import NotifyAISpeakers
+@testable import NotifyAISummarization
+@testable import NotifyAISupport
+@testable import NotifyAITranscription
 import Testing
 
 // MARK: - Fixtures
@@ -255,7 +268,7 @@ struct StreamingDiarizationTests {
         }
 
         let diarizer = SpeakerDiarizer()
-        let loaded = diarizer.turns(for: try SpeakerDiarizer.readMonoSamples(from: url))
+        let loaded = diarizer.turns(for: try MonoAudioFile.readSamples(from: url))
         let streamed = try await diarizer.turns(forAudioAt: url)
         #expect(streamed == loaded)
         #expect(Set(streamed.map(\.speaker)) == [0, 1])

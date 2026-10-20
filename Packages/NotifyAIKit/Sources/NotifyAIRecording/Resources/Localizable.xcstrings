@@ -1,0 +1,16 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Kein Zugriff auf das Mikrofon. Bitte erlaube den Zugriff in den Systemeinstellungen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No access to the microphone. Please allow access in System Settings."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

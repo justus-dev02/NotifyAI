@@ -13,9 +13,11 @@ intermediates = f"{derived}/Build/Intermediates.noindex"
 targets = [
     ("App", f"{intermediates}/NotifyAI.build/**/NotifyAI.build/**/*.stringsdata", "NotifyAI/Localizable.xcstrings"),
     ("Widget", f"{intermediates}/NotifyAI.build/**/NotifyAIWidgets.build/**/*.stringsdata", "NotifyAIWidgets/Localizable.xcstrings"),
-    ("Services", f"{intermediates}/NotifyAIKit.build/**/NotifyAIServices*.build/**/*.stringsdata",
-     "Packages/NotifyAIKit/Sources/NotifyAIServices/Resources/Localizable.xcstrings"),
 ]
+# Every package module with texts has its own catalog (Sources/<Module>/Resources).
+for catalog in sorted(glob.glob("Packages/NotifyAIKit/Sources/*/Resources/Localizable.xcstrings")):
+    module = catalog.split("/")[3]
+    targets.append((module, f"{intermediates}/NotifyAIKit.build/**/{module}-t.build/**/*.stringsdata", catalog))
 
 problems = []
 for name, pattern, catalog in targets:

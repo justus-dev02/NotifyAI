@@ -5,7 +5,7 @@
 
 import Foundation
 @testable import NotifyAI
-import NotifyAICore
+@testable import NotifyAICore
 import Testing
 
 @Suite("Markers and highlighting")
