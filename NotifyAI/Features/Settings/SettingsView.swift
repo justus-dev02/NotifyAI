@@ -81,7 +81,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
     /// What the page contains, below its title in the list on iOS.
     var detail: String {
         switch self {
-        case .general: String(localized: "Version und Diagnosebericht")
+        case .general: String(localized: "Version, Lizenzen und Diagnosebericht")
         case .recording: String(localized: "Spracherkennung, Sprache und Modelle")
         case .summary: String(localized: "Apple Intelligence, Vorlagen und Suche")
         case .speakers: String(localized: "Sprechererkennung und gemerkte Stimmen")
@@ -164,11 +164,14 @@ private struct SettingsCategoryPage: View {
     }
 }
 
-/// Version and the diagnosis report.
+/// Version, licenses and the diagnosis report.
 private struct AboutSettingsSection: View {
     var body: some View {
         Section {
             LabeledContent("Version", value: Bundle.main.versionDescription)
+            NavigationLink("Lizenzen") {
+                LicensesView()
+            }
             DiagnosticsExportButton()
         } footer: {
             Text("Der Diagnosebericht enthält Versionen, Einstellungen, Speicherbelegung und das technische Protokoll – keine Inhalte deiner Notizen. Er wird nur gespeichert oder geteilt, wenn du es auswählst.")

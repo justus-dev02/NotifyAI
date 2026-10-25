@@ -108,6 +108,10 @@ dist_checks() {
             || fail "$f nennt Team $team, das Projekt nutzt ein anderes DEVELOPMENT_TEAM."
     done
 
+    # Die Lizenz in der App (Einstellungen → Lizenzen) ist dieselbe wie die des Repos.
+    cmp -s LICENSE NotifyAI/Licenses/License-NotifyAI.txt \
+        || fail "NotifyAI/Licenses/License-NotifyAI.txt weicht von LICENSE ab – bitte LICENSE dorthin kopieren."
+
     # App-Icons: iOS braucht 1024 × 1024 ohne Transparenz, macOS alle Größen aus Contents.json.
     python3 - NotifyAI/Assets.xcassets/AppIcon.appiconset <<'EOF' || fail "App-Icon unvollständig (siehe oben)."
 import json, subprocess, sys

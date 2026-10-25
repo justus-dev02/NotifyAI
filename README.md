@@ -292,3 +292,8 @@ Process Tap (Zoom/Teams/…) ┘                                                
   Whisper und für Audio, das beim Laden eines Modells gepuffert wird.
 - Der Suchindex liegt vollständig im Speicher (Vektoren im Speicher als Float32, auf der Platte als Float16). Für sehr
   große Bibliotheken wäre ein Index mit Lazy Loading (z. B. SQLite FTS5) der nächste Schritt.
+
+## Lizenz
+
+NotifyAI ist Open Source unter der [MIT-Lizenz](LICENSE). Verwendete Bibliotheken und Modelle mit ihren Lizenzen stehen
+in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) und in der App unter Einstellungen → Allgemein → Lizenzen.

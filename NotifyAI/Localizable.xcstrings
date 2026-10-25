@@ -5814,12 +5814,142 @@
         }
       }
     },
-    "Version und Diagnosebericht" : {
+    "Lizenzen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version and diagnostic report"
+            "value" : "Licenses"
+          }
+        }
+      }
+    },
+    "Version, Lizenzen und Diagnosebericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version, licenses and diagnostic report"
+          }
+        }
+      }
+    },
+    "NotifyAI ist Open Source unter der MIT-Lizenz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NotifyAI is open source under the MIT License."
+          }
+        }
+      }
+    },
+    "Bibliotheken" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libraries"
+          }
+        }
+      }
+    },
+    "Die Modelle sind nicht in der App enthalten. NotifyAI lädt sie erst, wenn du sie in den Einstellungen herunterlädst, direkt von Hugging Face." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The models are not part of the app. NotifyAI downloads them directly from Hugging Face, and only when you download them in the settings."
+          }
+        }
+      }
+    },
+    "Lizenz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "License"
+          }
+        }
+      }
+    },
+    "Quelle öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Source"
+          }
+        }
+      }
+    },
+    "Lizenz öffnen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View License"
+          }
+        }
+      }
+    },
+    "Lizenztext" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "License Text"
+          }
+        }
+      }
+    },
+    "Teil von FluidAudio (Sprechererkennung)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part of FluidAudio (speaker recognition)."
+          }
+        }
+      }
+    },
+    "Updates der Mac-App. Enthält Code unter weiteren freien Lizenzen, siehe Lizenztext." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates of the Mac app. Contains code under further open-source licenses; see the license text."
+          }
+        }
+      }
+    },
+    "Spracherkennung. Core-ML-Fassung der Whisper-Modelle von OpenAI." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition. Core ML version of OpenAI's Whisper models."
+          }
+        }
+      }
+    },
+    "Spracherkennung. Geändert: Moondream hat NVIDIAs parakeet-tdt-0.6b-v3 nachtrainiert, Fluid Inference hat das Modell in Core ML umgewandelt und den Encoder auf 8 Bit quantisiert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition. Modified: Moondream post-trained NVIDIA's parakeet-tdt-0.6b-v3; Fluid Inference converted the model to Core ML and quantized the encoder to 8 bits."
+          }
+        }
+      }
+    },
+    "Sprechererkennung. Geändert: Fluid Inference hat die Modelle von pyannote/speaker-diarization-community-1 in Core ML umgewandelt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker recognition. Modified: Fluid Inference converted the models of pyannote/speaker-diarization-community-1 to Core ML."
           }
         }
       }
