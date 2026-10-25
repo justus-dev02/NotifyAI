@@ -1,19 +1,19 @@
 # CI/CD für NotifyAI
 
-Alles läuft **auf deinem eigenen Mac** und kostet nichts. GitHub verteilt nur die Aufträge. Gebaut
-und getestet wird ausschließlich auf dem self-hosted Runner. Einzige Ausnahme ist die Website: Sie
-besteht nur aus statischen Dateien und wird auf einer GitHub-Maschine veröffentlicht, was für
-öffentliche Repositories nichts kostet.
+Gebaut und getestet wird **auf einer Mac-Maschine von GitHub** (GitHub-hosted Runner, Image
+`xcode-27`). Für öffentliche Repositories ist das kostenlos, und dein Mac muss dafür nicht laufen.
+Nur der Release-Workflow braucht deinen Mac, weil er mit deinem Developer-ID-Zertifikat signiert
+(siehe [2.2](#22-ein-release-veröffentlichen)).
 
 | Wann | Was läuft | Wo |
 |---|---|---|
 | `git commit` | SwiftLint für die Swift-Dateien des Commits | Hook `.githooks/pre-commit` |
 | `git push` | SwiftLint, ShellCheck, actionlint, Paket-Tests (~15 s) | Hook `.githooks/pre-push` |
-| Push auf `main`, Pull Request | Lint, Paket- und Architekturtests, App-Tests auf macOS, UI-Tests auf macOS, iOS-Simulator-Build | `.github/workflows/ci.yml` |
-| Von Hand: Actions → Release | komplette CI, danach `scripts/release.sh --publish` (macOS) und/oder `scripts/release-ios.sh` (App Store Connect) | `.github/workflows/release.yml` |
-| Push auf `main`, der `website/` ändert | Website auf GitHub Pages veröffentlichen | `.github/workflows/pages.yml` (GitHub-Maschine, für öffentliche Repos kostenlos) |
+| Push auf `main`, Pull Request | Lint, Veröffentlichungs-Checks, Paket- und Architekturtests, App-Tests auf macOS, UI-Tests auf macOS, iOS-Simulator-Build, Übersetzungen | `.github/workflows/ci.yml` (GitHub-Mac) |
+| Von Hand: Actions → Release | komplette CI, danach `scripts/release.sh --publish` (macOS) und/oder `scripts/release-ios.sh` (App Store Connect) | `.github/workflows/release.yml` (dein Mac, self-hosted Runner) |
+| Push auf `main`, der `website/` ändert | Website auf GitHub Pages veröffentlichen | `.github/workflows/pages.yml` (GitHub-Linux-Maschine) |
 
-Alle Prüfungen stehen in `scripts/ci.sh`. Lokal laufen sie genau wie auf dem Runner:
+Alle Prüfungen stehen in `scripts/ci.sh`. Lokal laufen sie genau wie in der CI:
 
 ```sh
 scripts/ci.sh                 # alles (~4 min beim ersten Mal, danach deutlich schneller)
@@ -22,6 +22,8 @@ scripts/ci.sh package macos   # einzelne Schritte
 ```
 
 Logs und Testergebnisse landen in `build/ci/`. Die `.xcresult`-Datei öffnest du per Doppelklick in Xcode.
+Schlägt die CI auf GitHub fehl, hängen Logs und `.xcresult` als Artefakt `ci-logs` am Lauf
+(Actions → Lauf → *Artifacts*, 7 Tage).
 
 ---
 
@@ -33,6 +35,9 @@ Logs und Testergebnisse landen in `build/ci/`. Die `.xcresult`-Datei öffnest du
 brew install swiftlint shellcheck actionlint gh
 ```
 
+Die CI nutzt SwiftLint in genau der Version, die in `.github/workflows/ci.yml` steht
+(`SWIFTLINT_VERSION`). Aktualisierst du SwiftLint lokal, dort Version und Prüfsumme mitziehen.
+
 ### 1.2 Git-Hooks aktivieren
 
 ```sh
@@ -42,13 +47,63 @@ scripts/install-hooks.sh
 Pro Klon des Repos einmal ausführen. Im Notfall kannst du die Hooks umgehen mit
 `git commit --no-verify` bzw. `git push --no-verify`.
 
-### 1.3 Self-hosted Runner auf dem Mac
+### 1.3 Die Mac-Maschine von GitHub
+
+- **Image:** `runs-on: xcode-27`, Apple Silicon. Xcode 27 gibt es auf GitHub nur in diesem Image
+  (Public Preview); `macos-26` hat nur Xcode 26. Bei einer Preview kann ein Lauf ab und zu länger in
+  der Warteschlange stehen. Sobald Xcode 27 in `macos-26` oder einem `macos-27`-Image enthalten ist,
+  dort umstellen.
+- **Xcode-Version:** fest `XCODE_VERSION` in `ci.yml`, dieselbe wie lokal. Fehlt sie im Image, bricht
+  der erste Schritt mit der Liste der vorhandenen Versionen ab. Welche Versionen ein Image hat, steht
+  in [actions/runner-images](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md).
+- **Build-Cache:** DerivedData (mit den Swift-Paketen und ihren fertig gebauten Modulen) und der
+  Build-Ordner der Paket-Tests liegen im Actions-Cache. Der Schlüssel enthält die Xcode-Version und
+  `Package.resolved`; ändert sich eins davon, beginnt ein neuer Cache. Gespeichert wird nur bei
+  Läufen auf `main`, Pull Requests lesen ihn nur.
+- **Was dort nicht verfügbar ist:** Apple Intelligence, das Suchmodell (`NLContextualEmbedding`) und
+  die neuronalen Modelle. Die Tests ersetzen das Sprachmodell durch Attrappen und überspringen, was
+  ein geladenes Modell braucht. Das ist lokal ohne Modelle genauso.
+- Ein neuer Push auf denselben Branch bricht den laufenden Lauf ab („Canceling since a higher
+  priority waiting request …“). Geprüft wird immer der neueste Stand.
+
+### 1.4 Kosten und Sicherheit
+
+**Kosten.** Laut GitHub ist Actions „free for self-hosted runners and for public repositories that
+use standard GitHub-hosted runners“. `xcode-27` ist ein Standard-Runner. Geld kostet es nur, wenn:
+
+- das Repository **privat** wird: Dann zählen Mac-Minuten mit einem hohen Faktor gegen das
+  Kontingent, danach wird pro Minute abgerechnet;
+- ein **größerer Runner** genutzt wird (`xcode-27-xlarge`, `macos-26-large` …): „Larger runners are
+  always charged for, even when used by public repositories.“
+
+Zur Sicherheit unter **GitHub → Settings (Konto) → Billing and plans** prüfen: Ist **keine
+Zahlungsmethode** hinterlegt, kann GitHub nichts abbuchen. Ist eine Karte hinterlegt, setze unter
+**Budgets** ein Actions-Budget von 0 $ mit „Stop usage when budget limit is reached“.
+
+**Sicherheit.** Das Repo ist öffentlich.
+
+- **CI und Pull Requests:** Die CI läuft auch für Pull Requests, auch aus Forks. Das ist auf GitHubs
+  Maschinen sicher: Jeder Lauf bekommt eine frische, isolierte Maschine, ein Token nur mit Leserechten
+  und keine Secrets. Unter **Settings → Actions → General → Fork pull request workflows** sollte
+  „Require approval for first-time contributors“ (Standard) oder strenger gewählt sein.
+- **Release auf deinem Mac:** Der Release-Workflow läuft auf einem self-hosted Runner, also mit deinen
+  Rechten, deinem Schlüsselbund und deinem Developer-ID-Zertifikat. Er darf deshalb nie auf
+  Pull Requests reagieren und startet nur von Hand. `scripts/ci.sh lint` bricht ab, wenn ein Workflow
+  mit `self-hosted` auf `pull_request` reagiert oder irgendein Workflow `pull_request_target` nutzt
+  (das liefe mit Schreibrechten und Secrets, auch für Forks).
+- Secrets (`SPARKLE_ED_PRIVATE_KEY`, optional `ASC_*`) stehen nur dem Release-Workflow zur Verfügung
+  und liegen während des Laufs als Datei unter `$RUNNER_TEMP`. Am Ende werden sie gelöscht.
+
+### 1.5 Self-hosted Runner für Releases (optional)
+
+Nur nötig, wenn du Releases über **Actions → Release** starten willst. Ohne Runner veröffentlichst du
+lokal mit `scripts/release.sh <version> --publish` und `scripts/release-ios.sh <version>`.
 
 1. Auf GitHub: **Repository → Settings → Actions → Runners → New self-hosted runner**.
    Wähle **macOS** und **ARM64**.
 2. Führe die angezeigten Befehle im Terminal aus. Nimm als Ordner `~/actions-runner`, **nicht** den
    Projektordner. Bei `./config.sh` alle Fragen mit Enter bestätigen. Die Standard-Labels
-   `self-hosted, macOS, ARM64` sind genau die, die die Workflows erwarten.
+   `self-hosted, macOS, ARM64` sind genau die, die `release.yml` erwartet.
 3. Runner als Hintergrunddienst starten:
    ```sh
    cd ~/actions-runner
@@ -56,52 +111,12 @@ Pro Klon des Repos einmal ausführen. Im Notfall kannst du die Hooks umgehen mit
    ./svc.sh start
    ./svc.sh status    # sollte "Started" zeigen
    ```
-   Der Dienst läuft als LaunchAgent unter deinem Benutzer. Er arbeitet also nur, **solange du
-   angemeldet bist**. Das ist so gewollt: Die App-Tests starten NotifyAI als Test-Host und brauchen
-   eine Benutzersitzung.
+   Der Dienst läuft als LaunchAgent unter deinem Benutzer, also nur, **solange du angemeldet bist**.
 4. Auf GitHub sollte der Runner jetzt als **Idle** erscheinen.
-5. **UI-Tests:** Sie steuern die App über die Bedienungshilfen. Beim ersten Lauf fragt macOS, ob
-   `xcodebuild` bzw. der Test-Runner die Bedienungshilfen nutzen darf. Erlaube es unter
-   **Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen**. Am einfachsten startest
-   du dafür einmal `scripts/ci.sh ui` von Hand im Terminal.
 
-Wichtig zu wissen:
-
-- **Ist der Mac aus oder im Ruhezustand,** wartet ein Job in der Warteschlange. Nach 24 Stunden
-  bricht GitHub ihn ab. Es geht nichts verloren, du kannst ihn einfach neu starten.
-- **Der Runner aktualisiert sich selbst.** Xcode, Simulatoren und Homebrew-Werkzeuge musst du
-  selbst aktuell halten.
-- **Entfernen:** erst `./svc.sh stop && ./svc.sh uninstall`, dann
-  `./config.sh remove --token <Token von der Runner-Seite>`.
-
-### 1.4 Kosten ausschließen
-
-- Self-hosted Runner verbrauchen **keine** Actions-Minuten.
-- Unter **GitHub → Settings (Konto) → Billing and plans** prüfen:
-  - Ist **keine Zahlungsmethode** hinterlegt, kann GitHub nichts abbuchen. Überschreitet etwas
-    das Gratiskontingent, wird es blockiert, nicht berechnet.
-  - Ist eine Karte hinterlegt, setze unter **Budgets** ein Actions-Budget von 0 $ mit
-    „Stop usage when budget limit is reached“.
-- Die Workflows laden keine Artefakte hoch und nutzen keinen GitHub-Cache. Der Build-Cache liegt
-  lokal unter `~/Library/Developer/Xcode/DerivedData/NotifyAI-CI`. Damit wird auch kein
-  Speicherkontingent verbraucht.
-
-### 1.5 Sicherheit
-
-Ein self-hosted Runner führt den Code aus, den Workflows mitbringen, **auf deinem Mac und mit
-deinen Rechten**, also auch mit Zugriff auf Schlüsselbund, Developer-ID-Zertifikat und
-Notarisierungs-Profil. Das Repo ist öffentlich, deshalb gilt:
-
-- **Kein Workflow auf dem Runner reagiert auf `pull_request` oder `pull_request_target`.** Sonst
-  könnte jeder per Fork-Pull-Request Code auf deinem Mac ausführen. `scripts/ci.sh lint` bricht ab,
-  sobald eine Workflow-Datei diese Auslöser nutzt. Fremde Änderungen prüfst du, indem du sie nach dem
-  Review auf `main` übernimmst oder den Branch lokal mit `scripts/ci.sh` testest.
-- Ausgelöst werden die Workflows nur durch Pushes auf `main` und von Hand. Beides können nur Personen
-  mit Schreibrechten.
-- Zusätzlich unter **Settings → Actions → General → Fork pull request workflows** die Option
-  **„Require approval for all external contributors“** wählen.
-- Secrets (`SPARKLE_ED_PRIVATE_KEY`, optional `ASC_*`) stehen nur dem Release-Workflow zur Verfügung
-  und liegen während des Laufs als Datei unter `$RUNNER_TEMP`. Am Ende werden sie gelöscht.
+Ist der Mac aus, wartet ein Release-Job in der Warteschlange; nach 24 Stunden bricht GitHub ihn ab.
+**Entfernen:** erst `./svc.sh stop && ./svc.sh uninstall`, dann
+`./config.sh remove --token <Token von der Runner-Seite>`.
 
 ---
 
@@ -139,7 +154,8 @@ BIN=$(ls -d ~/Library/Developer/Xcode/DerivedData/NotifyAI-*/SourcePackages/arti
    DMG und ZIP und pusht `appcast.xml` auf `main`. Bei Plattform „iOS“ folgt
    `scripts/release-ios.sh` (Upload zu App Store Connect).
    Developer-ID-Zertifikat, Notarisierungs-Profil und Xcode-Account kommen aus deinem Schlüsselbund
-   (siehe [Publishing.md](Publishing.md)), weil der Runner als dein Benutzer läuft.
+   (siehe [Publishing.md](Publishing.md)), weil der Runner als dein Benutzer läuft. Dafür muss
+   der self-hosted Runner eingerichtet sein ([1.5](#15-self-hosted-runner-für-releases-optional)).
 4. Danach lokal `git pull`, denn auf `main` ist der Commit „Release …: Update-Feed“
    dazugekommen.
 

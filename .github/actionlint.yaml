@@ -1,0 +1,5 @@
+# actionlint kennt nicht jedes Label der GitHub-hosted Runner.
+# „xcode-27“ ist das Image mit Xcode 27 (Public Preview), siehe .github/workflows/ci.yml.
+self-hosted-runner:
+  labels:
+    - xcode-27

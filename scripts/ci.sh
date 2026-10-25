@@ -2,7 +2,7 @@
 #
 # Prüft NotifyAI so, wie es die CI tut. Läuft lokal genauso wie auf dem GitHub-Runner.
 #
-#   scripts/ci.sh              alles: lint, dist, package, macos, ui, ios
+#   scripts/ci.sh              alles: lint, dist, package, macos, ui, ios, strings
 #   scripts/ci.sh lint macos   nur die genannten Schritte, in dieser Reihenfolge
 #
 # Schritte:
@@ -12,10 +12,12 @@
 #   macos     App bauen und NotifyAITests auf dem Mac ausführen
 #   ui        NotifyAIUITests auf dem Mac ausführen (Abläufe und Barrierefreiheits-Audits)
 #   ios       App für den iOS-Simulator bauen (ohne Tests)
+#   strings   jeder Text im Katalog und ins Englische übersetzt (nach macos und ios: liest, was
+#             deren Builds aus dem Code extrahiert haben, auch die nur für iOS gebauten Widgets)
 #
 # Umgebungsvariablen:
-#   CI_DERIVED_DATA   Ort für DerivedData (Standard: build/ci/DerivedData). Auf dem Runner liegt es
-#                     außerhalb des Checkouts, damit der Build-Cache zwischen Läufen erhalten bleibt.
+#   CI_DERIVED_DATA   Ort für DerivedData (Standard: build/ci/DerivedData). Die CI auf GitHub
+#                     speichert es zwischen Läufen im Actions-Cache.
 #
 # macOS-Tests werden ad-hoc signiert: Der Test-Target hat kein Team, die App schon. Mit Team-Signatur
 # lehnt die Hardened Runtime das Test-Bundle ab („different Team IDs“). Ad-hoc braucht außerdem
@@ -37,11 +39,11 @@ DERIVED="${CI_DERIVED_DATA:-$OUT/DerivedData}"
 mkdir -p "$OUT"
 
 STEPS=("$@")
-[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint dist package macos ui ios)
+[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint dist package macos ui ios strings)
 for s in "${STEPS[@]}"; do
     case "$s" in
-        lint|dist|package|macos|ui|ios) ;;
-        *) sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
+        lint|dist|package|macos|ui|ios|strings) ;;
+        *) sed -n '3,17p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
     esac
 done
 
@@ -81,10 +83,19 @@ lint() {
     command -v actionlint >/dev/null || fail "actionlint fehlt: brew install actionlint"
     shellcheck scripts/*.sh .githooks/*
     actionlint
-    # Öffentliches Repo, self-hosted Runner: Pull Requests aus Forks dürfen nie Code auf dem Mac ausführen.
-    if grep -nE '^\s*pull_request(_target)?\s*:|^\s*on:.*pull_request|^\s*-\s*pull_request' .github/workflows/*.yml; then
-        fail "Workflows dürfen nicht auf pull_request reagieren (siehe docs/CI.md, 1.5)."
+    # Öffentliches Repo: pull_request_target läuft mit Schreibrechten und Secrets im Kontext des Repos,
+    # auch für Forks. Und ein Workflow auf einem self-hosted Runner (dem eigenen Mac, z. B. der Release)
+    # darf nie auf Pull Requests reagieren, sonst liefe Code aus Forks auf diesem Mac (docs/CI.md, 1.4).
+    if grep -nE 'pull_request_target' .github/workflows/*.yml; then
+        fail "Workflows dürfen nicht auf pull_request_target reagieren (siehe docs/CI.md, 1.4)."
     fi
+    local workflow
+    for workflow in .github/workflows/*.yml; do
+        if grep -qE '^\s*runs-on:.*self-hosted' "$workflow" \
+            && grep -nE '^\s*pull_request\s*:|^\s*on:.*pull_request|^\s*-\s*pull_request' "$workflow"; then
+            fail "$workflow läuft auf einem self-hosted Runner und darf nicht auf pull_request reagieren (siehe docs/CI.md, 1.4)."
+        fi
+    done
     echo "  ok"
 }
 
@@ -178,9 +189,6 @@ macos_tests() {
         | python3 -c 'import json,sys; s=json.load(sys.stdin); print("  %d bestanden, %d fehlgeschlagen, %d übersprungen" % (s["passedTests"], s["failedTests"], s["skippedTests"]))' \
         || true
     echo "  Ergebnis: $result"
-
-    step "Übersetzungen: jeder Text im Katalog und ins Englische übersetzt"
-    python3 "$ROOT/scripts/check-localization.py" "$DERIVED" || fail "Texte ohne Katalogeintrag oder Übersetzung (siehe oben)."
 }
 
 ui_tests() {
@@ -195,6 +203,11 @@ ui_tests() {
         -resultBundlePath "$result" \
         CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
     echo "  Ergebnis: $result"
+}
+
+strings_check() {
+    step "Übersetzungen: jeder Text im Katalog und ins Englische übersetzt"
+    python3 "$ROOT/scripts/check-localization.py" "$DERIVED" || fail "Texte ohne Katalogeintrag oder Übersetzung (siehe oben)."
 }
 
 ios_build() {
@@ -215,6 +228,7 @@ for s in "${STEPS[@]}"; do
         macos) macos_tests ;;
         ui) ui_tests ;;
         ios) ios_build ;;
+        strings) strings_check ;;
     esac
 done
 echo
