@@ -62,31 +62,45 @@ struct SearchResult: Sendable {
 
 /// Finds the passages and notes that answer a request.
 ///
-/// Two complementary rankings are fused:
-/// - **BM25 full-text search** finds exact names, numbers and technical terms, which
-///   embeddings tend to blur.
-/// - **Sentence embeddings** find passages with the same meaning in other words
-///   ("Kosten" ↔ "Budget", "Kündigung" ↔ "Vertrag beenden").
+/// Every passage gets one score from two signals:
+/// - **Coverage:** the share of the question's terms the passage contains, each weighted by
+///   how rare it is among the candidate passages (inverse document frequency). It finds exact
+///   names, numbers and technical terms, which meaning vectors blur.
+/// - **Meaning:** the similarity of the passage's best 25-word window to the question
+///   (`ContextualSentenceEmbedder`), which finds the same thing said in other words.
 ///
-/// Reciprocal rank fusion combines both without having to calibrate their very different
-/// score scales; the semantic ranking counts half (see `semanticWeight`). Filters are
-/// applied first; mentioned people and the preferred focus boost the fused score.
+/// `score = 0.7 · similarity + 0.3 · coverage`, and a passage answers the question from a
+/// score of 0.32. Both values were chosen on `SearchEvaluationCorpus.json` and checked by
+/// cross-validation (docs/Quality.md): compared with the previous rank fusion, questions with
+/// the note's own words find it first in 96 % instead of 72 % of cases, questions in other
+/// words in 46 % instead of 29 %, and a question no note answers names a note in 12 % instead
+/// of 50 % of cases. The threshold is what makes the answer "nothing found" possible.
+///
+/// Only vectors of the contextual model are calibrated for this. Passages without them (the
+/// model is not installed, or the language has none) are scored by coverage alone, from 0.22:
+/// measured, the older sentence embeddings made rankings worse, not better.
+///
+/// Filters are applied first; mentioned people and the preferred focus raise the score of a
+/// passage that already answers.
 package struct HybridRetriever: Sendable {
+    /// How full text and meaning are weighed; tests evaluate other values.
+    struct Tuning: Sendable {
+        var semanticWeight = 0.7
+        /// Score from which a passage with a meaning vector answers the question.
+        var threshold = 0.32
+        /// Coverage from which a passage without a meaning vector answers the question.
+        var fullTextThreshold = 0.22
+        /// Synonyms from the query expansion count less than the question's own words.
+        var expansionWeight = 0.4
+    }
+
     let index: KnowledgeIndex
     let embedder: any SentenceEmbedding
+    var tuning = Tuning()
 
     private let k1 = 1.2
     private let b = 0.75
-    /// Rank constant of reciprocal rank fusion (the value from the original paper).
-    private let fusionK = 60.0
-    /// Only the best semantic matches take part in the fusion; the long tail is noise.
-    private let semanticDepth = 40
     private let maximumPassagesPerNote = 3
-    /// Apple's sentence embeddings separate German topics only weakly (a question and its
-    /// answer measured −0.02, the same question and an unrelated passage −0.04). They help to
-    /// order candidates but count half as much as full-text matches; synonyms from the
-    /// language model's query expansion carry most of the "same meaning, other words" recall.
-    static let semanticWeight = 0.5
 
     func search(_ request: SearchRequest, passageLimit: Int = 12, noteLimit: Int = 10) -> SearchResult {
         var request = request
@@ -119,17 +133,17 @@ package struct HybridRetriever: Sendable {
             return listing(candidates, result: result, filters: request.filters, noteLimit: noteLimit)
         }
 
-        // 1. Full-text ranking.
-        let lexical = bm25Scores(queryTerms: queryTerms, expansionTerms: expansionTerms, passages: passages.map(\.1))
-        // 2. Semantic ranking.
-        let semantic = semanticScores(of: passages, for: request)
-        // 3. Fusion and boosts.
-        let fused = fusedScores(passages: passages, lexical: ranks(of: lexical), semantic: ranks(of: semantic, depth: semanticDepth),
-                                request: request, personsRelaxed: !result.relaxedPersons.isEmpty)
+        // 1. Full text: coverage of the question's terms, BM25 to break ties.
+        let lexical = lexicalScores(queryTerms: queryTerms, expansionTerms: expansionTerms, notes: candidates, passageCount: passages.count)
+        // 2. Meaning: the best window of each passage.
+        let semantic = semanticScores(of: candidates, passageCount: passages.count, for: request)
+        // 3. One score per passage; only passages that answer remain.
+        let scored = answeringPassages(passages: passages, lexical: lexical, semantic: semantic, request: request,
+                                       personsRelaxed: !result.relaxedPersons.isEmpty)
         // 4. Diverse passages: at most a few per note, so one long meeting does not crowd out the rest.
-        result.passages = diversePassages(fused, passages: passages, limit: passageLimit)
-        // 5. Notes ranked by their best passages.
-        result.notes = rankedNotes(fused, passages: passages, lexical: lexical, request: request, limit: noteLimit)
+        result.passages = diversePassages(scored, passages: passages, limit: passageLimit)
+        // 5. Notes ranked by their best passage.
+        result.notes = rankedNotes(scored, passages: passages, request: request, limit: noteLimit)
         return result
     }
 
@@ -158,37 +172,59 @@ package struct HybridRetriever: Sendable {
         return withPersons
     }
 
-    /// Similarity of every passage to the question, per language (vectors of different
-    /// languages are not comparable); -1 where a passage has no vector.
-    private func semanticScores(of passages: [(IndexedNote, IndexedPassage)], for request: SearchRequest) -> [Double] {
-        var queryVectors: [String: EmbeddingVector] = [:]
-        var semantic = [Double](repeating: -1, count: passages.count)
+    /// The best window similarity of every passage, -1 for passages without calibrated
+    /// vectors, in the order of `passages` in `search` (note by note).
+    ///
+    /// The question is embedded once per vector space. Notes are compared only with a
+    /// question vector of their own space; one space can hold several languages.
+    func semanticScores(of notes: [IndexedNote], passageCount: Int, for request: SearchRequest) -> [Double] {
         let semanticText = ([request.text] + request.expansions).joined(separator: " ")
-        for (position, (note, passage)) in passages.enumerated() {
-            guard let vector = passage.vector else { continue }
-            let queryVector = queryVectors[note.languageCode] ?? embedder.vector(for: semanticText, languageCode: note.languageCode)
-            guard let queryVector else { continue }
-            queryVectors[note.languageCode] = queryVector
-            semantic[position] = Double(vector.similarity(to: queryVector))
+        var queryVectors: [String: [Float]?] = [:]
+        func queryVector(in space: String, noteLanguage: String) -> [Float]? {
+            if let known = queryVectors[space] { return known }
+            // The question's language first: in a shared space it is the more faithful vector.
+            let language = [request.languageCode, noteLanguage].first { embedder.space(for: $0) == space }
+            let vector = language.flatMap { embedder.vector(for: semanticText, languageCode: $0)?.values }
+            queryVectors[space] = vector
+            return vector
+        }
+
+        var semantic: [Double] = []
+        semantic.reserveCapacity(passageCount)
+        var scratch: [Float] = []
+        for note in notes {
+            guard let space = note.embeddingSpace, ContextualSentenceEmbedder.isCalibrated(space: space),
+                  let query = queryVector(in: space, noteLanguage: note.languageCode)
+            else {
+                semantic += repeatElement(-1, count: note.passages.count)
+                continue
+            }
+            let scores = note.passageVectors.bestScores(for: query, passageCount: note.passages.count, scratch: &scratch)
+            semantic += scores.map(Double.init)
         }
         return semantic
     }
 
-    /// Reciprocal rank fusion of both rankings, with boosts for mentioned people and the
-    /// preferred focus; best first.
-    private func fusedScores(
+    /// The passages that answer the question, best first, with their score. Boosts for
+    /// mentioned people and the preferred focus only reorder passages that already answer.
+    private func answeringPassages(
         passages: [(IndexedNote, IndexedPassage)],
-        lexical: [Int: Int],
-        semantic: [Int: Int],
+        lexical: [(coverage: Double, bm25: Double)],
+        semantic: [Double],
         request: SearchRequest,
         personsRelaxed: Bool
     ) -> [(position: Int, score: Double)] {
-        var fused: [(position: Int, score: Double)] = []
+        var scored: [(position: Int, score: Double, bm25: Double)] = []
         for position in passages.indices {
-            var score = 0.0
-            if let rank = lexical[position] { score += 1 / (fusionK + Double(rank)) }
-            if let rank = semantic[position] { score += Self.semanticWeight / (fusionK + Double(rank)) }
-            guard score > 0 else { continue }
+            let coverage = lexical[position].coverage
+            var score: Double
+            if semantic[position] > -1 {
+                score = tuning.semanticWeight * max(0, semantic[position]) + (1 - tuning.semanticWeight) * coverage
+                guard score >= tuning.threshold else { continue }
+            } else {
+                score = coverage
+                guard score > 0, score >= tuning.fullTextThreshold else { continue }
+            }
             let (note, passage) = passages[position]
             if !request.filters.persons.isEmpty, !personsRelaxed,
                request.filters.persons.contains(where: { Self.text(passage.text, mentions: $0) }) {
@@ -197,19 +233,21 @@ package struct HybridRetriever: Sendable {
             if let focus = request.filters.preferredFocus, note.focus == focus {
                 score *= 1.1
             }
-            fused.append((position, score))
+            scored.append((position, score, lexical[position].bm25))
         }
-        return fused.sorted { $0.score > $1.score }
+        return scored
+            .sorted { $0.score != $1.score ? $0.score > $1.score : $0.bm25 > $1.bm25 }
+            .map { ($0.position, $0.score) }
     }
 
     private func diversePassages(
-        _ fused: [(position: Int, score: Double)],
+        _ scored: [(position: Int, score: Double)],
         passages: [(IndexedNote, IndexedPassage)],
         limit: Int
     ) -> [PassageHit] {
         var hits: [PassageHit] = []
         var perNote: [UUID: Int] = [:]
-        for entry in fused {
+        for entry in scored {
             let (note, passage) = passages[entry.position]
             guard perNote[note.id, default: 0] < maximumPassagesPerNote else { continue }
             perNote[note.id, default: 0] += 1
@@ -219,37 +257,23 @@ package struct HybridRetriever: Sendable {
         return hits
     }
 
-    /// Notes ranked by their best passages. Semantic similarity alone always finds
-    /// *something* and is too weak to decide on its own, so a note only counts as a match
-    /// with a full-text hit on the question or its synonyms.
+    /// Notes ranked by their best answering passage.
     private func rankedNotes(
-        _ fused: [(position: Int, score: Double)],
+        _ scored: [(position: Int, score: Double)],
         passages: [(IndexedNote, IndexedPassage)],
-        lexical: [Double],
         request: SearchRequest,
         limit: Int
     ) -> [NoteHit] {
-        var noteScores: [UUID: [Double]] = [:]
-        var qualifiedNotes = Set<UUID>()
-        for entry in fused {
-            let noteID = passages[entry.position].0.id
-            noteScores[noteID, default: []].append(entry.score)
-            if lexical[entry.position] > 0 {
-                qualifiedNotes.insert(noteID)
-            }
-        }
         let matchedTerms = Set(TextAnalysis.terms(in: request.text, languageCode: request.languageCode))
-        return noteScores
-            .filter { qualifiedNotes.contains($0.key) }
-            .compactMap { id, scores -> NoteHit? in
-                guard let note = index.notes[id] else { return nil }
-                let sorted = scores.sorted(by: >)
-                let score = sorted[0] + 0.5 * (sorted.count > 1 ? sorted[1] : 0)
-                return NoteHit(note: note, score: score, reasons: reasons(for: note, matchedTerms: matchedTerms, filters: request.filters))
-            }
-            .sorted { $0.score > $1.score }
-            .prefix(limit)
-            .map { $0 }
+        var seen = Set<UUID>()
+        var hits: [NoteHit] = []
+        // `scored` is sorted, so a note's first entry is its best passage.
+        for entry in scored where seen.insert(passages[entry.position].0.id).inserted {
+            let note = passages[entry.position].0
+            hits.append(NoteHit(note: note, score: entry.score, reasons: reasons(for: note, matchedTerms: matchedTerms, filters: request.filters)))
+            if hits.count >= limit { break }
+        }
+        return hits
     }
 
     // MARK: - Filters
@@ -286,41 +310,97 @@ package struct HybridRetriever: Sendable {
 
     // MARK: - Ranking
 
-    /// Okapi BM25 with inverse document frequencies over the candidate passages.
-    private func bm25Scores(queryTerms: [String], expansionTerms: [String], passages: [IndexedPassage]) -> [Double] {
-        guard !passages.isEmpty else { return [] }
-        let averageLength = max(1, Double(passages.reduce(0) { $0 + $1.termCount }) / Double(passages.count))
+    /// Coverage of the question's terms and Okapi BM25 for every passage.
+    ///
+    /// Coverage is the sum of the inverse document frequencies of the terms a passage contains
+    /// divided by that of all the question's terms (synonyms from the expansion count with
+    /// `expansionWeight`), at most 1. Unlike BM25 it is comparable between questions, so one
+    /// threshold can decide what answers. BM25 only breaks ties between equal coverage.
+    ///
+    /// Rarity is a property of the library, not of a filter: document frequencies count all
+    /// passages of the index. And it is smoothed (`log((N + 1) / (df + 1)) + 1`, at least 1):
+    /// with BM25's own weights, a word of the question that no note contains outweighed all
+    /// others, and "Samsung: Wie hoch ist das Budget?" found nothing, because within the two
+    /// Samsung notes "Budget" was everywhere and "hoch" nowhere.
+    ///
+    /// Walks the notes and their passages in the order of `passages` in `search` (note by
+    /// note), so the scores line up with it without copying a note for every passage.
+    private func lexicalScores(
+        queryTerms: [String],
+        expansionTerms: [String],
+        notes: [IndexedNote],
+        passageCount: Int
+    ) -> [(coverage: Double, bm25: Double)] {
+        guard passageCount > 0 else { return [] }
         var weights: [String: Double] = [:]
         for term in queryTerms { weights[term, default: 0] = max(weights[term, default: 0], 1) }
-        for term in expansionTerms where weights[term] == nil { weights[term] = 0.4 }
+        for term in expansionTerms where weights[term] == nil { weights[term] = tuning.expansionWeight }
+        let weighted = Array(weights)
 
-        var documentFrequency: [String: Int] = [:]
-        for passage in passages {
-            for term in weights.keys where passage.termFrequencies[term] != nil {
-                documentFrequency[term, default: 0] += 1
+        // How often each query term occurs in each passage, 0 where it does not: one buffer
+        // with a row per passage. The terms are looked up in each note's term list once.
+        let termsCount = weighted.count
+        var frequencies = [Int](repeating: 0, count: passageCount * termsCount)
+        var lengths = [Int](repeating: 0, count: passageCount)
+        var documentFrequency = [Int](repeating: 0, count: termsCount)
+        var position = 0
+        for note in notes {
+            let ids = weighted.map { note.terms.id(of: $0.key) }
+            for passage in note.passages {
+                lengths[position] = passage.termCount
+                for (term, id) in ids.enumerated() {
+                    guard let id, let frequency = passage.termFrequencies.frequency(of: id) else { continue }
+                    frequencies[position * termsCount + term] = frequency
+                    documentFrequency[term] += 1
+                }
+                position += 1
             }
         }
-        let count = Double(passages.count)
-        return passages.map { passage in
-            var score = 0.0
-            for (term, weight) in weights {
-                guard let frequency = passage.termFrequencies[term], let df = documentFrequency[term] else { continue }
-                let idf = log(1 + (count - Double(df) + 0.5) / (Double(df) + 0.5))
+
+        // A filter left out passages: count them too.
+        var total = Double(passageCount)
+        if notes.count < index.notes.count {
+            total += countPassages(outside: notes, containing: weighted.map(\.key), into: &documentFrequency)
+        }
+
+        let averageLength = max(1, Double(lengths.reduce(0, +)) / Double(passageCount))
+        let rarity = documentFrequency.map { df in log((total + 1) / (Double(df) + 1)) + 1 }
+        let bm25Weights = documentFrequency.map { df in log(1 + (total - Double(df) + 0.5) / (Double(df) + 0.5)) }
+        // The question's own terms make a full match; without any, its synonyms do.
+        let ownTerms = weighted.indices.filter { weighted[$0].value >= 1 }
+        let fullMatch = ownTerms.isEmpty
+            ? weighted.indices.reduce(0) { $0 + weighted[$1].value * rarity[$1] }
+            : ownTerms.reduce(0) { $0 + rarity[$1] }
+        return (0..<passageCount).map { position in
+            var matched = 0.0
+            var bm25 = 0.0
+            for (term, (_, weight)) in weighted.enumerated() {
+                let frequency = frequencies[position * termsCount + term]
+                guard frequency > 0 else { continue }
+                matched += weight * rarity[term]
                 let tf = Double(frequency)
-                let normalization = tf + k1 * (1 - b + b * Double(passage.termCount) / averageLength)
-                score += weight * idf * tf * (k1 + 1) / normalization
+                let normalization = tf + k1 * (1 - b + b * Double(lengths[position]) / averageLength)
+                bm25 += weight * bm25Weights[term] * tf * (k1 + 1) / normalization
             }
-            return score
+            return (fullMatch > 0 ? min(1, matched / fullMatch) : 0, bm25)
         }
     }
 
-    /// Rank (1 = best) of every position with a positive score, limited to the best `depth`.
-    private func ranks(of scores: [Double], depth: Int = .max) -> [Int: Int] {
-        let ordered = scores.indices
-            .filter { scores[$0] > 0 }
-            .sorted { scores[$0] > scores[$1] }
-            .prefix(depth)
-        return Dictionary(uniqueKeysWithValues: ordered.enumerated().map { ($1, $0 + 1) })
+    /// Adds the passages of the notes not in `candidates` that contain each term to
+    /// `documentFrequency`; returns how many passages those notes have.
+    private func countPassages(outside candidates: [IndexedNote], containing terms: [String], into documentFrequency: inout [Int]) -> Double {
+        let candidateIDs = Set(candidates.map(\.id))
+        var count = 0
+        for note in index.notes.values where !candidateIDs.contains(note.id) {
+            let ids = terms.map { note.terms.id(of: $0) }
+            for passage in note.passages {
+                for (term, id) in ids.enumerated() where id.flatMap(passage.termFrequencies.frequency(of:)) != nil {
+                    documentFrequency[term] += 1
+                }
+            }
+            count += note.passages.count
+        }
+        return Double(count)
     }
 
     private func listing(_ candidates: [IndexedNote], result: SearchResult, filters: SearchFilters, noteLimit: Int) -> SearchResult {

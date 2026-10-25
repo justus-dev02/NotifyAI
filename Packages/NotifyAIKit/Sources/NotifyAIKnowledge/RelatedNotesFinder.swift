@@ -73,12 +73,20 @@ struct RelatedNotesFinder: Sendable {
     /// others. This needs a few notes to compare with (`minimumNotesForContent`).
     var contentDeviations = 2.0
     var minimumNotesForContent = 4
+    /// Vectors of the contextual model are compared after removing the mean of all notes:
+    /// transcripts resemble each other more than anything else, so what two notes share beyond
+    /// that decides. From this similarity on, content counts fully; content alone makes a note
+    /// related from 0.22. Measured on `SearchEvaluationCorpus.json` (docs/Quality.md): notes
+    /// that belong together are listed twice as often as with the previous relative score
+    /// (44 % instead of 22 %), and more of the listed notes belong together (20 % instead of
+    /// 13 %). Lower values find more pairs but list three notes for almost every note.
+    var centeredSimilarityForFullContent = 0.4
 
     func related(to noteID: UUID, limit: Int = 5) -> [RelatedNote] {
         guard let source = index.notes[noteID] else { return [] }
         let keywordIDF = keywordRarity()
         let sourceKeywords = keywordKeys(of: source)
-        let contentScores = relativeContentScores(for: source)
+        let contentScores = contentScores(for: source)
 
         return index.notes.values
             .filter { $0.id != noteID }
@@ -133,6 +141,33 @@ struct RelatedNotesFinder: Sendable {
     }
 
     // MARK: - Helpers
+
+    /// 0…1 per candidate: how much the content of the notes has in common.
+    private func contentScores(for source: IndexedNote) -> [UUID: Double] {
+        if let space = source.embeddingSpace, ContextualSentenceEmbedder.isCalibrated(space: space) {
+            return centeredContentScores(for: source, space: space)
+        }
+        return relativeContentScores(for: source)
+    }
+
+    /// Similarity of the note vectors after removing the mean of all notes in the same space.
+    private func centeredContentScores(for source: IndexedNote, space: String) -> [UUID: Double] {
+        let peers = index.notes.values.filter { $0.embeddingSpace == space && $0.vector != nil }
+        guard peers.count >= minimumNotesForContent, let mean = EmbeddingVector.mean(of: peers.compactMap(\.vector)),
+              let sourceVector = source.vector.flatMap({ centered($0, mean) })
+        else { return [:] }
+        var scores: [UUID: Double] = [:]
+        for candidate in peers where candidate.id != source.id {
+            guard let vector = candidate.vector.flatMap({ centered($0, mean) }) else { continue }
+            let similarity = Double(sourceVector.similarity(to: vector))
+            scores[candidate.id] = min(1, max(0, similarity / centeredSimilarityForFullContent))
+        }
+        return scores
+    }
+
+    private func centered(_ vector: EmbeddingVector, _ mean: EmbeddingVector) -> EmbeddingVector? {
+        EmbeddingVector.normalized(zip(vector.values, mean.values).map { $0 - $1 }).map(EmbeddingVector.init)
+    }
 
     /// 0…1 per candidate: how far its similarity lies above the average, in standard deviations.
     private func relativeContentScores(for source: IndexedNote) -> [UUID: Double] {

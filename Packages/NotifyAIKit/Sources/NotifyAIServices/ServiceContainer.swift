@@ -75,7 +75,9 @@ public final class ServiceContainer {
         whisperModels = WhisperModelManager(store: modelStore, usage: whisperEngine)
         neuralModels = NeuralModelManager(store: neuralStore, usages: [parakeetEngine, speakerDetection.neural])
 
-        let embedder = SentenceEmbedder()
+        // Search and related notes use the contextual model. The summary's evidence links keep
+        // the sentence embeddings their thresholds were measured with.
+        let embedder = ContextualSentenceEmbedder(fallback: SentenceEmbedder())
         let summarization = SummarizationService()
         let digestStore = ChapterDigestStore(directory: inMemory ? nil : locations.processingDirectory)
         processing = ProcessingCoordinator(
@@ -84,7 +86,7 @@ public final class ServiceContainer {
             transcription: transcription,
             summarization: summarization,
             diarizer: speakerDetection,
-            embedder: embedder,
+            embedder: SentenceEmbedder(),
             digestStore: digestStore
         )
         knowledge = KnowledgeIndexService(

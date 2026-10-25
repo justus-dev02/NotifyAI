@@ -115,6 +115,24 @@ public final class KnowledgeIndexService {
         scheduleRefresh()
     }
 
+    // MARK: - Meaning vectors
+
+    /// Whether the model for meaning vectors is installed for notes in `languageCode`.
+    public func embeddingModelStatus(for languageCode: String) -> EmbeddingModelStatus {
+        (embedder as? any EmbeddingModelAssets)?.modelStatus(for: languageCode) ?? .unsupported
+    }
+
+    /// Downloads the model (a one-time system download from Apple) and indexes the notes
+    /// again with it. Returns whether the model is installed afterwards.
+    public func installEmbeddingModel(for languageCode: String) async throws -> Bool {
+        guard let assets = embedder as? any EmbeddingModelAssets else { return false }
+        let installed = try await assets.installModel(for: languageCode)
+        if installed {
+            scheduleRefresh()
+        }
+        return installed
+    }
+
     public func related(to noteID: UUID, limit: Int = 5) async -> [RelatedNote] {
         await Self.related(to: noteID, in: index, limit: limit)
     }
@@ -147,8 +165,17 @@ public final class KnowledgeIndexService {
 
         // Everything is read from the models before the first `await`: a note may be
         // deleted while another one is indexed.
+        // The space is part of the fingerprint: once the contextual model is installed, every
+        // note is indexed again with its vectors.
+        var spaces: [String: String?] = [:]
         let pending = notes.compactMap { note -> IndexableNote? in
-            index.notes[note.id]?.contentHash == IndexableNote.fingerprint(of: note) ? nil : IndexableNote(note: note)
+            let languageCode = note.language.languageCode
+            if spaces[languageCode] == nil {
+                spaces[languageCode] = embedder.space(for: languageCode)
+            }
+            let space = spaces[languageCode].flatMap { $0 }
+            let fingerprint = IndexableNote.fingerprint(of: note, embeddingSpace: space)
+            return index.notes[note.id]?.contentHash == fingerprint ? nil : IndexableNote(note: note, embeddingSpace: space)
         }
         let builder = KnowledgeIndexBuilder(embedder: embedder)
         for input in pending {

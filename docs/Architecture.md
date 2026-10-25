@@ -37,7 +37,7 @@ Zusammenfassung, die Zusammenfassung keine Warteschlange, die Suche keine Aufnah
 | `NotifyAICore` | Werttypen (Transkript, Zusammenfassung, Marker, Fristen, Labels, Vorlagenwahl), Logging, `EventChannel`, `BackgroundWork` | UI, Daten, Services kennen |
 | `AudioCapture` | Echtzeit-Aufnahme: lock-freie Ringpuffer, Konvertieren, Mischen, Echo-Unterdrückung, Schreiben | UI, Daten |
 | `NotifyAIPersistence` | SwiftData-Schema V1–V7 mit Migrationen, `NoteStore`, `NoteQueries`, Dateiablage | UI, Services |
-| `NotifyAISupport` | `TextAnalysis`, `SentenceEmbedder`, `DeviceLoad`, Plattform-Adapter, Anzeigenamen, `SpeakerLabels`, Schlüsselbund | andere Services; UIKit/AppKit nur in `Platform/` |
+| `NotifyAISupport` | `TextAnalysis`, `ContextualSentenceEmbedder` (Suche) und `SentenceEmbedder` (Belege der Zusammenfassung), `DeviceLoad`, Plattform-Adapter, Anzeigenamen, `SpeakerLabels`, Schlüsselbund | andere Services; UIKit/AppKit nur in `Platform/` |
 | `NotifyAIAudio` | `AudioRecorder`, `AudioPlayer`, Audio-Session, Mikrofon, Systemton, `MonoAudioFile` | höhere Services; UIKit/AppKit nur in `SystemAudio/` |
 | `NotifyAINeuralModels` | `NeuralModelManager`, `NeuralModelStore`, `LoadedModel`; kennt Parakeet und Sprechererkennung nur über `NeuralModelUsage` | Transkription, Sprecher |
 | `NotifyAITranscription` | Engines, Live-Sitzungen, Prüfung gegen das Audio, Füllwörter, Vokabular, Whisper-Modelle | Zusammenfassung, Verarbeitung |
@@ -46,7 +46,7 @@ Zusammenfassung, die Zusammenfassung keine Warteschlange, die Suche keine Aufnah
 | `NotifyAISettings` | `AppSettings` und ihre Gruppen | Verarbeitung, UI |
 | `NotifyAIProcessing` | `ProcessingCoordinator` und Pipeline-Schritte | Aufnahme, Suche, Use Cases |
 | `NotifyAIExport` | `ExportDocument` und die Formate | Verarbeitung, Integrationen |
-| `NotifyAIKnowledge` | `KnowledgeIndex`, `HybridRetriever`, `QueryPlanner`, `NoteChatModel`, `NoteQuestionAnswering` | Aufnahme, Use Cases |
+| `NotifyAIKnowledge` | `KnowledgeIndex`, `PassageVectors`, `HybridRetriever`, `RelatedNotesFinder`, `QueryPlanner`, `NoteChatModel`, `NoteQuestionAnswering` | Aufnahme, Use Cases |
 | `NotifyAIIntegrations` | `IntegrationService`, Obsidian, Notion, Webhooks | Aufnahme, Use Cases |
 | `NotifyAIRecording` | `RecordingController`, Live-Transkript, Live-Kapitel, Wiederherstellung | Suche, Use Cases |
 | `NotifyAILibrary` | `NoteLibrary`, `NoteLabels`, `NoteCollections`, `TaskBoard`, `SummaryTemplates`, `SpeakerDirectory`, `TranscriptEditor`, Import, Speicher, Diagnose, App-Sperre | Aufnahme |
@@ -105,6 +105,26 @@ Einstellungen ausdrücklich ausgelöst wird (`WhisperModelManager`, `NeuralModel
 ausschließlich aus dem geladenen Ordner mit Fertig-Markierung geöffnet (`AsrModels.loadLocal`, eigener
 Loader für die Sprechermodelle), nie implizit nachgeladen. Geladene Modelle gibt `LoadedModel` zwei Minuten
 nach der letzten Nutzung oder bei Speicherdruck frei.
+Das Sprachmodell der Suche (`NLContextualEmbedding`) ist ein System-Download von Apple wie die Sprachpakete von
+Apple Speech: Es wird nur über Einstellungen → Zusammenfassung → „Suche“ geladen. Bis dahin sucht die App nach Wörtern.
+
+## Suche
+
+`HybridRetriever` gibt jedem Abschnitt einen Wert aus zwei Signalen: `0,7 · Ähnlichkeit + 0,3 · Abdeckung`.
+
+- **Ähnlichkeit:** `ContextualSentenceEmbedder` (Apples `NLContextualEmbedding`, Mittel aller Token, minus einer
+  festen Hintergrundrichtung aus Alltagssätzen). Vektoren gibt es für Fenster von etwa 25 Wörtern, mehrere pro
+  Abschnitt; ein Abschnitt zählt mit seinem besten Fenster. Gespeichert als 8-Bit-Matrix pro Notiz.
+- **Abdeckung:** Anteil der Fragebegriffe im Abschnitt, gewichtet nach Seltenheit in der ganzen Bibliothek
+  (geglättete IDF). BM25 entscheidet nur Gleichstände.
+
+Ab 0,32 beantwortet ein Abschnitt die Frage; darunter erscheint nichts, und „Notizen fragen“ sagt, dass es nichts
+gefunden hat. Ohne kalibrierte Vektoren (Modell nicht geladen, andere Schrift) zählt die Abdeckung allein, ab 0,22.
+Vektoren tragen ihren Raum (Modell und Revision); er gehört zum Fingerabdruck einer Notiz, sodass ein neues Modell
+alle Notizen neu indexiert. Wie die Werte gewählt und geprüft wurden, steht in [Quality.md](Quality.md).
+
+Verwandte Notizen vergleichen die Mittelwertvektoren nach Abzug des Mittels aller Notizen: Transkripte ähneln
+einander mehr als allem anderen, entscheidend ist, was zwei Notizen darüber hinaus teilen.
 
 ## Sprecher
 

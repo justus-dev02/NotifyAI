@@ -16,7 +16,7 @@ import Synchronization
 /// differences that decide a ranking. In memory the values stay Float32 for vDSP.
 /// The conversion uses vImage, which also works on Intel Macs (Swift's `Float16` does not).
 package struct EmbeddingVector: Codable, Hashable, Sendable {
-    let values: [Float]
+    package let values: [Float]
 
     package init(_ values: [Float]) {
         self.values = values
@@ -38,7 +38,7 @@ package struct EmbeddingVector: Codable, Hashable, Sendable {
         return normalized(sum).map(Self.init)
     }
 
-    static func normalized(_ values: [Float]) -> [Float]? {
+    package static func normalized(_ values: [Float]) -> [Float]? {
         let length = vDSP.sumOfSquares(values).squareRoot()
         guard length > 0, length.isFinite else { return nil }
         return vDSP.divide(values, length)
@@ -113,6 +113,17 @@ package struct EmbeddingVector: Codable, Hashable, Sendable {
 package protocol SentenceEmbedding: Sendable {
     /// The normalized vector of `text`, or `nil` if the language has no embedding.
     func vector(for text: String, languageCode: String) -> EmbeddingVector?
+
+    /// The vector space of `languageCode`'s vectors, `nil` if the language has no embedding.
+    /// Only vectors of the same space can be compared; the space changes when the model does.
+    func space(for languageCode: String) -> String?
+}
+
+extension SentenceEmbedding {
+    /// One space per language, for embeddings that know no better.
+    package func space(for languageCode: String) -> String? {
+        "language-\(languageCode)"
+    }
 }
 
 extension SentenceEmbedding {
@@ -139,15 +150,23 @@ package final class SentenceEmbedder: SentenceEmbedding {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         return embeddings.withLock { cache in
-            let embedding: NLEmbedding?
-            if let cached = cache[languageCode] {
-                embedding = cached
-            } else {
-                embedding = NLEmbedding.sentenceEmbedding(for: NLLanguage(rawValue: languageCode))
-                cache[languageCode] = embedding
-            }
-            guard let embedding, let values = embedding.vector(for: trimmed) else { return nil }
+            guard let embedding = Self.embedding(for: languageCode, cache: &cache), let values = embedding.vector(for: trimmed) else { return nil }
             return EmbeddingVector.normalized(values.map(Float.init)).map(EmbeddingVector.init)
         }
+    }
+
+    /// Each language has a space of its own.
+    package func space(for languageCode: String) -> String? {
+        let exists = embeddings.withLock { Self.embedding(for: languageCode, cache: &$0) != nil }
+        return exists ? "sentence-\(languageCode)" : nil
+    }
+
+    private static func embedding(for languageCode: String, cache: inout [String: NLEmbedding?]) -> NLEmbedding? {
+        if let cached = cache[languageCode] {
+            return cached
+        }
+        let embedding = NLEmbedding.sentenceEmbedding(for: NLLanguage(rawValue: languageCode))
+        cache[languageCode] = embedding
+        return embedding
     }
 }

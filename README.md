@@ -29,6 +29,9 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
   im Hintergrund weiter, Unerledigtes nachts beim Laden (`BGProcessingTask`). Bei Hitze pausiert die Arbeit.
 - **macOS:** wahlweise nur im Dock, im Dock und in der Menüleiste oder nur in der Menüleiste.
 - **Notizen fragen (⌘K):** Fragen in natürlicher Sprache über alle Notizen („Was hat Anna letzte Woche zum Budget gesagt?“).
+  Die Suche versteht auch andere Worte als die der Notiz („Wie viel Geld haben wir für die Werbung?“ findet „Das
+  Budget der Herbstkampagne …“): ein Sprachmodell von Apple auf dem Gerät, einmalig über die Einstellungen geladen.
+  Passt nichts, sagt die App das, statt aus unpassenden Stellen zu antworten.
   Zeiträume, Personen und Arten werden als Filter erkannt; Antworten nennen ihre Quellen.
 - **Verwandte Notizen:** gleiche Personen, Orte, Organisationen, seltene gemeinsame Themen, ähnlicher Inhalt – mit Begründung.
 - **Wiedergabe** mit Timeline inkl. Markern, Mitlesen im Transkript, Sprung per Tipp.

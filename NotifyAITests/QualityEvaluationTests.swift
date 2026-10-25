@@ -12,6 +12,7 @@
 
 import AVFoundation
 import Foundation
+import Synchronization
 @testable import NotifyAIAudio
 @testable import NotifyAICore
 @testable import NotifyAIExport
@@ -54,95 +55,58 @@ private struct NoEmbedding: SentenceEmbedding {
 
 // MARK: - Search
 
-private enum SearchCorpus {
-    struct Query {
-        let text: String
-        let relevant: Int
-        /// Asked with other words than the note uses.
-        let isParaphrase: Bool
+/// `SearchEvaluationCorpus.json`: 25 transcripts, labeled questions and notes that belong
+/// together. Several notes share a domain on purpose, so a topic alone does not find the answer.
+private struct SearchCorpus: Decodable {
+    struct Note: Decodable {
+        let id: String
+        let title: String
+        let language: String
+        let sentences: [String]
     }
 
-    static let notes: [(title: String, sentences: [String])] = [
-        ("Marketing-Runde", [
-            "Das Budget der Herbstkampagne liegt bei 12.000 Euro.",
-            "Die Anzeigen auf Instagram starten am 15. Oktober.",
-            "Ben stimmt die Motive mit der Agentur ab.",
-        ]),
-        ("Vorlesung Statistik", [
-            "Die Varianz beschreibt die Streuung einer Zufallsvariable.",
-            "Die Standardabweichung ist die Wurzel der Varianz.",
-            "In der Klausur kommt die Normalverteilung dran.",
-        ]),
-        ("Sprint-Planung", [
-            "Das Release der App ist für den 20. Oktober geplant.",
-            "Der Fehler beim Login muss vorher behoben werden.",
-            "Tickets ohne Schätzung kommen in den nächsten Sprint.",
-        ]),
-        ("Kundengespräch Müller", [
-            "Die Firma Müller bekommt ein Angebot über 48.000 Euro.",
-            "Die Lieferzeit beträgt sechs Wochen.",
-            "Der Einkauf möchte bis Freitag eine Rückmeldung.",
-        ]),
-        ("Bewerbungsgespräch Frontend", [
-            "Die Kandidatin hat fünf Jahre Erfahrung mit React und TypeScript.",
-            "Ihre Gehaltsvorstellung liegt bei 65.000 Euro.",
-            "Sie könnte im Januar anfangen.",
-        ]),
-        ("Arzttermin", [
-            "Der Blutdruck war mit 135 zu 85 leicht erhöht.",
-            "Die Ärztin hat Ramipril verschrieben.",
-            "Die nächste Kontrolle ist in drei Monaten.",
-        ]),
-        ("Umzug", [
-            "Der Transporter ist für Samstag um acht Uhr reserviert.",
-            "Wir brauchen noch vierzig Umzugskartons.",
-            "Die alte Wohnung muss bis Ende November gekündigt werden.",
-        ]),
-        ("Datenschutz-Workshop", [
-            "Für den Newsletter brauchen wir eine Einwilligung nach DSGVO.",
-            "Bewerbungsunterlagen werden nach sechs Monaten gelöscht.",
-            "Das Verzeichnis der Verarbeitungstätigkeiten wird aktualisiert.",
-        ]),
-        ("Quartalszahlen", [
-            "Der Umsatz im dritten Quartal lag bei 2,4 Millionen Euro.",
-            "Der Gewinn ist um acht Prozent gestiegen.",
-            "Für das vierte Quartal erwarten wir ein leichtes Wachstum.",
-        ]),
-        ("Teamausflug", [
-            "Der Teamausflug geht in die Kletterhalle am Ostbahnhof.",
-            "Termin ist der 9. Oktober um 16 Uhr.",
-            "Anmeldungen bitte bis Montag an Lisa.",
-        ]),
-    ]
+    enum Kind: String, Decodable {
+        /// Asked with the note's own words.
+        case lexical
+        /// Asked with other words than the note uses.
+        case paraphrase
+        /// Asked in another language than the note's.
+        case crosslingual
+        /// Answered by no note.
+        case negative
+    }
 
-    static let queries: [Query] = [
-        Query(text: "Wie hoch ist das Budget der Herbstkampagne?", relevant: 0, isParaphrase: false),
-        Query(text: "Was ist die Standardabweichung?", relevant: 1, isParaphrase: false),
-        Query(text: "Wann ist das Release der App?", relevant: 2, isParaphrase: false),
-        Query(text: "Welches Angebot bekommt die Firma Müller?", relevant: 3, isParaphrase: false),
-        Query(text: "Welche Gehaltsvorstellung hat die Kandidatin?", relevant: 4, isParaphrase: false),
-        Query(text: "Welches Medikament wurde verschrieben?", relevant: 5, isParaphrase: false),
-        Query(text: "Wann ist der Transporter reserviert?", relevant: 6, isParaphrase: false),
-        Query(text: "Brauchen wir für den Newsletter eine Einwilligung?", relevant: 7, isParaphrase: false),
-        Query(text: "Wie hoch war der Umsatz im dritten Quartal?", relevant: 8, isParaphrase: false),
-        Query(text: "Wohin geht der Teamausflug?", relevant: 9, isParaphrase: false),
-        Query(text: "Wie viel Geld steht für die Werbung zur Verfügung?", relevant: 0, isParaphrase: true),
-        Query(text: "Wie stark schwanken die Werte um den Mittelwert?", relevant: 1, isParaphrase: true),
-        Query(text: "Probleme beim Anmelden in der Anwendung", relevant: 2, isParaphrase: true),
-        Query(text: "Wie lange dauert die Auslieferung beim Kunden?", relevant: 3, isParaphrase: true),
-        Query(text: "Welche Programmiersprachen kennt die Bewerberin?", relevant: 4, isParaphrase: true),
-        Query(text: "Wie waren die Werte beim Doktor?", relevant: 5, isParaphrase: true),
-        Query(text: "Bis wann müssen wir den Mietvertrag beenden?", relevant: 6, isParaphrase: true),
-        Query(text: "Wann werden Bewerbungen vernichtet?", relevant: 7, isParaphrase: true),
-        Query(text: "Wie hat sich der Profit entwickelt?", relevant: 8, isParaphrase: true),
-        Query(text: "Bei wem melde ich mich zum Klettern an?", relevant: 9, isParaphrase: true),
-    ]
+    struct Query: Decodable {
+        let text: String
+        let relevant: [String]
+        let kind: Kind
+    }
 
-    /// The index and the identifier of every note, in the order of `notes`.
-    static func index(embedder: any SentenceEmbedding) -> (KnowledgeIndex, [UUID]) {
+    struct Metrics {
+        var recallAt1 = 0.0
+        var recallAt3 = 0.0
+        var mrr = 0.0
+    }
+
+    let notes: [Note]
+    let queries: [Query]
+    let related: [[String]]
+
+    static let shared: SearchCorpus = {
+        let url = Bundle(for: CorpusBundleMarker.self).url(forResource: "SearchEvaluationCorpus", withExtension: "json")!
+        // swiftlint:disable:next force_try
+        return try! JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
+    }()
+
+    func queries(_ kind: Kind) -> [Query] {
+        queries.filter { $0.kind == kind }
+    }
+
+    /// The index and the identifier of every note.
+    func index(embedder: any SentenceEmbedding) -> (KnowledgeIndex, [String: UUID]) {
         let builder = KnowledgeIndexBuilder(embedder: embedder)
         var index = KnowledgeIndex()
-        var ids: [UUID] = []
+        var ids: [String: UUID] = [:]
         for (offset, note) in notes.enumerated() {
             let segments = note.sentences.enumerated().map { position, text in
                 TranscriptSegment(start: Double(position) * 10, end: Double(position) * 10 + 9, text: text)
@@ -150,52 +114,130 @@ private enum SearchCorpus {
             let input = IndexableNote(
                 title: note.title,
                 createdAt: reference.addingTimeInterval(Double(-offset) * 86_400),
+                languageCode: note.language,
                 bodyText: note.sentences.joined(separator: " "),
                 segments: segments
             )
             index.notes[input.id] = builder.entry(for: input)
-            ids.append(input.id)
+            ids[note.id] = input.id
         }
         return (index, ids)
     }
 
-    /// Recall at 1 and 3 and the mean reciprocal rank over `queries`.
-    static func evaluate(_ queries: [Query], embedder: any SentenceEmbedding) -> (recallAt1: Double, recallAt3: Double, mrr: Double) {
-        let (index, ids) = index(embedder: embedder)
-        let retriever = HybridRetriever(index: index, embedder: embedder)
-        var hitsAt1 = 0.0
-        var hitsAt3 = 0.0
-        var reciprocalRanks = 0.0
+    /// Recall at 1 and 3 and the mean reciprocal rank of the notes found.
+    static func evaluate(_ queries: [Query], retriever: HybridRetriever, ids: [String: UUID]) -> Metrics {
+        var metrics = Metrics()
         for query in queries {
             let ranking = retriever.search(SearchRequest(text: query.text, languageCode: "de")).notes.map(\.note.id)
-            guard let rank = ranking.firstIndex(of: ids[query.relevant]) else { continue }
-            if rank == 0 { hitsAt1 += 1 }
-            if rank < 3 { hitsAt3 += 1 }
-            reciprocalRanks += 1 / Double(rank + 1)
+            let relevant = Set(query.relevant.compactMap { ids[$0] })
+            guard let rank = ranking.firstIndex(where: relevant.contains) else { continue }
+            if rank == 0 { metrics.recallAt1 += 1 }
+            if rank < 3 { metrics.recallAt3 += 1 }
+            metrics.mrr += 1 / Double(rank + 1)
         }
-        let count = Double(queries.count)
-        return (hitsAt1 / count, hitsAt3 / count, reciprocalRanks / count)
+        let count = Double(max(queries.count, 1))
+        return Metrics(recallAt1: metrics.recallAt1 / count, recallAt3: metrics.recallAt3 / count, mrr: metrics.mrr / count)
+    }
+
+    /// Share of the questions that no note answers for which the search still names a note.
+    static func falseHitRate(_ queries: [Query], retriever: HybridRetriever) -> Double {
+        let hits = queries.filter { !retriever.search(SearchRequest(text: $0.text, languageCode: "de")).notes.isEmpty }
+        return Double(hits.count) / Double(max(queries.count, 1))
     }
 }
 
-@Suite("Quality: search")
-struct SearchQualityTests {
-    @Test("Questions with the note's own words find it")
-    func lexicalQuestions() {
-        let metrics = SearchCorpus.evaluate(SearchCorpus.queries.filter { !$0.isParaphrase }, embedder: NoEmbedding())
-        #expect(metrics.recallAt1 >= 0.9, "Recall@1 \(metrics.recallAt1)")
-        #expect(metrics.mrr >= 0.9, "MRR \(metrics.mrr)")
+private final class CorpusBundleMarker {}
+
+/// Remembers vectors, so evaluating many settings embeds every text once.
+private final class CachingEmbedder: SentenceEmbedding {
+    private let base: any SentenceEmbedding
+    private let cache = Mutex<[String: EmbeddingVector?]>([:])
+
+    init(_ base: any SentenceEmbedding) {
+        self.base = base
     }
 
-    @Test("Meaning vectors find notes asked about with other words",
-          .enabled(if: SentenceEmbedder().supports(languageCode: "de")))
-    func paraphrasedQuestions() {
-        let paraphrases = SearchCorpus.queries.filter(\.isParaphrase)
-        let lexical = SearchCorpus.evaluate(paraphrases, embedder: NoEmbedding())
-        let hybrid = SearchCorpus.evaluate(paraphrases, embedder: SentenceEmbedder())
-        #expect(hybrid.recallAt3 >= QualityLevels.paraphraseRecallAt3, "Recall@3 \(hybrid.recallAt3)")
-        // The semantic part must add something over full text alone.
-        #expect(hybrid.mrr >= lexical.mrr, "hybrid \(hybrid.mrr) vs. full text \(lexical.mrr)")
+    func vector(for text: String, languageCode: String) -> EmbeddingVector? {
+        let key = languageCode + "\u{1F}" + text
+        if let cached = cache.withLock({ $0[key] }) { return cached }
+        let vector = base.vector(for: text, languageCode: languageCode)
+        cache.withLock { $0[key] = vector }
+        return vector
+    }
+
+    func space(for languageCode: String) -> String? {
+        base.space(for: languageCode)
+    }
+}
+
+private let contextualModelInstalled = ContextualSentenceEmbedder().modelStatus(for: "de") == .installed
+
+@Suite("Quality: search")
+struct SearchQualityTests {
+    @Test("Without meaning vectors, questions with the note's own words find it")
+    func lexicalQuestions() {
+        let corpus = SearchCorpus.shared
+        let (index, ids) = corpus.index(embedder: NoEmbedding())
+        let retriever = HybridRetriever(index: index, embedder: NoEmbedding())
+        let metrics = SearchCorpus.evaluate(corpus.queries(.lexical), retriever: retriever, ids: ids)
+        #expect(metrics.recallAt1 >= QualityLevels.fullTextRecallAt1, "Recall@1 \(metrics.recallAt1)")
+        let falseHits = SearchCorpus.falseHitRate(corpus.queries(.negative), retriever: retriever)
+        #expect(falseHits <= QualityLevels.fullTextFalseHits, "false hits \(falseHits)")
+    }
+
+    @Test("Meaning vectors find notes asked about in other words, and nothing where nothing fits",
+          .enabled(if: contextualModelInstalled))
+    func meaningVectors() {
+        let corpus = SearchCorpus.shared
+        let embedder = CachingEmbedder(ContextualSentenceEmbedder())
+        let (index, ids) = corpus.index(embedder: embedder)
+        let retriever = HybridRetriever(index: index, embedder: embedder)
+
+        let lexical = SearchCorpus.evaluate(corpus.queries(.lexical), retriever: retriever, ids: ids)
+        let paraphrases = SearchCorpus.evaluate(corpus.queries(.paraphrase), retriever: retriever, ids: ids)
+        let falseHits = SearchCorpus.falseHitRate(corpus.queries(.negative), retriever: retriever)
+        #expect(lexical.recallAt1 >= QualityLevels.lexicalRecallAt1, "own words: Recall@1 \(lexical.recallAt1)")
+        #expect(paraphrases.recallAt1 >= QualityLevels.paraphraseRecallAt1, "other words: Recall@1 \(paraphrases.recallAt1)")
+        #expect(paraphrases.recallAt3 >= QualityLevels.paraphraseRecallAt3, "other words: Recall@3 \(paraphrases.recallAt3)")
+        #expect(paraphrases.mrr >= QualityLevels.paraphraseMRR, "other words: MRR \(paraphrases.mrr)")
+        #expect(falseHits <= QualityLevels.falseHits, "false hits \(falseHits)")
+
+        // The vectors must add clearly over full text alone.
+        let (plainIndex, plainIDs) = corpus.index(embedder: NoEmbedding())
+        let plain = SearchCorpus.evaluate(corpus.queries(.paraphrase), retriever: HybridRetriever(index: plainIndex, embedder: NoEmbedding()), ids: plainIDs)
+        #expect(paraphrases.mrr >= plain.mrr + 0.15, "with vectors \(paraphrases.mrr) vs. full text \(plain.mrr)")
+    }
+}
+
+@Suite("Quality: related notes")
+struct RelatedNotesQualityTests {
+    /// For every labeled pair, whether each note lists the other among its first three
+    /// related notes; and the share of all listed relations that are labeled. Unlabeled
+    /// relations are not necessarily wrong, so precision is a lower bound.
+    fileprivate static func evaluate(
+        _ index: KnowledgeIndex, ids: [String: UUID], corpus: SearchCorpus, finder: RelatedNotesFinder
+    ) -> (recallAt3: Double, precision: Double, listed: Int) {
+        let pairs = Set(corpus.related.flatMap { pair in [[pair[0], pair[1]], [pair[1], pair[0]]] })
+        let names = Dictionary(uniqueKeysWithValues: ids.map { ($1, $0) })
+        var found = 0
+        var listed = 0
+        var labeled = 0
+        for note in corpus.notes {
+            let related = finder.related(to: ids[note.id]!, limit: 3).compactMap { names[$0.note.id] }
+            listed += related.count
+            labeled += related.filter { pairs.contains([note.id, $0]) }.count
+            found += pairs.filter { $0[0] == note.id && related.contains($0[1]) }.count
+        }
+        return (Double(found) / Double(pairs.count), listed > 0 ? Double(labeled) / Double(listed) : 0, listed)
+    }
+
+    @Test("Notes that belong together are listed as related", .enabled(if: contextualModelInstalled))
+    func relatedNotes() {
+        let corpus = SearchCorpus.shared
+        let (index, ids) = corpus.index(embedder: ContextualSentenceEmbedder())
+        let result = Self.evaluate(index, ids: ids, corpus: corpus, finder: RelatedNotesFinder(index: index))
+        #expect(result.recallAt3 >= QualityLevels.relatedRecallAt3, "found \(result.recallAt3)")
+        #expect(result.precision >= QualityLevels.relatedPrecision, "precision \(result.precision)")
     }
 }
 
@@ -419,9 +461,22 @@ struct ChapterQualityTests {
 /// The levels the analysis reaches today (docs/Quality.md). Raise them when it improves;
 /// lowering one needs a reason in the commit.
 private enum QualityLevels {
-    /// Without Apple Intelligence's query expansion (as in tests), a note only matches with a
-    /// full-text hit; meaning vectors only reorder. Paraphrases are therefore mostly missed.
-    static let paraphraseRecallAt3 = 0.2
+    // Search on SearchEvaluationCorpus.json, without Apple Intelligence's query expansion.
+    /// Measured 0.96 (coverage alone, no meaning vectors).
+    static let fullTextRecallAt1 = 0.9
+    /// Measured 0.25: a question no note answers still shares a rare word with some note.
+    static let fullTextFalseHits = 0.25
+    /// Measured 0.96 with meaning vectors.
+    static let lexicalRecallAt1 = 0.9
+    /// Measured 0.46 / 0.58 / 0.52 for questions in other words (full text alone: 0.23 / 0.29 / 0.27).
+    static let paraphraseRecallAt1 = 0.4
+    static let paraphraseRecallAt3 = 0.5
+    static let paraphraseMRR = 0.45
+    /// Measured 0.125 (one of eight questions). Only eight such questions: one more is allowed.
+    static let falseHits = 0.25
+    /// Measured 0.44 / 0.20 (previous relative score with sentence embeddings: 0.22 / 0.13).
+    static let relatedRecallAt3 = 0.4
+    static let relatedPrecision = 0.18
     /// Measured 0.059 on the synthesized conversation.
     static let diarizationErrorRate = 0.1
     static let deadlineAccuracy = 1.0

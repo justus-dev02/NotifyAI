@@ -1,0 +1,415 @@
+{
+  "about": "Labeled data for the search and related-notes quality tests (QualityEvaluationTests, docs/Quality.md). Notes are transcripts in everyday spoken language; several share a domain on purpose (two job interviews, two lectures, two customer meetings) so that a topic alone does not identify the answer. Queries: 'lexical' uses the note's own words, 'paraphrase' other words for the same thing, 'crosslingual' asks in English about a German note (or the other way round), 'negative' is answered by no note. 'related' lists notes that belong together without sharing their key words.",
+  "notes": [
+    {
+      "id": "marketing",
+      "title": "Marketing-Runde",
+      "language": "de",
+      "sentences": [
+        "Okay, dann fangen wir mit der Herbstkampagne an.",
+        "Das Budget liegt bei zwölftausend Euro, das ist schon freigegeben.",
+        "Die Anzeigen auf Instagram sollen am fünfzehnten Oktober starten.",
+        "Ben stimmt die Motive bis Mittwoch mit der Agentur ab.",
+        "Für TikTok haben wir dieses Jahr nichts eingeplant, das war letztes Mal zu teuer pro Klick.",
+        "Die Landingpage braucht noch einen neuen Text für das Gewinnspiel."
+      ]
+    },
+    {
+      "id": "budget2027",
+      "title": "Budgetplanung 2027",
+      "language": "de",
+      "sentences": [
+        "Für nächstes Jahr müssen wir insgesamt etwa zehn Prozent einsparen.",
+        "Die Geschäftsführung möchte vor allem bei der Werbung kürzen, Messen fallen komplett weg.",
+        "Zwei neue Stellen im Vertrieb sind trotzdem genehmigt.",
+        "Die neuen Laptops für das Entwicklungsteam verschieben wir ins zweite Halbjahr.",
+        "Den Entwurf bekommt der Aufsichtsrat Anfang Dezember."
+      ]
+    },
+    {
+      "id": "quartal",
+      "title": "Quartalszahlen",
+      "language": "de",
+      "sentences": [
+        "Kurz zu den Zahlen vom dritten Quartal.",
+        "Der Umsatz lag bei zwei Komma vier Millionen Euro.",
+        "Der Gewinn ist um acht Prozent gestiegen, vor allem wegen der Wartungsverträge.",
+        "Die Kosten für Server sind leider deutlich höher als geplant.",
+        "Für das vierte Quartal rechnen wir mit einem leichten Wachstum."
+      ]
+    },
+    {
+      "id": "mueller1",
+      "title": "Kundengespräch Müller",
+      "language": "de",
+      "sentences": [
+        "Frau Kaiser vom Einkauf bei Müller Maschinenbau war heute da.",
+        "Sie brauchen zweihundert Sensoren für die neue Produktionslinie.",
+        "Unser Angebot liegt bei achtundvierzigtausend Euro.",
+        "Die Lieferzeit beträgt sechs Wochen ab Bestellung.",
+        "Sie möchten bis Freitag eine verbindliche Rückmeldung von uns."
+      ]
+    },
+    {
+      "id": "mueller2",
+      "title": "Nachverhandlung Sensoren",
+      "language": "de",
+      "sentences": [
+        "Frau Kaiser hat zurückgerufen, ihnen ist der Preis zu hoch.",
+        "Wir können ihnen fünf Prozent Nachlass anbieten, mehr geht nicht.",
+        "Dafür liefern wir in zwei Teilen, die erste Hälfte schon nach drei Wochen.",
+        "Bei Verspätung wollen sie eine Vertragsstrafe, das muss die Rechtsabteilung prüfen."
+      ]
+    },
+    {
+      "id": "sprint",
+      "title": "Sprint-Planung",
+      "language": "de",
+      "sentences": [
+        "Das Release der App ist für den zwanzigsten Oktober geplant.",
+        "Vorher muss unbedingt der Fehler beim Login behoben werden, da hängt die Seite nach dem Passwort.",
+        "Lena übernimmt das Ticket, Tom macht das Code-Review.",
+        "Tickets ohne Schätzung kommen in den nächsten Sprint.",
+        "Die Dunkelmodus-Funktion schieben wir auf November."
+      ]
+    },
+    {
+      "id": "incident",
+      "title": "Nachbesprechung Ausfall",
+      "language": "de",
+      "sentences": [
+        "Am Dienstagabend konnte sich zwei Stunden lang niemand anmelden.",
+        "Die Ursache war ein abgelaufenes Zertifikat beim Identitätsanbieter.",
+        "Die Überwachung hat nicht angeschlagen, weil der Statuscheck nur die Startseite prüft.",
+        "Wir richten eine Warnung dreißig Tage vor Ablauf ein.",
+        "Außerdem schreiben wir eine kurze Anleitung, wer nachts zuständig ist."
+      ]
+    },
+    {
+      "id": "database",
+      "title": "Architektur Datenbank",
+      "language": "de",
+      "sentences": [
+        "Wir überlegen, von MySQL auf Postgres umzuziehen.",
+        "Hauptgrund sind die besseren Volltextfunktionen und die JSON-Spalten.",
+        "Die Migration würde ungefähr drei Wochen dauern.",
+        "Backups laufen bisher nur einmal am Tag, das reicht nicht.",
+        "Die monatlichen Kosten in der Cloud würden um etwa vierhundert Euro steigen."
+      ]
+    },
+    {
+      "id": "interview_frontend",
+      "title": "Bewerbungsgespräch Frontend",
+      "language": "de",
+      "sentences": [
+        "Die Kandidatin hat fünf Jahre Erfahrung mit React und TypeScript.",
+        "Vorher war sie bei einer Agentur und hat viele Onlineshops gebaut.",
+        "Ihre Gehaltsvorstellung liegt bei fünfundsechzigtausend Euro.",
+        "Sie könnte im Januar anfangen und möchte zwei Tage pro Woche ins Büro kommen.",
+        "Der Eindruck war sehr gut, vor allem bei der Barrierefreiheit kennt sie sich aus."
+      ]
+    },
+    {
+      "id": "interview_backend",
+      "title": "Bewerbungsgespräch Backend",
+      "language": "de",
+      "sentences": [
+        "Der Bewerber programmiert seit acht Jahren in Go und Java.",
+        "Er hat Erfahrung mit Kubernetes und hat bei einer Bank gearbeitet.",
+        "Er möchte komplett von zu Hause arbeiten, weil er in Leipzig wohnt.",
+        "Er verlangt achtzigtausend Euro im Jahr.",
+        "Fachlich stark, aber bei der Teamarbeit waren wir uns nicht sicher."
+      ]
+    },
+    {
+      "id": "doctor",
+      "title": "Arzttermin",
+      "language": "de",
+      "sentences": [
+        "Der Blutdruck war mit hundertfünfunddreißig zu fünfundachtzig leicht erhöht.",
+        "Die Ärztin hat Ramipril verschrieben, morgens eine Tablette.",
+        "Ich soll weniger Salz essen und mehr spazieren gehen.",
+        "Die nächste Kontrolle ist in drei Monaten."
+      ]
+    },
+    {
+      "id": "pharmacy",
+      "title": "Rückruf Praxis",
+      "language": "de",
+      "sentences": [
+        "Seit ich die neuen Tabletten nehme, habe ich so einen trockenen Reizhusten.",
+        "Die Praxis sagt, das ist eine bekannte Nebenwirkung von diesem Mittel.",
+        "Ich bekomme stattdessen Candesartan, das Rezept liegt ab morgen bereit.",
+        "Den Druck soll ich weiter jeden Abend messen und aufschreiben."
+      ]
+    },
+    {
+      "id": "physio",
+      "title": "Physiotherapie Knie",
+      "language": "de",
+      "sentences": [
+        "Der Meniskus ist nur leicht angerissen, operieren muss man nicht.",
+        "Ich habe sechs Termine Physiotherapie verschrieben bekommen.",
+        "Die Übungen mit dem Gummiband soll ich jeden Tag zehn Minuten machen.",
+        "Joggen erst wieder, wenn das Knie nicht mehr dick wird."
+      ]
+    },
+    {
+      "id": "moving",
+      "title": "Umzug",
+      "language": "de",
+      "sentences": [
+        "Der Transporter ist für Samstag um acht Uhr reserviert.",
+        "Wir brauchen noch vierzig Umzugskartons und Klebeband.",
+        "Die alte Wohnung muss bis Ende November gekündigt werden, sonst zahlen wir doppelt.",
+        "Jonas und Mia helfen beim Tragen, dafür gibt es Pizza."
+      ]
+    },
+    {
+      "id": "viewing",
+      "title": "Wohnungsbesichtigung",
+      "language": "de",
+      "sentences": [
+        "Die Wohnung in der Lindenstraße hat drei Zimmer und einen Balkon nach Süden.",
+        "Kalt kostet sie elfhundert Euro, dazu kommen zweihundertzwanzig Euro Nebenkosten.",
+        "Die Kaution beträgt drei Monatsmieten.",
+        "Der Vermieter will bis Montag eine Selbstauskunft und die letzten Gehaltsnachweise.",
+        "Einziehen könnten wir ab dem ersten Dezember."
+      ]
+    },
+    {
+      "id": "tenancy_law",
+      "title": "Beratung Mieterverein",
+      "language": "de",
+      "sentences": [
+        "Die Abrechnung für letztes Jahr kam erst im Februar, also fast vierzehn Monate zu spät.",
+        "Laut Beraterin muss der Vermieter innerhalb von zwölf Monaten abrechnen, sonst darf er nichts nachfordern.",
+        "Die Nachzahlung von sechshundert Euro müssen wir deshalb nicht leisten.",
+        "Wir schicken einen Widerspruch per Einschreiben."
+      ]
+    },
+    {
+      "id": "team_event",
+      "title": "Teamausflug",
+      "language": "de",
+      "sentences": [
+        "Der Teamausflug geht dieses Jahr in die Kletterhalle am Ostbahnhof.",
+        "Termin ist der neunte Oktober um sechzehn Uhr.",
+        "Anmeldungen bitte bis Montag an Lisa.",
+        "Danach gehen wir zusammen essen, die Firma zahlt."
+      ]
+    },
+    {
+      "id": "wedding",
+      "title": "Hochzeitsplanung",
+      "language": "de",
+      "sentences": [
+        "Die Feier ist im Gutshof an der Elbe, wir haben den dritten Juni bekommen.",
+        "Wir rechnen mit ungefähr neunzig Gästen.",
+        "Das Catering kostet pro Person fünfundsiebzig Euro ohne Getränke.",
+        "Die Band muss noch bestätigt werden, sonst nehmen wir einen DJ."
+      ]
+    },
+    {
+      "id": "school",
+      "title": "Elternabend",
+      "language": "de",
+      "sentences": [
+        "Die Klassenfahrt geht im Mai für fünf Tage an die Ostsee.",
+        "Sie kostet pro Kind dreihundertzwanzig Euro, Zuschüsse kann man beim Förderverein beantragen.",
+        "Ab nächster Woche gilt in den Pausen ein Handyverbot.",
+        "Gesucht werden noch zwei Eltern für den Kuchenverkauf beim Sommerfest."
+      ]
+    },
+    {
+      "id": "statistics",
+      "title": "Vorlesung Statistik",
+      "language": "de",
+      "sentences": [
+        "Die Varianz beschreibt die Streuung einer Zufallsvariable um ihren Erwartungswert.",
+        "Die Standardabweichung ist die Wurzel aus der Varianz und hat dieselbe Einheit wie die Daten.",
+        "In der Klausur kommt auf jeden Fall die Normalverteilung dran.",
+        "Übungsblatt vier ist bis Donnerstag abzugeben."
+      ]
+    },
+    {
+      "id": "machine_learning",
+      "title": "Vorlesung Maschinelles Lernen",
+      "language": "de",
+      "sentences": [
+        "Heute geht es um Überanpassung, also wenn ein Modell die Trainingsdaten auswendig lernt.",
+        "Dagegen hilft Regularisierung, zum Beispiel ein Strafterm auf große Gewichte.",
+        "Mit Kreuzvalidierung schätzt man, wie gut das Modell auf neuen Daten ist.",
+        "Das Projekt soll in Zweiergruppen bis Ende Januar fertig sein."
+      ]
+    },
+    {
+      "id": "privacy",
+      "title": "Datenschutz-Workshop",
+      "language": "de",
+      "sentences": [
+        "Für den Newsletter brauchen wir eine nachweisbare Einwilligung nach DSGVO.",
+        "Bewerbungsunterlagen werden nach sechs Monaten gelöscht, wenn niemand eingestellt wurde.",
+        "Das Verzeichnis der Verarbeitungstätigkeiten wird bis Jahresende aktualisiert.",
+        "Für das neue Videotool brauchen wir einen Vertrag zur Auftragsverarbeitung."
+      ]
+    },
+    {
+      "id": "taxes",
+      "title": "Termin Steuerberaterin",
+      "language": "de",
+      "sentences": [
+        "Für das Arbeitszimmer setzen wir die Pauschale von sechs Euro pro Tag an.",
+        "Die Belege für die Fortbildung und den neuen Bürostuhl fehlen noch.",
+        "Die Erklärung muss bis Ende Juli beim Finanzamt sein.",
+        "Voraussichtlich gibt es rund neunhundert Euro zurück."
+      ]
+    },
+    {
+      "id": "garage",
+      "title": "Werkstatt",
+      "language": "de",
+      "sentences": [
+        "Die vorderen Bremsscheiben und Beläge sind fast runter.",
+        "Der Kostenvoranschlag liegt bei vierhundertachtzig Euro inklusive Arbeitszeit.",
+        "Ohne neue Bremsen bekommen wir keine TÜV-Plakette.",
+        "Das Auto kann ich Donnerstagnachmittag wieder abholen."
+      ]
+    },
+    {
+      "id": "acme",
+      "title": "Sales call Acme",
+      "language": "en",
+      "sentences": [
+        "Acme wants to roll out our scheduling software to three warehouses.",
+        "They asked for single sign-on with their Microsoft accounts.",
+        "Pricing would be twelve dollars per user and month for four hundred users.",
+        "Their IT team needs a security questionnaire before the end of the month."
+      ]
+    }
+  ],
+  "queries": [
+    { "text": "Wie hoch ist das Budget der Herbstkampagne?", "relevant": ["marketing"], "kind": "lexical" },
+    { "text": "Wie viel Geld haben wir für die Werbung im Herbst?", "relevant": ["marketing"], "kind": "paraphrase" },
+    { "text": "Wer kümmert sich um die Gestaltung der Werbebilder mit der Kreativfirma?", "relevant": ["marketing"], "kind": "paraphrase" },
+
+    { "text": "Wo will die Geschäftsführung nächstes Jahr kürzen?", "relevant": ["budget2027"], "kind": "lexical" },
+    { "text": "Bei welchen Ausgaben wird 2027 gespart?", "relevant": ["budget2027"], "kind": "paraphrase" },
+    { "text": "Bekommt der Vertrieb zusätzliche Leute?", "relevant": ["budget2027"], "kind": "paraphrase" },
+
+    { "text": "Wie hoch war der Umsatz im dritten Quartal?", "relevant": ["quartal"], "kind": "lexical" },
+    { "text": "Wie hat sich der Profit entwickelt?", "relevant": ["quartal"], "kind": "paraphrase" },
+    { "text": "Warum sind die Ausgaben für die Rechenzentren gestiegen?", "relevant": ["quartal"], "kind": "paraphrase" },
+
+    { "text": "Welches Angebot bekommt Müller Maschinenbau?", "relevant": ["mueller1"], "kind": "lexical" },
+    { "text": "Wie lange dauert es, bis der Kunde die Ware bekommt?", "relevant": ["mueller1"], "kind": "paraphrase" },
+    { "text": "Wie viele Messfühler braucht der Maschinenbauer?", "relevant": ["mueller1"], "kind": "paraphrase" },
+
+    { "text": "Wie viel Nachlass können wir bei den Sensoren geben?", "relevant": ["mueller2"], "kind": "lexical" },
+    { "text": "Welchen Rabatt bieten wir dem Kunden an?", "relevant": ["mueller2"], "kind": "paraphrase" },
+    { "text": "Was passiert, wenn wir zu spät liefern?", "relevant": ["mueller2"], "kind": "paraphrase" },
+
+    { "text": "Wann ist das Release der App?", "relevant": ["sprint"], "kind": "lexical" },
+    { "text": "Wann veröffentlichen wir die neue Version?", "relevant": ["sprint"], "kind": "paraphrase" },
+    { "text": "Wer prüft den Programmcode für die Korrektur?", "relevant": ["sprint"], "kind": "paraphrase" },
+
+    { "text": "Warum ist das Zertifikat abgelaufen?", "relevant": ["incident"], "kind": "lexical" },
+    { "text": "Warum konnten sich die Nutzer nicht einloggen?", "relevant": ["incident"], "kind": "paraphrase" },
+    { "text": "Warum hat das Monitoring keinen Alarm gegeben?", "relevant": ["incident"], "kind": "paraphrase" },
+
+    { "text": "Wollen wir von MySQL auf Postgres umziehen?", "relevant": ["database"], "kind": "lexical" },
+    { "text": "Wie oft werden die Daten gesichert?", "relevant": ["database"], "kind": "paraphrase" },
+    { "text": "Was kostet der Wechsel des Datenbanksystems im Monat mehr?", "relevant": ["database"], "kind": "paraphrase" },
+
+    { "text": "Welche Gehaltsvorstellung hat die Kandidatin?", "relevant": ["interview_frontend"], "kind": "lexical" },
+    { "text": "Welche Programmiersprachen beherrscht die Bewerberin?", "relevant": ["interview_frontend"], "kind": "paraphrase" },
+    { "text": "Ab wann kann die Frau bei uns starten?", "relevant": ["interview_frontend"], "kind": "paraphrase" },
+
+    { "text": "Wie viel verlangt der Bewerber für Go und Java?", "relevant": ["interview_backend"], "kind": "lexical" },
+    { "text": "Will der Kandidat aus Leipzig ins Büro kommen?", "relevant": ["interview_backend"], "kind": "paraphrase" },
+    { "text": "Welche Bedenken hatten wir beim Entwickler wegen der Zusammenarbeit?", "relevant": ["interview_backend"], "kind": "paraphrase" },
+
+    { "text": "Welches Medikament wurde verschrieben?", "relevant": ["doctor"], "kind": "lexical" },
+    { "text": "Wie waren die Werte beim Doktor?", "relevant": ["doctor"], "kind": "paraphrase" },
+    { "text": "Was soll ich an meiner Ernährung ändern?", "relevant": ["doctor"], "kind": "paraphrase" },
+
+    { "text": "Welche Nebenwirkung haben die neuen Tabletten?", "relevant": ["pharmacy"], "kind": "lexical" },
+    { "text": "Warum muss ich husten?", "relevant": ["pharmacy"], "kind": "paraphrase" },
+    { "text": "Welches Präparat ersetzt das alte Mittel?", "relevant": ["pharmacy"], "kind": "paraphrase" },
+
+    { "text": "Muss der Meniskus operiert werden?", "relevant": ["physio"], "kind": "lexical" },
+    { "text": "Wann darf ich wieder laufen gehen?", "relevant": ["physio"], "kind": "paraphrase" },
+    { "text": "Wie oft soll ich die Gymnastik für das Bein machen?", "relevant": ["physio"], "kind": "paraphrase" },
+
+    { "text": "Wann ist der Transporter reserviert?", "relevant": ["moving"], "kind": "lexical" },
+    { "text": "Bis wann müssen wir den Mietvertrag beenden?", "relevant": ["moving"], "kind": "paraphrase" },
+    { "text": "Wer hilft beim Möbelschleppen?", "relevant": ["moving"], "kind": "paraphrase" },
+
+    { "text": "Wie hoch ist die Kaution für die Wohnung in der Lindenstraße?", "relevant": ["viewing"], "kind": "lexical" },
+    { "text": "Was kostet die neue Bleibe im Monat?", "relevant": ["viewing"], "kind": "paraphrase" },
+    { "text": "Welche Unterlagen will der Eigentümer sehen?", "relevant": ["viewing"], "kind": "paraphrase" },
+
+    { "text": "Müssen wir die Nachzahlung der Nebenkosten leisten?", "relevant": ["tenancy_law"], "kind": "lexical" },
+    { "text": "Darf der Vermieter so spät noch Geld verlangen?", "relevant": ["tenancy_law"], "kind": "paraphrase" },
+    { "text": "Wie legen wir Einspruch gegen die Abrechnung ein?", "relevant": ["tenancy_law"], "kind": "paraphrase" },
+
+    { "text": "Wohin geht der Teamausflug?", "relevant": ["team_event"], "kind": "lexical" },
+    { "text": "Bei wem melde ich mich zum Klettern an?", "relevant": ["team_event"], "kind": "paraphrase" },
+    { "text": "Wer bezahlt das Abendessen nach dem Firmenevent?", "relevant": ["team_event"], "kind": "paraphrase" },
+
+    { "text": "Wie viele Gäste kommen zur Hochzeit?", "relevant": ["wedding"], "kind": "lexical" },
+    { "text": "Was kostet die Verpflegung pro Kopf bei der Feier?", "relevant": ["wedding"], "kind": "paraphrase" },
+    { "text": "Haben wir schon Musiker für das Fest?", "relevant": ["wedding"], "kind": "paraphrase" },
+
+    { "text": "Was kostet die Klassenfahrt?", "relevant": ["school"], "kind": "lexical" },
+    { "text": "Wohin reisen die Schüler im Frühjahr?", "relevant": ["school"], "kind": "paraphrase" },
+    { "text": "Dürfen die Kinder in der Schule ihr Smartphone benutzen?", "relevant": ["school"], "kind": "paraphrase" },
+
+    { "text": "Was ist die Standardabweichung?", "relevant": ["statistics"], "kind": "lexical" },
+    { "text": "Wie stark schwanken die Werte um den Mittelwert?", "relevant": ["statistics"], "kind": "paraphrase" },
+    { "text": "Was kommt in der Prüfung sicher vor?", "relevant": ["statistics"], "kind": "paraphrase" },
+
+    { "text": "Was hilft gegen Überanpassung?", "relevant": ["machine_learning"], "kind": "lexical" },
+    { "text": "Wie verhindert man, dass ein Modell nur auswendig lernt?", "relevant": ["machine_learning"], "kind": "paraphrase" },
+    { "text": "Wie prüft man, ob ein Algorithmus auf unbekannten Beispielen funktioniert?", "relevant": ["machine_learning"], "kind": "paraphrase" },
+
+    { "text": "Brauchen wir für den Newsletter eine Einwilligung?", "relevant": ["privacy"], "kind": "lexical" },
+    { "text": "Wann werden Bewerbungen vernichtet?", "relevant": ["privacy"], "kind": "paraphrase" },
+    { "text": "Was müssen wir mit dem Anbieter der Videokonferenzen vertraglich regeln?", "relevant": ["privacy"], "kind": "paraphrase" },
+
+    { "text": "Bis wann muss die Erklärung beim Finanzamt sein?", "relevant": ["taxes"], "kind": "lexical" },
+    { "text": "Wie viel Geld bekomme ich vom Staat zurück?", "relevant": ["taxes"], "kind": "paraphrase" },
+    { "text": "Was kann ich für das Homeoffice absetzen?", "relevant": ["taxes"], "kind": "paraphrase" },
+
+    { "text": "Was kostet die Reparatur der Bremsen?", "relevant": ["garage"], "kind": "lexical" },
+    { "text": "Warum bestehe ich die Hauptuntersuchung nicht?", "relevant": ["garage"], "kind": "paraphrase" },
+    { "text": "Wann ist mein Wagen fertig?", "relevant": ["garage"], "kind": "paraphrase" },
+
+    { "text": "What does Acme pay per user?", "relevant": ["acme"], "kind": "lexical" },
+    { "text": "Welche Anmeldung wünscht sich der Kunde für die Lagersoftware?", "relevant": ["acme"], "kind": "crosslingual" },
+    { "text": "Which side effect do the new pills cause?", "relevant": ["pharmacy"], "kind": "crosslingual" },
+    { "text": "How much is the deposit for the apartment?", "relevant": ["viewing"], "kind": "crosslingual" },
+    { "text": "Why could nobody log in on Tuesday?", "relevant": ["incident"], "kind": "crosslingual" },
+    { "text": "What salary does the frontend candidate expect?", "relevant": ["interview_frontend"], "kind": "crosslingual" },
+
+    { "text": "Wie heißt der neue Hund vom Nachbarn?", "relevant": [], "kind": "negative" },
+    { "text": "Welche Aktien wollen wir kaufen?", "relevant": [], "kind": "negative" },
+    { "text": "Wann fliegen wir in den Urlaub nach Spanien?", "relevant": [], "kind": "negative" },
+    { "text": "Welche Farbe bekommt das Kinderzimmer?", "relevant": [], "kind": "negative" },
+    { "text": "Wie war das Fußballspiel am Wochenende?", "relevant": [], "kind": "negative" },
+    { "text": "Welches Rezept kochen wir an Weihnachten?", "relevant": [], "kind": "negative" },
+    { "text": "Wer gewinnt die Bundestagswahl?", "relevant": [], "kind": "negative" },
+    { "text": "Wie installiere ich einen Drucker unter Windows?", "relevant": [], "kind": "negative" }
+  ],
+  "related": [
+    ["mueller1", "mueller2"],
+    ["sprint", "incident"],
+    ["doctor", "pharmacy"],
+    ["moving", "viewing"],
+    ["viewing", "tenancy_law"],
+    ["marketing", "budget2027"],
+    ["quartal", "budget2027"],
+    ["statistics", "machine_learning"],
+    ["interview_frontend", "interview_backend"]
+  ]
+}

@@ -264,21 +264,26 @@ struct ContentRevisionTests {
 
         note.summary = NoteSummary(overview: "Kurz", actionItems: [ActionItem(task: "Folien bauen")], source: .extractive)
         #expect(note.contentRevision == initial + 1)
-        let fingerprint = IndexableNote.fingerprint(of: note)
+        let fingerprint = IndexableNote.fingerprint(of: note, embeddingSpace: "space")
 
         let task = try #require(note.sortedTasks.first)
         task.isDone = true
         #expect(note.summary?.actionItems.first?.isDone == true)
         #expect(note.contentRevision == initial + 1)
-        #expect(IndexableNote.fingerprint(of: note) == fingerprint)
+        #expect(IndexableNote.fingerprint(of: note, embeddingSpace: "space") == fingerprint)
 
         note.bodyText = "Neuer Text"
         #expect(note.contentRevision == initial + 2)
         #expect(note.textLength == 10)
-        #expect(IndexableNote.fingerprint(of: note) != fingerprint)
+        #expect(IndexableNote.fingerprint(of: note, embeddingSpace: "space") != fingerprint)
 
         note.isFavorite = true
-        #expect(IndexableNote.fingerprint(of: note) != fingerprint)
+        #expect(IndexableNote.fingerprint(of: note, embeddingSpace: "space") != fingerprint)
+
+        // Installing or updating the embedding model indexes every note again.
+        let current = IndexableNote.fingerprint(of: note, embeddingSpace: "space")
+        #expect(IndexableNote.fingerprint(of: note, embeddingSpace: "other space") != current)
+        #expect(IndexableNote.fingerprint(of: note, embeddingSpace: nil) != current)
     }
 
     @Test("Deleting a note deletes its text")

@@ -1491,6 +1491,26 @@
         }
       }
     },
+    "Das Modell ist gerade nicht verfügbar. Versuche es später erneut." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model is not available right now. Try again later."
+          }
+        }
+      }
+    },
+    "Das Modell konnte nicht geladen werden: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model could not be downloaded: %@"
+          }
+        }
+      }
+    },
     "Das Modell wird einmalig von Hugging Face geladen und danach ausschließlich lokal ausgeführt. Deine Aufnahmen werden nie hochgeladen." : {
       "localizations" : {
         "en" : {
@@ -2077,6 +2097,16 @@
         }
       }
     },
+    "Ein Sprachmodell von Apple erkennt, was gemeint ist, auch wenn eine Frage andere Worte benutzt als die Notiz, und findet zusammengehörige Notizen. Es wird einmalig von Apple geladen und läuft danach ohne Internet auf diesem Gerät. Nach dem Laden werden alle Notizen im Hintergrund neu durchsucht." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A language model from Apple recognizes what is meant, even when a question uses other words than the note, and finds notes that belong together. It is downloaded once from Apple and then runs on this device without internet. After the download, all notes are indexed again in the background."
+          }
+        }
+      }
+    },
     "Eine Aufnahme ist schon älter und verliert sofort ihre Audiodatei. Transkript, Zusammenfassung und Aufgaben bleiben erhalten; Favoriten behalten ihre Aufnahme." : {
       "localizations" : {
         "en" : {
@@ -2444,6 +2474,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove filler words"
+          }
+        }
+      }
+    },
+    "Für %@ sucht NotifyAI nur nach Wörtern." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %@, NotifyAI searches by words only."
           }
         }
       }
@@ -4710,6 +4750,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rename Voice"
+          }
+        }
+      }
+    },
+    "Suche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        }
+      }
+    },
+    "Suche nach Bedeutung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search by meaning"
           }
         }
       }

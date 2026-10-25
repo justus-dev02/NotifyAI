@@ -92,8 +92,11 @@ private enum Fixture {
         summary: NoteSummary(overview: "Stand der Herbstkampagne.", source: .appleIntelligence, keywords: ["Herbstkampagne", "Agentur"])
     )
 
-    static func index(_ notes: [IndexableNote] = [budgetMeeting, lecture, followUp]) -> KnowledgeIndex {
-        let builder = KnowledgeIndexBuilder(embedder: SentenceEmbedder())
+    static func index(
+        _ notes: [IndexableNote] = [budgetMeeting, lecture, followUp],
+        embedder: any SentenceEmbedding = SentenceEmbedder()
+    ) -> KnowledgeIndex {
+        let builder = KnowledgeIndexBuilder(embedder: embedder)
         var index = KnowledgeIndex()
         for note in notes {
             index.notes[note.id] = builder.entry(for: note)
@@ -209,9 +212,11 @@ struct RetrievalTests {
         #expect(result.notes.map(\.note.title) == ["Vorlesung Statistik", "Kampagne Abstimmung", "Marketing-Runde"])
     }
 
-    @Test("Semantic search finds a passage with different words", .enabled(if: SentenceEmbedder().supports(languageCode: "de")))
+    @Test("Semantic search finds a passage with different words",
+          .enabled(if: ContextualSentenceEmbedder().modelStatus(for: "de") == .installed))
     func semanticSearch() {
-        let retriever = HybridRetriever(index: Fixture.index(), embedder: SentenceEmbedder())
+        let embedder = ContextualSentenceEmbedder()
+        let retriever = HybridRetriever(index: Fixture.index(embedder: embedder), embedder: embedder)
         let result = retriever.search(SearchRequest(text: "Wie viel Geld steht für die Werbung zur Verfügung?", languageCode: "de"))
         #expect(result.passages.prefix(3).contains { $0.note.title == "Marketing-Runde" || $0.note.title == "Kampagne Abstimmung" })
     }
