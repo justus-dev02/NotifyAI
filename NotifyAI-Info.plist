@@ -12,6 +12,9 @@
 		<string>com.justus.NotifyAI.processing.overnight</string>
 		<string>com.justus.NotifyAI.processing.continued.*</string>
 	</array>
+	<!-- Nur HTTPS (Modell-Downloads, Notion, Webhooks): von der Exportkontrolle ausgenommen, App Store Connect fragt nicht nach. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>CFBundleURLTypes</key>

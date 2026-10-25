@@ -1,0 +1,54 @@
+# Veröffentlicht die Website (website/) über GitHub Pages: Download der Mac-App, Datenschutz, Impressum.
+# Läuft auf einer GitHub-Maschine, nicht auf dem eigenen Mac: Es wird nichts gebaut, nur statische Dateien
+# hochgeladen. Für öffentliche Repositories kostet das nichts.
+#
+# Einmalig: GitHub → Settings → Pages → Source: „GitHub Actions“.
+
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths: ['website/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Impressum und Datenschutzerklärung sind Pflicht. Mit Platzhaltern geht die Seite nicht online.
+      - name: Platzhalter und tote Links prüfen
+        run: |
+          if grep -nE "BITTE AUSFÜLLEN|BITTE-AUSFUELLEN" website/*.html; then
+              echo "::error::website/ enthält noch Platzhalter (siehe oben). Name, Anschrift und E-Mail eintragen."
+              exit 1
+          fi
+          missing=0
+          for f in website/*.html; do
+              while read -r ref; do
+                  [[ -e "website/${ref%%#*}" ]] || { echo "::error file=$f::Verweis auf fehlende Datei: $ref"; missing=1; }
+              done < <(grep -oE '(href|src)="[^"]+"' "$f" | sed -E 's/^(href|src)="//; s/"$//' | grep -vE '^#|:|/$' || true)
+          done
+          exit "$missing"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+      - id: deployment
+        uses: actions/deploy-pages@v4

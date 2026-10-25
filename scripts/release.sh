@@ -1,30 +1,35 @@
 #!/usr/bin/env bash
 #
-# Baut ein Release von NotifyAI für macOS und trägt es in den Update-Feed (appcast.xml) ein.
+# Baut ein Release von NotifyAI für macOS (Download von der Website) und trägt es in den Update-Feed ein.
 #
-#   scripts/release.sh 0.2.0              bauen, ZIP signieren, appcast.xml ergänzen
+#   scripts/release.sh 0.2.0              bauen, signieren, notarisieren, ZIP + DMG, appcast.xml ergänzen
 #   scripts/release.sh 0.2.0 --publish    zusätzlich Tag, GitHub-Release und appcast.xml pushen (braucht `gh`)
+#   scripts/release.sh 0.2.0 --check      nur die Voraussetzungen prüfen, nichts bauen (Sekunden statt Minuten)
 #
 # Optionen:
 #   --ed-key-file DATEI   privaten Sparkle-Schlüssel aus einer Datei statt aus dem Schlüsselbund lesen (z. B. für CI)
 #
-# Voraussetzungen: sauberer Git-Stand, release-notes/<version>.md, SUPublicEDKey in NotifyAI-macOS-Info.plist.
-# Die App wird ad-hoc signiert (ohne Developer ID). Für Updates zählt die EdDSA-Signatur von Sparkle.
+# Voraussetzungen: sauberer Git-Stand, release-notes/<version>.md, SUPublicEDKey in NotifyAI-macOS-Info.plist,
+# Developer-ID-Zertifikat, Notarisierungs-Zugang (siehe docs/Publishing.md). Anmeldung bei Apple entweder über
+# das Schlüsselbund-Profil NOTARY_PROFILE (Standard: NotifyAI-Notary) oder über einen App-Store-Connect-API-Schlüssel
+# in ASC_KEY_PATH, ASC_KEY_ID und ASC_ISSUER_ID.
 
 set -euo pipefail
 
 usage() {
-    sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
 }
 
 [[ $# -ge 1 ]] || usage
 VERSION="$1"; shift
 PUBLISH=0
+CHECK_ONLY=0
 KEY_FILE=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --publish) PUBLISH=1 ;;
+        --check) CHECK_ONLY=1 ;;
         --ed-key-file) KEY_FILE="${2:?--ed-key-file braucht einen Pfad}"; shift ;;
         *) usage ;;
     esac
@@ -45,7 +50,14 @@ NOTES="release-notes/$VERSION.md"
 INFO_PLIST="NotifyAI-macOS-Info.plist"
 OUT="build/release"
 DERIVED="$OUT/DerivedData"
+ARCHIVE="$OUT/NotifyAI.xcarchive"
+EXPORT="$OUT/export"
 ZIP="$OUT/NotifyAI-$VERSION.zip"
+DMG="$OUT/NotifyAI-$VERSION.dmg"
+# Fester Name für den Download-Link der Website: …/releases/latest/download/NotifyAI.dmg
+DMG_LATEST="$OUT/NotifyAI.dmg"
+EXPORT_OPTIONS="scripts/ExportOptions-macOS.plist"
+TEAM_ID="$(/usr/libexec/PlistBuddy -c 'Print :teamID' "$EXPORT_OPTIONS")"
 
 # github.com/<owner>/<repo> aus dem Remote, egal ob HTTPS oder SSH.
 REPO_URL="$(git remote get-url origin | sed -E 's#^git@github\.com:#https://github.com/#; s#\.git$##')"
@@ -54,6 +66,15 @@ DOWNLOAD_URL="$REPO_URL/releases/download/$TAG/NotifyAI-$VERSION.zip"
 
 # Sparkle vergleicht die Build-Nummer. Die Anzahl der Commits steigt mit jedem Release.
 BUILD_NUMBER="$(git rev-list --count HEAD)"
+
+# Anmeldung bei Apple: API-Schlüssel (z. B. CI) oder Schlüsselbund-Profil von `notarytool store-credentials`.
+XCODE_AUTH=()
+if [[ -n "${ASC_KEY_PATH:-}" ]]; then
+    XCODE_AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "${ASC_KEY_ID:?ASC_KEY_ID fehlt}" -authenticationKeyIssuerID "${ASC_ISSUER_ID:?ASC_ISSUER_ID fehlt}")
+    NOTARY_AUTH=(--key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")
+else
+    NOTARY_AUTH=(--keychain-profile "${NOTARY_PROFILE:-NotifyAI-Notary}")
+fi
 
 # --- Prüfungen ----------------------------------------------------------------
 
@@ -67,32 +88,92 @@ grep -q "<!-- NEW-RELEASES -->" "$APPCAST" || fail "Markierung <!-- NEW-RELEASES
 if [[ $PUBLISH -eq 1 ]]; then
     command -v gh >/dev/null || fail "--publish braucht die GitHub CLI: brew install gh && gh auth login"
 fi
+# Früh prüfen, nicht erst nach zehn Minuten Build.
+xcrun notarytool history "${NOTARY_AUTH[@]}" >/dev/null 2>&1 \
+    || fail "Anmeldung für die Notarisierung fehlgeschlagen. Einmalig: xcrun notarytool store-credentials NotifyAI-Notary (siehe docs/Publishing.md)."
 
-# --- Bauen --------------------------------------------------------------------
+# Ohne API-Schlüssel signiert xcodebuild mit dem Zertifikat aus dem Schlüsselbund. Mit API-Schlüssel kann
+# Xcode ein von Apple verwaltetes Zertifikat nutzen (Cloud Signing), dann ist keins im Schlüsselbund nötig.
+if [[ -z "${ASC_KEY_PATH:-}" ]] && ! security find-identity -v -p codesigning | grep -q "Developer ID Application: .*($TEAM_ID)"; then
+    fail "Kein „Developer ID Application“-Zertifikat für Team $TEAM_ID im Schlüsselbund (siehe docs/Publishing.md, 1.1)."
+fi
+if [[ -n "$KEY_FILE" ]]; then
+    [[ -s "$KEY_FILE" ]] || fail "--ed-key-file $KEY_FILE ist leer oder fehlt."
+fi
+if [[ $CHECK_ONLY -eq 1 ]]; then
+    echo "✓ Alle Voraussetzungen für NotifyAI $VERSION (macOS) sind erfüllt."
+    exit 0
+fi
+
+# Reicht eine Datei zur Notarisierung ein und wartet auf Apples Ergebnis. Bei Ablehnung steht der Grund im Log.
+notarize() {
+    local file="$1" result status id
+    step "Notarisiere $(basename "$file") (dauert meist 1–5 Minuten) …"
+    result="$(xcrun notarytool submit "$file" "${NOTARY_AUTH[@]}" --wait --output-format json)" \
+        || fail "notarytool submit ist fehlgeschlagen: $result"
+    status="$(plutil -extract status raw -o - - <<<"$result")"
+    id="$(plutil -extract id raw -o - - <<<"$result")"
+    if [[ "$status" != "Accepted" ]]; then
+        xcrun notarytool log "$id" "${NOTARY_AUTH[@]}" >&2 || true
+        fail "Apple hat $(basename "$file") nicht notarisiert (Status: $status). Details stehen oben."
+    fi
+}
+
+# --- Bauen und mit Developer ID signieren -------------------------------------
 
 step "Baue NotifyAI $VERSION (Build $BUILD_NUMBER) …"
 rm -rf "$OUT"
 mkdir -p "$OUT"
-xcodebuild \
+xcodebuild archive \
     -project NotifyAI.xcodeproj -scheme NotifyAI \
     -configuration Release -destination 'generic/platform=macOS' \
-    -derivedDataPath "$DERIVED" \
+    -derivedDataPath "$DERIVED" -archivePath "$ARCHIVE" \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-    CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
-    NOTIFYAI_MACOS_ENTITLEMENTS=NotifyAI-macOS-AdHoc.entitlements \
-    CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
-    -quiet build
+    -allowProvisioningUpdates ${XCODE_AUTH[@]+"${XCODE_AUTH[@]}"} \
+    -quiet
 
-APP="$DERIVED/Build/Products/Release/NotifyAI.app"
+step "Exportiere mit Developer ID …"
+xcodebuild -exportArchive \
+    -archivePath "$ARCHIVE" -exportPath "$EXPORT" -exportOptionsPlist "$EXPORT_OPTIONS" \
+    -allowProvisioningUpdates ${XCODE_AUTH[@]+"${XCODE_AUTH[@]}"} \
+    -quiet
+
+APP="$EXPORT/NotifyAI.app"
 codesign --verify --deep --strict "$APP" || fail "Code-Signatur der App ist ungültig."
-codesign -d --entitlements - "$APP" 2>/dev/null | grep -q "disable-library-validation" \
-    || fail "Ad-hoc-Entitlements fehlen – die App könnte Sparkle.framework nicht laden."
+SIGNATURE_INFO="$(codesign -dv --verbose=2 "$APP" 2>&1)"
+[[ "$SIGNATURE_INFO" == *"TeamIdentifier=$TEAM_ID"* ]] || fail "Die App ist nicht mit Team $TEAM_ID signiert."
+[[ "$SIGNATURE_INFO" =~ flags=0x[0-9a-f]+\([^\)]*runtime ]] || fail "Hardened Runtime fehlt – Apple würde nicht notarisieren."
+SIGN_IDENTITY="$(sed -n 's/^Authority=\(Developer ID Application: .*\)$/\1/p' <<<"$SIGNATURE_INFO" | head -1)"
+[[ -n "$SIGN_IDENTITY" ]] || fail "Die App ist nicht mit einem „Developer ID Application“-Zertifikat signiert."
 BUILT_KEY="$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")"
 [[ "$BUILT_KEY" == "$PUBLIC_KEY" ]] || fail "Die gebaute App enthält einen anderen SUPublicEDKey."
 MIN_SYSTEM="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$APP/Contents/Info.plist")"
 
+# --- Notarisieren -------------------------------------------------------------
+
+ditto -c -k --keepParent "$APP" "$OUT/notarize.zip"
+notarize "$OUT/notarize.zip"
+rm "$OUT/notarize.zip"
+xcrun stapler staple -q "$APP"
+spctl --assess --type execute "$APP" || fail "Gatekeeper lehnt die notarisierte App ab."
+
+# --- Disk-Image für den Download von der Website -------------------------------
+
+step "Erzeuge $DMG …"
+mkdir -p "$OUT/dmg"
+ditto "$APP" "$OUT/dmg/NotifyAI.app"
+ln -s /Applications "$OUT/dmg/Applications"
+hdiutil create -volname "NotifyAI" -srcfolder "$OUT/dmg" -fs HFS+ -format UDZO -ov -quiet "$DMG"
+rm -rf "$OUT/dmg"
+codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"
+notarize "$DMG"
+xcrun stapler staple -q "$DMG"
+spctl --assess --type open --context context:primary-signature "$DMG" || fail "Gatekeeper lehnt das DMG ab."
+cp "$DMG" "$DMG_LATEST"
+
 # --- Verpacken und für Sparkle signieren --------------------------------------
 
+# Sparkle lädt Updates als ZIP: In einer Sandbox-App ist das zuverlässiger als ein DMG.
 step "Packe $ZIP …"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
 
@@ -145,14 +226,15 @@ xmllint --noout "$OUT/appcast.xml" || fail "Die neue appcast.xml ist kein gülti
 cp "$OUT/appcast.xml" "$APPCAST"
 
 SHA256="$(shasum -a 256 "$ZIP" | cut -d ' ' -f 1)"
+DMG_SHA256="$(shasum -a 256 "$DMG" | cut -d ' ' -f 1)"
 echo
-echo "✓ NotifyAI $VERSION (Build $BUILD_NUMBER) ist gebaut."
-echo "  Archiv:  $ZIP"
-echo "  SHA-256: $SHA256"
+echo "✓ NotifyAI $VERSION (Build $BUILD_NUMBER) ist gebaut, signiert und notarisiert."
+echo "  Download: $DMG  (SHA-256 $DMG_SHA256)"
+echo "  Update:   $ZIP  (SHA-256 $SHA256)"
 echo
 
 # --- Veröffentlichen ----------------------------------------------------------
-# Reihenfolge ist wichtig: Erst muss das ZIP auf GitHub liegen, dann wird appcast.xml gepusht.
+# Reihenfolge ist wichtig: Erst müssen ZIP und DMG auf GitHub liegen, dann wird appcast.xml gepusht.
 # Sonst findet die App ein Update, dessen Download noch nicht existiert.
 
 if [[ $PUBLISH -eq 1 ]]; then
@@ -162,9 +244,11 @@ if [[ $PUBLISH -eq 1 ]]; then
     {
         cat "$NOTES"
         # shellcheck disable=SC2016 # Backticks sind Markdown, keine Befehlsersetzung.
-        printf '\n---\nSHA-256 (`NotifyAI-%s.zip`): `%s`\n' "$VERSION" "$SHA256"
+        printf '\n---\nSHA-256 (`NotifyAI-%s.dmg`): `%s`  \n' "$VERSION" "$DMG_SHA256"
+        # shellcheck disable=SC2016
+        printf 'SHA-256 (`NotifyAI-%s.zip`): `%s`\n' "$VERSION" "$SHA256"
     } > "$OUT/release-notes.md"
-    gh release create "$TAG" "$ZIP" --verify-tag --title "NotifyAI $VERSION" --notes-file "$OUT/release-notes.md"
+    gh release create "$TAG" "$DMG" "$DMG_LATEST" "$ZIP" --latest --verify-tag --title "NotifyAI $VERSION" --notes-file "$OUT/release-notes.md"
 
     step "Veröffentliche den Update-Feed …"
     git add "$APPCAST"
@@ -177,7 +261,8 @@ else
 Nächste Schritte (in dieser Reihenfolge):
   1. git tag $TAG && git push origin $TAG
   2. Auf GitHub: Releases → Draft a new release → Tag $TAG
-     $ZIP hochladen, Text aus $NOTES einfügen, veröffentlichen.
+     $DMG, $DMG_LATEST und $ZIP hochladen, Text aus $NOTES einfügen,
+     als „Latest release“ veröffentlichen (die Website verlinkt …/releases/latest/download/NotifyAI.dmg).
   3. git add $APPCAST && git commit -m "Release $VERSION: Update-Feed" && git push
 Oder alles auf einmal: scripts/release.sh $VERSION --publish
 (Zum Verwerfen: git checkout -- $APPCAST)

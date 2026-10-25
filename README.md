@@ -78,7 +78,7 @@ Die Mac-App wird außerhalb des App Stores über GitHub Releases verteilt und ak
 App ──(täglich, wenige KB)──▶ appcast.xml (dieses Repo, Branch main)
                                │ neueste Version, Build-Nummer, Release-Notes, EdDSA-Signatur
                                ▼ nur wenn neuer:
-                              NotifyAI-x.y.z.zip (Anhang am GitHub-Release)
+                              NotifyAI-x.y.z.zip (Anhang am GitHub-Release, neben dem DMG für die Website)
 ```
 
 - Die App lädt nur dann ein Archiv herunter, wenn `appcast.xml` eine höhere Build-Nummer nennt. Nutzer müssen
@@ -103,25 +103,21 @@ build/release/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_
 
 ### Release veröffentlichen
 
-1. `release-notes/<version>.md` schreiben (siehe `release-notes/README.md`) und alles committen.
-2. `scripts/release.sh 0.2.0` – baut ad-hoc signiert, packt `build/release/NotifyAI-0.2.0.zip`, signiert es für
-   Sparkle und trägt die Version in `appcast.xml` ein. Die Build-Nummer ist die Anzahl der Commits.
-3. Veröffentlichen – entweder mit `scripts/release.sh 0.2.0 --publish` (GitHub CLI `gh`) oder von Hand:
-   Tag pushen, GitHub-Release mit dem ZIP anlegen, **danach** `appcast.xml` committen und pushen.
+Ausführlich, inklusive App Store für iOS: [docs/Publishing.md](docs/Publishing.md).
 
-Ad-hoc signierte Releases (ohne Developer ID) brauchen `NotifyAI-macOS-AdHoc.entitlements`
-(`disable-library-validation`), sonst blockiert die Hardened Runtime `Sparkle.framework`. Mit einer Developer ID
-entfällt diese Datei, und macOS behält Mikrofon- und Systemaudio-Freigaben auch über Updates hinweg.
+1. `release-notes/<version>.md` schreiben (siehe `release-notes/README.md`) und alles committen.
+2. `scripts/release.sh 1.0.0` – baut mit Developer ID, notarisiert App und DMG, packt
+   `build/release/NotifyAI-1.0.0.dmg` (Website) und `NotifyAI-1.0.0.zip` (Sparkle), signiert das ZIP für
+   Sparkle und trägt die Version in `appcast.xml` ein. Die Build-Nummer ist die Anzahl der Commits.
+3. Veröffentlichen – entweder mit `scripts/release.sh 1.0.0 --publish` (GitHub CLI `gh`) oder von Hand:
+   Tag pushen, GitHub-Release mit DMG und ZIP anlegen, **danach** `appcast.xml` committen und pushen.
+4. iOS: `scripts/release-ios.sh 1.0.0` lädt den Build zu App Store Connect hoch.
 
 ### Installation für Nutzer
 
-1. `NotifyAI-x.y.z.zip` unter Releases laden, entpacken, `NotifyAI.app` nach *Programme* ziehen.
-2. Beim ersten Öffnen meldet macOS, dass die App nicht überprüft werden kann → *Fertig*.
-3. *Systemeinstellungen → Datenschutz & Sicherheit* → bei NotifyAI *Dennoch öffnen*.
-   Alternativ: `xattr -dr com.apple.quarantine /Applications/NotifyAI.app`
-
-Spätere Updates installiert die App selbst, ohne diese Schritte. Weil die App nicht mit einer Developer ID signiert
-ist, fragt macOS nach einem Update eventuell erneut nach Mikrofon- und Systemaudio-Zugriff.
+`NotifyAI.dmg` von der Website (`website/`, GitHub Pages) oder unter Releases laden, öffnen und
+`NotifyAI.app` nach *Programme* ziehen. Die App ist notarisiert und öffnet sich ohne Warnung. Spätere
+Updates installiert sie selbst.
 
 ## Architektur
 

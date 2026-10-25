@@ -2,11 +2,12 @@
 #
 # Prüft NotifyAI so, wie es die CI tut. Läuft lokal genauso wie auf dem GitHub-Runner.
 #
-#   scripts/ci.sh              alles: lint, package, macos, ios
+#   scripts/ci.sh              alles: lint, dist, package, macos, ui, ios
 #   scripts/ci.sh lint macos   nur die genannten Schritte, in dieser Reihenfolge
 #
 # Schritte:
 #   lint      SwiftLint (neue Verstöße sind Fehler, siehe .swiftlint.yml)
+#   dist      Veröffentlichung: Plists, Entitlements, App-Icons, Export-Optionen, Website
 #   package   Tests des lokalen Pakets Packages/NotifyAIKit (swift test)
 #   macos     App bauen und NotifyAITests auf dem Mac ausführen
 #   ui        NotifyAIUITests auf dem Mac ausführen (Abläufe und Barrierefreiheits-Audits)
@@ -36,11 +37,11 @@ DERIVED="${CI_DERIVED_DATA:-$OUT/DerivedData}"
 mkdir -p "$OUT"
 
 STEPS=("$@")
-[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint package macos ui ios)
+[[ ${#STEPS[@]} -gt 0 ]] || STEPS=(lint dist package macos ui ios)
 for s in "${STEPS[@]}"; do
     case "$s" in
-        lint|package|macos|ui|ios) ;;
-        *) sed -n '3,14p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
+        lint|dist|package|macos|ui|ios) ;;
+        *) sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; fail "Unbekannter Schritt: $s" ;;
     esac
 done
 
@@ -80,6 +81,71 @@ lint() {
     command -v actionlint >/dev/null || fail "actionlint fehlt: brew install actionlint"
     shellcheck scripts/*.sh .githooks/*
     actionlint
+    # Öffentliches Repo, self-hosted Runner: Pull Requests aus Forks dürfen nie Code auf dem Mac ausführen.
+    if grep -nE '^\s*pull_request(_target)?\s*:|^\s*on:.*pull_request|^\s*-\s*pull_request' .github/workflows/*.yml; then
+        fail "Workflows dürfen nicht auf pull_request reagieren (siehe docs/CI.md, 1.5)."
+    fi
+    echo "  ok"
+}
+
+# Was der App Store, die Notarisierung oder die Website sonst erst beim Release bemängeln würden.
+dist_checks() {
+    step "Veröffentlichung: Plists, App-Icons, Export-Optionen, Website"
+    local f
+    for f in NotifyAI-Info.plist NotifyAI-macOS-Info.plist NotifyAIWidgets-Info.plist NotifyAI-macOS.entitlements \
+             NotifyAI/PrivacyInfo.xcprivacy NotifyAIWidgets/PrivacyInfo.xcprivacy scripts/ExportOptions-*.plist; do
+        plutil -lint -s "$f" || fail "$f ist keine gültige Plist."
+    done
+
+    [[ "$(/usr/libexec/PlistBuddy -c 'Print :ITSAppUsesNonExemptEncryption' NotifyAI-Info.plist 2>/dev/null)" == false ]] \
+        || fail "ITSAppUsesNonExemptEncryption fehlt in NotifyAI-Info.plist – App Store Connect würde jeden Build anhalten."
+
+    # Das Team in den Export-Optionen muss das Team der App sein, sonst scheitert der Export erst nach dem Build.
+    local team
+    for f in scripts/ExportOptions-*.plist; do
+        team="$(/usr/libexec/PlistBuddy -c 'Print :teamID' "$f")"
+        grep -q "DEVELOPMENT_TEAM = $team;" NotifyAI.xcodeproj/project.pbxproj \
+            || fail "$f nennt Team $team, das Projekt nutzt ein anderes DEVELOPMENT_TEAM."
+    done
+
+    # App-Icons: iOS braucht 1024 × 1024 ohne Transparenz, macOS alle Größen aus Contents.json.
+    python3 - NotifyAI/Assets.xcassets/AppIcon.appiconset <<'EOF' || fail "App-Icon unvollständig (siehe oben)."
+import json, subprocess, sys
+folder = sys.argv[1]
+def info(name):
+    out = subprocess.run(["sips", "-g", "pixelWidth", "-g", "pixelHeight", "-g", "hasAlpha", f"{folder}/{name}"],
+                         capture_output=True, text=True, check=True).stdout
+    return {k.strip(): v.strip() for k, v in (l.split(":", 1) for l in out.splitlines()[1:])}
+errors, platforms = [], set()
+for image in json.load(open(f"{folder}/Contents.json"))["images"]:
+    name = image.get("filename")
+    if not name:
+        continue
+    platforms.add(image.get("platform", image["idiom"]))
+    pixels = round(float(image["size"].split("x")[0]) * int(image.get("scale", "1x")[0]))
+    i = info(name)
+    if (int(i["pixelWidth"]), int(i["pixelHeight"])) != (pixels, pixels):
+        errors.append(f"{name}: {i['pixelWidth']}×{i['pixelHeight']}, erwartet {pixels}×{pixels}")
+    if image.get("platform") == "ios" and i["hasAlpha"] == "yes":
+        errors.append(f"{name}: iOS-Icons dürfen keine Transparenz haben")
+for needed in ("ios", "mac"):
+    if needed not in platforms:
+        errors.append(f"kein Icon für {needed}")
+print("\n".join(errors), file=sys.stderr)
+sys.exit(1 if errors else 0)
+EOF
+
+    # Website: jede lokal verlinkte Datei existiert.
+    local ref missing=0
+    for f in website/*.html; do
+        while read -r ref; do
+            [[ -e "website/${ref%%#*}" ]] || { echo "  $f verweist auf fehlende Datei: $ref" >&2; missing=1; }
+        done < <(grep -oE '(href|src)="[^"]+"' "$f" | sed -E 's/^(href|src)="//; s/"$//' | grep -vE '^#|:|/$' || true)
+    done
+    [[ $missing -eq 0 ]] || fail "Website enthält tote Links."
+    if grep -qE "BITTE AUSFÜLLEN|BITTE-AUSFUELLEN" website/*.html; then
+        echo "  Hinweis: website/ enthält noch Platzhalter (BITTE AUSFÜLLEN). Die Website wird erst veröffentlicht, wenn sie ersetzt sind."
+    fi
     echo "  ok"
 }
 
@@ -140,6 +206,7 @@ START=$SECONDS
 for s in "${STEPS[@]}"; do
     case "$s" in
         lint) lint ;;
+        dist) dist_checks ;;
         package) package_tests ;;
         macos) macos_tests ;;
         ui) ui_tests ;;

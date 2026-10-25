@@ -1,15 +1,17 @@
 # CI/CD für NotifyAI
 
 Alles läuft **auf deinem eigenen Mac** und kostet nichts. GitHub verteilt nur die Aufträge. Gebaut
-und getestet wird ausschließlich auf dem self-hosted Runner, keine Workflow-Datei nutzt
-GitHub-Maschinen.
+und getestet wird ausschließlich auf dem self-hosted Runner. Einzige Ausnahme ist die Website: Sie
+besteht nur aus statischen Dateien und wird auf einer GitHub-Maschine veröffentlicht, was für
+öffentliche Repositories nichts kostet.
 
 | Wann | Was läuft | Wo |
 |---|---|---|
 | `git commit` | SwiftLint für die Swift-Dateien des Commits | Hook `.githooks/pre-commit` |
 | `git push` | SwiftLint, ShellCheck, actionlint, Paket-Tests (~15 s) | Hook `.githooks/pre-push` |
 | Push auf `main`, Pull Request | Lint, Paket- und Architekturtests, App-Tests auf macOS, UI-Tests auf macOS, iOS-Simulator-Build | `.github/workflows/ci.yml` |
-| Von Hand: Actions → Release | komplette CI, danach `scripts/release.sh --publish` | `.github/workflows/release.yml` |
+| Von Hand: Actions → Release | komplette CI, danach `scripts/release.sh --publish` (macOS) und/oder `scripts/release-ios.sh` (App Store Connect) | `.github/workflows/release.yml` |
+| Push auf `main`, der `website/` ändert | Website auf GitHub Pages veröffentlichen | `.github/workflows/pages.yml` (GitHub-Maschine, für öffentliche Repos kostenlos) |
 
 Alle Prüfungen stehen in `scripts/ci.sh`. Lokal laufen sie genau wie auf dem Runner:
 
@@ -86,10 +88,20 @@ Wichtig zu wissen:
 
 ### 1.5 Sicherheit
 
-Ein self-hosted Runner führt den Code aus, den Workflows und Pull Requests mitbringen, **auf deinem
-Mac und mit deinen Rechten**. Bei einem privaten Repo können das nur du und eingeladene
-Mitarbeitende. **Mach das Repo nicht öffentlich, solange der Runner verbunden ist.** Sonst könnte
-jeder per Fork-Pull-Request Code auf deinem Mac ausführen.
+Ein self-hosted Runner führt den Code aus, den Workflows mitbringen, **auf deinem Mac und mit
+deinen Rechten**, also auch mit Zugriff auf Schlüsselbund, Developer-ID-Zertifikat und
+Notarisierungs-Profil. Das Repo ist öffentlich, deshalb gilt:
+
+- **Kein Workflow auf dem Runner reagiert auf `pull_request` oder `pull_request_target`.** Sonst
+  könnte jeder per Fork-Pull-Request Code auf deinem Mac ausführen. `scripts/ci.sh lint` bricht ab,
+  sobald eine Workflow-Datei diese Auslöser nutzt. Fremde Änderungen prüfst du, indem du sie nach dem
+  Review auf `main` übernimmst oder den Branch lokal mit `scripts/ci.sh` testest.
+- Ausgelöst werden die Workflows nur durch Pushes auf `main` und von Hand. Beides können nur Personen
+  mit Schreibrechten.
+- Zusätzlich unter **Settings → Actions → General → Fork pull request workflows** die Option
+  **„Require approval for all external contributors“** wählen.
+- Secrets (`SPARKLE_ED_PRIVATE_KEY`, optional `ASC_*`) stehen nur dem Release-Workflow zur Verfügung
+  und liegen während des Laufs als Datei unter `$RUNNER_TEMP`. Am Ende werden sie gelöscht.
 
 ---
 
@@ -123,10 +135,22 @@ BIN=$(ls -d ~/Library/Developer/Xcode/DerivedData/NotifyAI-*/SourcePackages/arti
    `main` pushen.
 2. GitHub → **Actions → Release → Run workflow**, Branch `main`, Version eingeben, z. B. `0.2.0`.
 3. Der Workflow führt die komplette CI aus und danach `scripts/release.sh <version> --publish`.
-   Das Skript legt den Tag an, erstellt das GitHub-Release mit ZIP und pusht `appcast.xml` auf
-   `main`.
+   Das Skript baut mit Developer ID, notarisiert, legt den Tag an, erstellt das GitHub-Release mit
+   DMG und ZIP und pusht `appcast.xml` auf `main`. Bei Plattform „iOS“ folgt
+   `scripts/release-ios.sh` (Upload zu App Store Connect).
+   Developer-ID-Zertifikat, Notarisierungs-Profil und Xcode-Account kommen aus deinem Schlüsselbund
+   (siehe [Publishing.md](Publishing.md)), weil der Runner als dein Benutzer läuft.
 4. Danach lokal `git pull`, denn auf `main` ist der Commit „Release …: Update-Feed“
    dazugekommen.
+
+Beim ersten Release über den Runner fragt macOS eventuell, ob `codesign` auf den Schlüssel des
+Zertifikats zugreifen darf. Das Fenster sieht nur, wer am Mac sitzt. Starte deshalb das erste
+Release einmal lokal im Terminal (`scripts/release.sh <version>` ohne `--publish`) und klicke
+**Immer erlauben**. Alternativ hinterlegst du einen App-Store-Connect-API-Schlüssel als Secrets
+`ASC_KEY_ID`, `ASC_ISSUER_ID` und `ASC_PRIVATE_KEY` (Inhalt der `.p8`-Datei; erstellen unter App Store
+Connect → Benutzer und Zugriff → Integrationen → Team-Schlüssel, Rolle **Admin**). Dann signiert
+Xcode mit einem von Apple verwalteten Zertifikat, und Notarisierung und Upload laufen ohne
+Schlüsselbund.
 
 Lokal geht es weiterhin ohne GitHub Actions: `scripts/release.sh 0.2.0 --publish`. Das braucht
 `gh auth login`, und der Schlüssel wird aus dem Schlüsselbund gelesen.
@@ -163,10 +187,12 @@ in `.shellcheckrc`.
 
 ---
 
-## 4. Grenzen ohne Apple-Developer-Programm (99 $/Jahr)
+## 4. Apple-Developer-Programm
 
-| Was | Folge | Lösung, falls später Geld da ist |
-|---|---|---|
-| Die macOS-App ist nur ad-hoc signiert, nicht notarisiert | Beim **ersten** Öffnen warnt Gatekeeper. Nutzer müssen in den Systemeinstellungen unter „Datenschutz & Sicherheit“ auf „Trotzdem öffnen“ klicken. Sparkle-Updates danach funktionieren. | Developer-ID-Zertifikat und `notarytool` |
-| iOS | Kein TestFlight, kein App Store. Die CI prüft nur, ob der Build kompiliert. | App Store Connect API und `xcodebuild -exportArchive` |
-| Branch-Schutz | Pflicht-Checks („erst mergen, wenn die CI grün ist“) gibt es bei privaten Repos erst mit GitHub Pro. Die CI meldet Fehler, verhindert aber keinen Merge. | GitHub Pro (für Studierende über das GitHub Student Developer Pack kostenlos) |
+Mit dem Developer-Account ist die Mac-App mit Developer ID signiert und notarisiert (keine
+Gatekeeper-Warnung, Freigaben bleiben über Updates erhalten), und iOS-Builds gehen über
+`scripts/release-ios.sh` zu TestFlight und in den App Store. Einrichtung und Ablauf:
+[Publishing.md](Publishing.md).
+
+Pflicht-Checks für Branches („erst mergen, wenn die CI grün ist“) gibt es bei öffentlichen
+Repositories kostenlos unter *Settings → Branches*.

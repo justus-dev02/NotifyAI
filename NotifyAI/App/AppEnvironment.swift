@@ -39,6 +39,8 @@ final class AppEnvironment {
     static let uiTestingArgument = "-ui-testing"
     /// Launch argument that adds sample notes with tasks for the UI tests (debug builds).
     static let uiTestingSampleDataArgument = "-ui-testing-sample-data"
+    /// Launch argument that adds the English notes for the App Store screenshots (debug builds).
+    static let screenshotSampleDataArgument = "-screenshot-sample-data"
 
     /// The production environment. Unit and UI tests get an isolated in-memory store and
     /// never touch the user's data.
@@ -57,6 +59,9 @@ final class AppEnvironment {
             #if DEBUG
             if processInfo.arguments.contains(uiTestingSampleDataArgument) {
                 try SampleData.insertUITestNotes(into: environment.services)
+            }
+            if processInfo.arguments.contains(screenshotSampleDataArgument) {
+                try SampleData.insertScreenshotNotes(into: environment.services)
             }
             #endif
             return environment

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NotifyAI – Gespräche aufnehmen, transkribieren, zusammenfassen</title>
+  <meta name="description" content="NotifyAI nimmt Gespräche und Online-Meetings auf, schreibt sie mit und fasst sie mit Apple Intelligence zusammen – komplett auf deinem Mac, iPhone und iPad.">
+  <meta property="og:title" content="NotifyAI">
+  <meta property="og:description" content="Gespräche aufnehmen, transkribieren und zusammenfassen – alles auf dem Gerät.">
+  <meta property="og:image" content="icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <img class="icon" src="icon.png" alt="" width="148" height="148">
+      <h1>NotifyAI</h1>
+      <p class="lead">Gespräche und Online-Meetings aufnehmen, mitlesen und zusammenfassen. Alles bleibt auf deinem Gerät.</p>
+      <div class="buttons">
+        <!-- Zeigt immer auf das DMG des neuesten GitHub-Releases (scripts/release.sh lädt NotifyAI.dmg mit hoch). -->
+        <a class="button" href="https://github.com/justus-dev02/NotifyAI/releases/latest/download/NotifyAI.dmg">
+          Für Mac laden<small>kostenlos · macOS 26 oder neuer</small>
+        </a>
+        <!-- Nach der Freigabe durch Apple: href auf den App-Store-Link setzen (App Store Connect → App-Informationen
+             → „Im App Store ansehen“, Form https://apps.apple.com/app/id<Nummer>) und class="disabled" entfernen. -->
+        <a class="button secondary disabled" href="#" aria-disabled="true">
+          Bald im App Store<small>iPhone und iPad · iOS 26</small>
+        </a>
+      </div>
+      <p class="note">Signiert und von Apple notarisiert. Updates installiert die Mac-App selbst.</p>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <h2>Was NotifyAI kann</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="symbol">🎙️</div>
+          <h3>Aufnehmen und mitlesen</h3>
+          <p>Live-Transkript mit Apple Speech, Whisper oder Parakeet. Wichtige Stellen markierst du mit einem Tipp.</p>
+        </div>
+        <div class="feature">
+          <div class="symbol">💻</div>
+          <h3>Online-Meetings</h3>
+          <p>Auf dem Mac nimmt NotifyAI Mikrofon und Systemton von Zoom, Teams oder Discord auf und trennt „Ich“ von den anderen.</p>
+        </div>
+        <div class="feature">
+          <div class="symbol">✨</div>
+          <h3>Zusammenfassungen</h3>
+          <p>Kernpunkte, Aufgaben, Entscheidungen und offene Fragen mit Apple Intelligence. Jeder Punkt springt zur Stelle im Transkript.</p>
+        </div>
+        <div class="feature">
+          <div class="symbol">👥</div>
+          <h3>Sprecher erkennen</h3>
+          <p>Jedes Wort wird einer Stimme zugeordnet. Benenne Personen einmal, NotifyAI erkennt sie in späteren Aufnahmen wieder.</p>
+        </div>
+        <div class="feature">
+          <div class="symbol">🔎</div>
+          <h3>Notizen fragen</h3>
+          <p>„Was hat Anna letzte Woche zum Budget gesagt?“ Die Antwort nennt ihre Quellen.</p>
+        </div>
+        <div class="feature">
+          <div class="symbol">📤</div>
+          <h3>Export und Integrationen</h3>
+          <p>Markdown, PDF, Word und Untertitel, dazu Obsidian, Notion und Webhooks für Zapier, Make oder n8n.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="privacy">
+    <div class="wrap">
+      <h2>Privat. Wirklich.</h2>
+      <p>Aufnahmen, Transkripte und Zusammenfassungen entstehen und bleiben auf deinem Gerät. Es gibt kein Konto, keine Cloud, kein Tracking.
+        Ins Internet geht NotifyAI nur, wenn du ein Sprachmodell lädst, nach Updates suchst oder selbst eine Integration einrichtest.
+        <a href="datenschutz.html">Datenschutzerklärung</a></p>
+    </div>
+  </section>
+
+  <section id="support">
+    <div class="wrap">
+      <h2>Fragen und Hilfe</h2>
+      <div class="faq">
+        <details>
+          <summary>Welche Geräte werden unterstützt?</summary>
+          <p>Macs mit macOS 26 sowie iPhone und iPad mit iOS bzw. iPadOS 26. Für Zusammenfassungen mit Apple Intelligence braucht dein Gerät Apple Intelligence. Ohne sie erstellt NotifyAI eine einfachere, gekennzeichnete Zusammenfassung.</p>
+        </details>
+        <details>
+          <summary>Wie installiere ich die Mac-App?</summary>
+          <p>DMG laden, öffnen und NotifyAI in den Ordner „Programme“ ziehen. Neue Versionen findet die App selbst (Einstellungen → Updates).</p>
+        </details>
+        <details>
+          <summary>Warum fragt der Mac nach Mikrofon und Systemaudio?</summary>
+          <p>Ohne diese Freigaben kann NotifyAI nichts aufnehmen. Die Aufnahmen bleiben auf deinem Mac. Ändern kannst du das unter Systemeinstellungen → Datenschutz &amp; Sicherheit.</p>
+        </details>
+        <details>
+          <summary>Etwas funktioniert nicht – wie erreiche ich dich?</summary>
+          <p>Schreib eine E-Mail an <a href="mailto:BITTE-AUSFUELLEN@example.com">BITTE-AUSFUELLEN@example.com</a> oder öffne ein
+            <a href="https://github.com/justus-dev02/NotifyAI/issues">Issue auf GitHub</a>. Am schnellsten hilft der Diagnosebericht aus der App (Einstellungen → Allgemein). Er enthält keine Inhalte deiner Notizen.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 NotifyAI</span>
+      <span>
+        <a href="https://github.com/justus-dev02/NotifyAI/releases">Versionen</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="impressum.html">Impressum</a>
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

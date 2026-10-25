@@ -12,7 +12,7 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**']
+    paths-ignore: ['**.md', 'release-notes/**', 'appcast.xml', 'docs/**', 'website/**', 'design/**']
   workflow_dispatch:
 
 permissions:
@@ -42,6 +42,10 @@ jobs:
 
       - name: SwiftLint
         run: scripts/ci.sh lint
+
+      - name: Veröffentlichung – Plists, Icons, Export-Optionen, Website
+        if: ${{ !cancelled() }}
+        run: scripts/ci.sh dist
 
       # Die weiteren Schritte laufen auch, wenn ein vorheriger fehlschlägt, damit alle Fehler auf
       # einmal sichtbar sind.
