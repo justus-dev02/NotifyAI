@@ -254,13 +254,15 @@ private enum SynthesizedConversation {
         "Einverstanden. Ich kläre die Motive bis Freitag mit der Agentur.",
     ]
 
+    /// The voices the reference value in docs/Quality.md was measured with, both part of macOS.
+    /// Fixed by identifier: which German voices a Mac has, and in which order, differs (GitHub's
+    /// runners list others first), and other voices give other results. Without both voices the
+    /// suite is skipped.
+    static let voiceIdentifiers = ["com.apple.voice.compact.de-DE.Anna", "com.apple.eloquence.de-DE.Eddy"]
+
     static var voices: [AVSpeechSynthesisVoice] {
-        // A female voice and one that is not (some voices report no gender).
-        let german = AVSpeechSynthesisVoice.speechVoices().filter { $0.language == "de-DE" }
-        guard let first = german.first(where: { $0.gender == .female }),
-              let second = german.first(where: { $0.gender != .female })
-        else { return [] }
-        return [first, second]
+        let voices = voiceIdentifiers.compactMap(AVSpeechSynthesisVoice.init(identifier:))
+        return voices.count == voiceIdentifiers.count ? voices : []
     }
 
     static var isAvailable: Bool { voices.count == 2 }

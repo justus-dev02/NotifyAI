@@ -138,6 +138,10 @@ final class NotifyAIUITests: XCTestCase {
         #else
         app.typeKey(",", modifierFlags: .command)
         #endif
+        // The storage section is part of the privacy topic: a tab on the Mac, a page on iOS.
+        let privacy = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Datenschutz")).firstMatch
+        XCTAssertTrue(privacy.waitForExistence(timeout: 5))
+        tap(privacy)
         let button = app.buttons["Geladene Modelle löschen …"].firstMatch
         // The storage section is further down; lists create rows only when they scroll in.
         for _ in 0..<8 where !button.waitForExistence(timeout: 1) {

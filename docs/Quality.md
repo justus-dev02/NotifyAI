@@ -92,9 +92,11 @@ Personen, Organisationen, Labels und die Stichworte der Zusammenfassung hinzu.
 
 ## Messdaten
 
-- Die Sprechererkennung verwendet echte, synthetisierte Sprache (`AVSpeechSynthesizer`, eine
-  weibliche und eine weitere deutsche Systemstimme) mit bekannter Zeitleiste. Fehlen die
-  Stimmen, wird der Test übersprungen.
+- Die Sprechererkennung verwendet echte, synthetisierte Sprache (`AVSpeechSynthesizer`) mit
+  bekannter Zeitleiste, gesprochen von den deutschen Systemstimmen Anna (compact) und Eddy. Sie sind
+  fest per Kennung gewählt: Welche Stimmen ein Mac hat und in welcher Reihenfolge, unterscheidet sich
+  (auf GitHubs Runnern ergab die erste weibliche und erste andere Stimme drei statt zwei Sprecher).
+  Fehlen die beiden Stimmen, wird der Test übersprungen.
 - Die Fehlerrate zählt gesprochene Zeit, die dem falschen oder keinem Sprecher zugeordnet wird,
   bei bester Zuordnung der erkannten zu den wahren Sprechern.
 
