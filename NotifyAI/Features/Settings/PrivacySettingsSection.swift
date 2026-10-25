@@ -27,7 +27,13 @@ struct PrivacySettingsSection: View {
         } header: {
             Text("Datenschutz")
         } footer: {
-            Text("Alle Daten liegen ausschließlich im geschützten Speicher dieser App. Ohne Backup-Freigabe sind sie auch nicht Teil von iCloud- oder Computer-Backups.")
+            // Says what the lock does and what it does not: it hides the notes in the app, the
+            // files are protected by the system's encryption only.
+            #if os(macOS)
+            Text("Die App-Sperre verbirgt deine Notizen in NotifyAI vor anderen an deinem angemeldeten Mac. Die Dateien selbst schützt FileVault; Programme mit Festplattenvollzugriff können sie lesen. Ohne Backup-Freigabe sind sie nicht Teil von Time-Machine-Backups.")
+            #else
+            Text("Die App-Sperre verbirgt deine Notizen in NotifyAI vor anderen an deinem entsperrten Gerät. Die Dateien selbst schützt die Verschlüsselung des Geräts: Nach einem Neustart sind sie bis zum ersten Entsperren unlesbar, danach bleiben sie lesbar, damit Aufnahme und Verarbeitung auch bei gesperrtem Bildschirm weiterlaufen. Ohne Backup-Freigabe sind sie nicht Teil von iCloud- oder Computer-Backups.")
+            #endif
         }
     }
 }

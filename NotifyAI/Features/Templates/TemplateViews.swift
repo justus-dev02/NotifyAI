@@ -237,12 +237,7 @@ private struct BuiltInTemplateRow: View {
 /// "Standard" next to the default template.
 private struct DefaultBadge: View {
     var body: some View {
-        Text("Standard")
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(.tint.opacity(0.15), in: Capsule())
-            .foregroundStyle(.tint)
+        Tag(text: String(localized: "Standard"), tint: .accentColor)
     }
 }
 

@@ -99,8 +99,9 @@ struct LibraryView: View {
         ToolbarItem {
             // One checkable entry per filter. An inline picker in a toolbar menu would cost the
             // menu its name and action for VoiceOver on the Mac. The task overview's filter has
-            // a different name, as both are on screen together.
-            Menu("Notizen filtern", systemImage: "line.3.horizontal.decrease") {
+            // a different name, as both are on screen together. A filled symbol shows that a
+            // filter is active.
+            Menu("Notizen filtern", systemImage: navigation.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
                 ForEach(LibraryFilter.allCases) { filter in
                     Toggle(isOn: Binding(
                         get: { navigation.filter == filter },
@@ -110,27 +111,35 @@ struct LibraryView: View {
                     }
                 }
                 LabelFilterOptions()
+                if navigation.isFiltering {
+                    Divider()
+                    Button("Filter zurücksetzen", systemImage: "xmark.circle") {
+                        navigation.resetFilters()
+                    }
+                }
             }
             .help("Notizen filtern")
         }
 
+        // Everything that adds a note, apart from recording, in one place.
         ToolbarItem {
-            Button("Notizen zusammenfassen …", systemImage: NoteKind.collection.symbolName) {
-                navigation.collectionRequest = CollectionRequest(label: navigation.labelFilter)
-            }
-            .help("Eine Zusammenfassung über mehrere Notizen erstellen")
-        }
-
-        ToolbarItem {
-            Menu("Importieren", systemImage: "square.and.arrow.down") {
-                Button("Datei importieren …", systemImage: "doc.badge.plus") {
-                    isImporterPresented = true
+            Menu("Hinzufügen", systemImage: "plus") {
+                Section {
+                    Button("Datei importieren …", systemImage: "doc.badge.plus") {
+                        isImporterPresented = true
+                    }
+                    .keyboardShortcut("o", modifiers: .command)
+                    Button("Foto (Texterkennung) …", systemImage: "photo") {
+                        isPhotoPickerPresented = true
+                    }
                 }
-                Button("Foto (Texterkennung) …", systemImage: "photo") {
-                    isPhotoPickerPresented = true
+                Section {
+                    Button("Mehrere Notizen zusammenfassen …", systemImage: NoteKind.collection.symbolName) {
+                        navigation.collectionRequest = CollectionRequest(label: navigation.labelFilter)
+                    }
                 }
             }
-            .help("Audiodatei, PDF oder Bild importieren")
+            .help("Audiodatei, PDF oder Foto importieren oder mehrere Notizen zusammenfassen")
         }
     }
 

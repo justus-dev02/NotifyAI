@@ -78,6 +78,14 @@ struct NoteList: View {
             if notes.isEmpty {
                 if isSearching {
                     ContentUnavailableView.search
+                } else if navigation.isFiltering {
+                    ContentUnavailableView {
+                        Label("Keine passenden Notizen", systemImage: "line.3.horizontal.decrease.circle")
+                    } description: {
+                        Text("Mit diesem Filter gibt es keine Notizen.")
+                    } actions: {
+                        Button("Alle Notizen zeigen") { navigation.resetFilters() }
+                    }
                 } else {
                     ContentUnavailableView(
                         "Noch keine Notizen",

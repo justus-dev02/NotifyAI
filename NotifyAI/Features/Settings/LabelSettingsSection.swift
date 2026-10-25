@@ -13,6 +13,7 @@ import SwiftUI
 struct LabelSettingsSection: View {
     @Environment(NoteLabels.self) private var labels
     @Environment(AppNavigation.self) private var navigation
+    @Environment(\.openWindow) private var openWindow
     /// Refreshes the list when notes change.
     @Query(filter: #Predicate<Note> { !$0.labelKeys.isEmpty }) private var labeledNotes: [Note]
     @State private var renaming: LabelUsage?
@@ -83,6 +84,11 @@ struct LabelSettingsSection: View {
             navigation.filter = .all
             navigation.labelFilter = usage.name
             navigation.isSettingsPresented = false
+            #if os(macOS)
+            // The settings are a window of their own on the Mac: close it and show the notes.
+            NSApplication.shared.keyWindow?.close()
+            openWindow(id: SceneID.main)
+            #endif
         }
         Button("Umbenennen …", systemImage: "pencil") {
             newName = usage.name

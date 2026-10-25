@@ -7,14 +7,6 @@ import AppIntents
 import NotifyAIServices
 import SwiftUI
 
-/// What only one platform has, behind one type.
-///
-/// - iOS / iPadOS: the recording's Live Activity with its buttons, and background tasks
-///   that let long processing continue when the user leaves the app.
-/// - macOS: the monitor of running audio apps and output devices for the source pickers.
-///
-/// This is the only place of the app's composition that distinguishes platforms; the
-/// composition root, the lifecycle and the services stay free of `#if os(…)`.
 @MainActor
 final class PlatformServices {
     #if os(iOS)

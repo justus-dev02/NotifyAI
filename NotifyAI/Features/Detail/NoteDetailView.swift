@@ -298,9 +298,9 @@ private struct NoteHeader: View {
                     TemplateChoiceButtons(note: note)
                 } label: {
                     if let template = templates.template(for: note) {
-                        Tag(text: template.name, systemImage: template.symbolName)
+                        Tag(text: template.name, systemImage: template.symbolName, showsMenuIndicator: true)
                     } else {
-                        Tag(text: note.focus.title, systemImage: note.focus.symbolName)
+                        Tag(text: note.focus.title, systemImage: note.focus.symbolName, showsMenuIndicator: true)
                     }
                 }
                 .menuStyle(.button)

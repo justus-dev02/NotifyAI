@@ -8,7 +8,12 @@ import SwiftUI
 extension View {
     /// A page pushed inside the settings, such as the custom vocabulary or the integrations.
     func settingsPage(_ title: LocalizedStringKey) -> some View {
-        modifier(SettingsPageModifier(title: title))
+        modifier(SettingsPageModifier(title: Text(title)))
+    }
+
+    /// For titles that are already localized.
+    func settingsPage(verbatim title: String) -> some View {
+        modifier(SettingsPageModifier(title: Text(verbatim: title)))
     }
 }
 
@@ -19,7 +24,7 @@ extension View {
 /// and shows its own back button at the leading edge, above the content, as System Settings
 /// does; ⌘[ goes back as well. iOS keeps the back button of the navigation bar.
 private struct SettingsPageModifier: ViewModifier {
-    let title: LocalizedStringKey
+    let title: Text
     @Environment(\.dismiss) private var dismiss
 
     func body(content: Content) -> some View {
@@ -39,7 +44,7 @@ private struct SettingsPageModifier: ViewModifier {
                     .buttonStyle(.bordered)
                     .keyboardShortcut("[", modifiers: .command)
                     .help("Zurück zu den Einstellungen")
-                    Text(title)
+                    title
                         .font(.headline)
                     Spacer(minLength: 0)
                 }

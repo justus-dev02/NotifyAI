@@ -6,31 +6,8 @@
 import NotifyAIServices
 import SwiftUI
 
-/// The entry to the integrations in the settings.
-struct IntegrationSettingsSection: View {
-    @Environment(IntegrationService.self) private var integrations
-
-    var body: some View {
-        Section {
-            NavigationLink {
-                IntegrationSettingsView()
-            } label: {
-                LabeledContent("Integrationen") {
-                    Text(summary)
-                }
-            }
-        } footer: {
-            Text("Notizen in einen Obsidian-Ordner sichern, als Notion-Seite anlegen oder an einen Webhook senden (Zapier, Make, n8n).")
-        }
-    }
-
-    private var summary: String {
-        let configured = IntegrationTarget.allCases.filter(integrations.isConfigured).map(\.name)
-        return configured.isEmpty ? String(localized: "Keine") : configured.joined(separator: ", ")
-    }
-}
-
-/// Obsidian, Notion and webhooks.
+/// Obsidian, Notion and webhooks: notes saved to a vault folder, created as Notion pages or
+/// sent to a webhook (Zapier, Make, n8n).
 struct IntegrationSettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(IntegrationService.self) private var integrations
@@ -56,7 +33,6 @@ struct IntegrationSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .settingsPage("Integrationen")
         .fileImporter(isPresented: $isPickingFolder, allowedContentTypes: [.folder]) { result in
             switch result {
             case .success(let folder): perform { try integrations.setObsidianFolder(folder) }

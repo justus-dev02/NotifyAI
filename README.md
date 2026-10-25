@@ -59,7 +59,9 @@ Aufnahmen, Transkripte und Zusammenfassungen verlassen das Gerät nicht.
 - **Sprachen der Oberfläche:** Deutsch (Quellsprache) und Englisch (String Catalogs).
 - **Diagnosebericht** zum Teilen mit dem Support: Versionen, Einstellungen, Speicher, Protokoll der Sitzung und
   MetricKit-Berichte, ohne Inhalte der Notizen. Nichts wird automatisch hochgeladen.
-- Optionale App-Sperre (Face ID / Touch ID / Code), Ausschluss aus Geräte-Backups.
+- Optionale App-Sperre (Face ID / Touch ID / Code) als Sichtschutz in der App, Ausschluss aus Geräte-Backups. Die
+  Dateien schützt die Verschlüsselung des Systems (iOS: bis zum ersten Entsperren nach dem Neustart, macOS: FileVault),
+  nicht die App-Sperre: Aufnahme und Verarbeitung laufen auch bei gesperrtem Bildschirm weiter.
 - **Updates in der App (macOS):** Einstellungen → Updates oder NotifyAI → „Nach Updates suchen …“. Wahlweise automatisch
   suchen (täglich / wöchentlich / monatlich) und automatisch laden und beim Beenden installieren – nie während einer Aufnahme.
 

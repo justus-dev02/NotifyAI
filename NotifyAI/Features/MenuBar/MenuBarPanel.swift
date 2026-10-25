@@ -12,14 +12,6 @@ import NotifyAIServices
 import SwiftData
 import SwiftUI
 
-/// The icon in the menu bar. Shows the elapsed time while recording.
-///
-/// Reads only `elapsedSeconds`, which changes once per second: the menu bar item is
-/// re-rendered once per second, not with every level update.
-///
-/// The status item does not reliably grow with its label, so the time gets the room of
-/// "0:00:00" from the start: after the first hour the seconds would otherwise be cut off and
-/// only hours and minutes remain visible.
 struct MenuBarLabel: View {
     let recording: RecordingController
 
@@ -188,13 +180,13 @@ private struct QuickStartForm: View {
                     .foregroundStyle(.orange)
             }
 
-            Toggle("Alle Anwesenden sind einverstanden", isOn: $recording.draft.consentConfirmed)
+            Toggle("Alle Beteiligten sind einverstanden", isOn: $recording.draft.consentConfirmed)
                 .toggleStyle(.checkbox)
 
-            if !settings.transcription.isReady(whisperModels: whisperModels, neuralModels: neuralModels) {
-                Label("\(settings.transcription.engine.displayName)-Modell fehlt – bitte in den Einstellungen laden.", systemImage: "exclamationmark.triangle")
+            if let blocker = RecordingStartBlocker.current(recording: recording, settings: settings, whisperModels: whisperModels, neuralModels: neuralModels) {
+                Label(blocker.message, systemImage: blocker.symbolName)
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.secondary)
             }
 
             if let error = recording.errorMessage {

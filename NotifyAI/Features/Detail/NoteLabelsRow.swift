@@ -50,12 +50,7 @@ private struct LabelChip: View {
                 labels.remove(name, from: note)
             }
         } label: {
-            Label(name, systemImage: "tag.fill")
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.tint.opacity(0.14), in: Capsule())
-                .foregroundStyle(.tint)
+            Tag(text: name, systemImage: "tag.fill", tint: .accentColor)
         }
         .menuStyle(.button)
         .buttonStyle(.plain)

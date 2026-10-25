@@ -16,22 +16,10 @@ protocol UpdateDeferring: AnyObject {
     var defersUpdates: Bool { get }
 }
 
-/// In-app updates for the Mac version, distributed outside the App Store.
-///
-/// Sparkle reads the small `appcast.xml` from `SUFeedURL` (Info.plist), compares the
-/// newest build number with the running one and only then downloads the release archive.
-/// Every archive must carry an EdDSA signature that matches `SUPublicEDKey`; unsigned or
-/// tampered downloads are rejected. Because the app is sandboxed, the installation runs in
-/// Sparkle's installer service (`SUEnableInstallerLauncherService` plus the Mach lookup
-/// exceptions in `NotifyAI-macOS.entitlements`).
-///
-/// Sparkle stores its preferences (automatic checks, automatic downloads, interval, date of
-/// the last check) in the app's user defaults; this type only mirrors them for SwiftUI.
 @MainActor
 @Observable
 final class AppUpdater: NSObject {
-    /// `false` when the build has no feed URL or public key (e.g. a local build from source).
-    /// Sparkle is not started then, so it cannot show an error at launch.
+
     let isConfigured: Bool
     /// `false` while a check, download or installation is already in progress.
     private(set) var canCheckForUpdates = false

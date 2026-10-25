@@ -79,6 +79,16 @@ final class AppNavigation {
         }
     }
 
+    /// Whether the library shows only some notes.
+    var isFiltering: Bool {
+        filter != .all || labelFilter != nil
+    }
+
+    func resetFilters() {
+        filter = .all
+        labelFilter = nil
+    }
+
     /// Opens a note, optionally at a position in its transcript.
     func open(noteID: UUID, at time: TimeInterval? = nil) {
         selectedNoteID = noteID

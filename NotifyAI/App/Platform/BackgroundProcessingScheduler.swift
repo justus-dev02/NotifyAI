@@ -11,23 +11,11 @@ import NotifyAIServices
 import OSLog
 import UIKit
 
-/// Lets long processing continue when the user leaves the app (iOS / iPadOS).
-///
-/// Two mechanisms:
-/// - **Continued processing** (`BGContinuedProcessingTask`, iOS 26): when a long recording
-///   starts processing while the app is open, the system is asked to keep it running in the
-///   background. iOS shows the progress in a system UI and may end the task when resources
-///   get scarce or the user cancels it.
-/// - **Overnight processing** (`BGProcessingTask`): when the app goes to the background with
-///   unfinished work, a task is scheduled that runs while the device charges.
-///
-/// Either way, an ended task interrupts the job cleanly: it keeps its saved steps
-/// (transcript, chapter digests) and continues at the next opportunity.
 @MainActor
 final class BackgroundProcessingScheduler {
     static let continuedIdentifierPrefix = "com.justus.NotifyAI.processing.continued"
     static let overnightIdentifier = "com.justus.NotifyAI.processing.overnight"
-    /// Recordings shorter than this finish within the normal background time.
+
     static let minimumDurationForContinuedTask: TimeInterval = 10 * 60
 
     private let processing: ProcessingCoordinator

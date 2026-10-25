@@ -219,16 +219,6 @@
         }
       }
     },
-    "%@-Modell fehlt – bitte in den Einstellungen laden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ model missing – please download it in Settings."
-          }
-        }
-      }
-    },
     "%@–%@" : {
       "localizations" : {
         "de" : {
@@ -517,26 +507,6 @@
         }
       }
     },
-    "Alle Anwesenden sind einverstanden" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Everyone present agrees"
-          }
-        }
-      }
-    },
-    "Alle Anwesenden sind mit der Aufnahme einverstanden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Everyone present agrees to being recorded."
-          }
-        }
-      }
-    },
     "Alle Aufnahmen (%lld · %@)" : {
       "localizations" : {
         "de" : {
@@ -563,12 +533,22 @@
         }
       }
     },
-    "Alle Daten liegen ausschließlich im geschützten Speicher dieser App. Ohne Backup-Freigabe sind sie auch nicht Teil von iCloud- oder Computer-Backups." : {
+    "Alle Beteiligten sind einverstanden" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All data is kept exclusively in this app’s protected storage. Without backup sharing, it is also not part of iCloud or computer backups."
+            "value" : "Everyone involved agrees"
+          }
+        }
+      }
+    },
+    "Alle Beteiligten sind mit der Aufnahme einverstanden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone involved agrees to being recorded."
           }
         }
       }
@@ -633,12 +613,32 @@
         }
       }
     },
+    "Alle Notizen zeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All Notes"
+          }
+        }
+      }
+    },
     "Alle Personen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "All People"
+          }
+        }
+      }
+    },
+    "Allgemein" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
           }
         }
       }
@@ -865,12 +865,32 @@
         }
       }
     },
+    "App-Sperre, Backups und Speicher" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App lock, backups and storage"
+          }
+        }
+      }
+    },
     "Apple Intelligence" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Intelligence"
+          }
+        }
+      }
+    },
+    "Apple Intelligence, Vorlagen und Suche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence, templates and search"
           }
         }
       }
@@ -905,12 +925,12 @@
         }
       }
     },
-    "Audiodatei, PDF oder Bild importieren" : {
+    "Audiodatei, PDF oder Foto importieren oder mehrere Notizen zusammenfassen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import an audio file, PDF or image"
+            "value" : "Import an audio file, PDF or photo, or summarize several notes"
           }
         }
       }
@@ -1415,6 +1435,16 @@
         }
       }
     },
+    "Bestätige zuerst, dass alle Beteiligten einverstanden sind." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First confirm that everyone involved agrees."
+          }
+        }
+      }
+    },
     "Bis" : {
       "localizations" : {
         "en" : {
@@ -1467,6 +1497,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Appearance"
+          }
+        }
+      }
+    },
+    "Das %@-Modell ist noch nicht geladen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %@ model hasn’t been downloaded yet."
           }
         }
       }
@@ -1717,6 +1757,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The change could not be saved: %@"
+          }
+        }
+      }
+    },
+    "Die App-Sperre verbirgt deine Notizen in NotifyAI vor anderen an deinem angemeldeten Mac. Die Dateien selbst schützt FileVault; Programme mit Festplattenvollzugriff können sie lesen. Ohne Backup-Freigabe sind sie nicht Teil von Time-Machine-Backups." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app lock hides your notes in NotifyAI from others using your logged-in Mac. The files themselves are protected by FileVault; apps with Full Disk Access can read them. Without backup sharing, they are not part of Time Machine backups."
+          }
+        }
+      }
+    },
+    "Die App-Sperre verbirgt deine Notizen in NotifyAI vor anderen an deinem entsperrten Gerät. Die Dateien selbst schützt die Verschlüsselung des Geräts: Nach einem Neustart sind sie bis zum ersten Entsperren unlesbar, danach bleiben sie lesbar, damit Aufnahme und Verarbeitung auch bei gesperrtem Bildschirm weiterlaufen. Ohne Backup-Freigabe sind sie nicht Teil von iCloud- oder Computer-Backups." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app lock hides your notes in NotifyAI from others using your unlocked device. The files themselves are protected by the device’s encryption: after a restart they are unreadable until the first unlock, afterwards they stay readable so recording and processing continue while the screen is locked. Without backup sharing, they are not part of iCloud or computer backups."
           }
         }
       }
@@ -2127,16 +2187,6 @@
         }
       }
     },
-    "Eine Zusammenfassung über mehrere Notizen erstellen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a summary across several notes"
-          }
-        }
-      }
-    },
     "Einfache Zusammenfassung" : {
       "localizations" : {
         "en" : {
@@ -2418,6 +2468,16 @@
         }
       }
     },
+    "Filter zurücksetzen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Filters"
+          }
+        }
+      }
+    },
     "Fortsetzen" : {
       "localizations" : {
         "en" : {
@@ -2628,12 +2688,12 @@
         }
       }
     },
-    "Gespräche dürfen nur mit Zustimmung aller Beteiligten aufgenommen werden. Die Aufnahme bleibt auf diesem Gerät." : {
+    "Gespräche dürfen nur mit Zustimmung aller Beteiligten aufgenommen werden, auch in Online-Meetings. Sag am besten zu Beginn, dass du aufnimmst. Die Aufnahme bleibt auf diesem Gerät." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conversations may only be recorded with the consent of everyone involved. The recording stays on this device."
+            "value" : "Conversations may only be recorded with the consent of everyone involved, including in online meetings. It is best to say at the start that you are recording. The recording stays on this device."
           }
         }
       }
@@ -2734,16 +2794,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Imports"
-          }
-        }
-      }
-    },
-    "Importieren" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import"
           }
         }
       }
@@ -2908,16 +2958,6 @@
         }
       }
     },
-    "Keine" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "None"
-          }
-        }
-      }
-    },
     "Keine Begriffe" : {
       "localizations" : {
         "en" : {
@@ -2974,6 +3014,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Matching Tasks"
+          }
+        }
+      }
+    },
+    "Keine passenden Notizen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Matching Notes"
           }
         }
       }
@@ -3348,6 +3398,16 @@
         }
       }
     },
+    "Mehrere Notizen zusammenfassen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize Several Notes…"
+          }
+        }
+      }
+    },
     "Mikrofon" : {
       "localizations" : {
         "en" : {
@@ -3394,6 +3454,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Intelligence creates an overview, tasks and decisions without the cloud."
+          }
+        }
+      }
+    },
+    "Mit diesem Filter gibt es keine Notizen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No notes match this filter."
           }
         }
       }
@@ -4004,16 +4074,6 @@
         }
       }
     },
-    "Notizen in einen Obsidian-Ordner sichern, als Notion-Seite anlegen oder an einen Webhook senden (Zapier, Make, n8n)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save notes to an Obsidian folder, create them as Notion pages or send them to a webhook (Zapier, Make, n8n)."
-          }
-        }
-      }
-    },
     "Notizen werden für die Suche vorbereitet …" : {
       "localizations" : {
         "en" : {
@@ -4040,16 +4100,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Summarize Notes"
-          }
-        }
-      }
-    },
-    "Notizen zusammenfassen …" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Summarize Notes …"
           }
         }
       }
@@ -4110,6 +4160,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Obsidian"
+          }
+        }
+      }
+    },
+    "Obsidian, Notion und Webhooks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obsidian, Notion and webhooks"
           }
         }
       }
@@ -4574,6 +4634,16 @@
         }
       }
     },
+    "Spracherkennung, Sprache und Modelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech recognition, language and models"
+          }
+        }
+      }
+    },
     "Sprachpaket" : {
       "localizations" : {
         "en" : {
@@ -4640,6 +4710,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Assign speaker"
+          }
+        }
+      }
+    },
+    "Sprechererkennung und gemerkte Stimmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaker detection and remembered voices"
           }
         }
       }
@@ -5160,6 +5240,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rename…"
+          }
+        }
+      }
+    },
+    "Umbenennen, zusammenführen, entfernen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename, merge, remove"
           }
         }
       }
@@ -5720,6 +5810,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The newest %lld notes are summarized."
+          }
+        }
+      }
+    },
+    "Version und Diagnosebericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version and diagnostic report"
           }
         }
       }

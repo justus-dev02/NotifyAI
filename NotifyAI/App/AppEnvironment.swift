@@ -8,12 +8,6 @@ import NotifyAIPersistence
 import NotifyAIServices
 import SwiftUI
 
-/// Composition root of the app: the services, the platform adapters and the objects that
-/// exist only for the user interface.
-///
-/// Views receive exactly the objects they use through the SwiftUI environment, each by its
-/// type (`@Environment(NoteLibrary.self)`). A missing object stops the app at once instead of
-/// silently doing nothing, and there is no object that hands out every service.
 @MainActor
 final class AppEnvironment {
     let services: ServiceContainer

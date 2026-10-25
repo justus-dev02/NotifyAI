@@ -111,10 +111,13 @@ public struct LevelMeter: View {
     }
 }
 
-/// A small capsule for secondary metadata.
+/// A small capsule for secondary metadata. With a tint it stands out (labels, "Standard");
+/// with `showsMenuIndicator` it says that tapping it opens a menu.
 public struct Tag: View {
     public let text: String
     public var systemImage: String?
+    public var tint: Color?
+    public var showsMenuIndicator = false
 
     public var body: some View {
         HStack(spacing: 4) {
@@ -122,16 +125,45 @@ public struct Tag: View {
                 Image(systemName: systemImage)
             }
             Text(text)
+            if showsMenuIndicator {
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .font(.caption)
+        .font(tint == nil ? .caption : .caption.weight(.semibold))
+        .foregroundStyle(tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.foreground))
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(.fill.tertiary, in: Capsule())
+        .background(tint.map { AnyShapeStyle($0.opacity(0.14)) } ?? AnyShapeStyle(.fill.tertiary), in: Capsule())
+        .contentShape(Capsule())
     }
 
-    public init(text: String, systemImage: String? = nil) {
+    public init(text: String, systemImage: String? = nil, tint: Color? = nil, showsMenuIndicator: Bool = false) {
         self.text = text
         self.systemImage = systemImage
+        self.tint = tint
+        self.showsMenuIndicator = showsMenuIndicator
+    }
+}
+
+/// The colored, rounded symbol in front of a settings category, as in the system settings.
+public struct SettingsIcon: View {
+    public let systemImage: String
+    public let color: Color
+
+    public init(systemImage: String, color: Color) {
+        self.systemImage = systemImage
+        self.color = color
+    }
+
+    public var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 28, height: 28)
+            .background(color.gradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
 

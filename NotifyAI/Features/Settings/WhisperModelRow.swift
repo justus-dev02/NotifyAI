@@ -31,12 +31,7 @@ struct WhisperModelRow: View {
                 HStack {
                     Text(model.name).font(.body.weight(.semibold))
                     if model == .recommended {
-                        Text("Empfohlen")
-                            .font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.tint.opacity(0.15), in: Capsule())
-                            .foregroundStyle(.tint)
+                        Tag(text: String(localized: "Empfohlen"), tint: .accentColor)
                     }
                 }
                 Text(model.detail)

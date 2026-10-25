@@ -215,7 +215,12 @@ final class NotifyAIUITests: XCTestCase {
             guard let element = issue.element else { return true }
             let isOutsideWindow = !window.contains(element.frame)
             let isHostingGroup = element.elementType == .group && element.label.isEmpty && element.identifier.isEmpty
+            #if os(macOS)
             let isMenuOpener = issue.auditType == .action && [.popUpButton, .menuButton].contains(element.elementType)
+            #else
+            // The "action" audit exists only on macOS.
+            let isMenuOpener = false
+            #endif
             let isToolbarOverflow = element.elementType == .popUpButton && element.identifier.isEmpty
                 && toolbarFrame.contains(element.frame)
             return isOutsideWindow || isHostingGroup || isMenuOpener || isToolbarOverflow

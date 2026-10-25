@@ -10,13 +10,6 @@ import NotifyAIServices
 import Observation
 import OSLog
 
-/// Creates the app environment and offers a way out when that fails.
-///
-/// The only thing that can stop the environment from being created is a database that
-/// cannot be opened (damaged file, failed migration, full disk). Instead of crashing on
-/// every launch, the app then shows `DatabaseRecoveryView`: try again, or move the database
-/// aside (nothing is deleted) and start with a new one. Recordings live outside the
-/// database and are turned into notes again after a reset.
 @MainActor
 @Observable
 final class AppLaunch {
