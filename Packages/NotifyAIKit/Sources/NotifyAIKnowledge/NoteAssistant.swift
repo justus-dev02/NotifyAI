@@ -9,7 +9,8 @@ import NotifyAICore
 import NotifyAIPersistence
 import NotifyAISupport
 
-/// A numbered excerpt the answer may use.
+/// A numbered excerpt the answer may use; for answers across notes, everything one note
+/// contributes.
 package struct AssistantSource: Sendable {
     let number: Int
     let noteTitle: String
@@ -33,12 +34,20 @@ package struct AssistantPlan: Sendable, Equatable {
     var persons: [String]
     var timeframe: Timeframe
     var wantsList: Bool
+    /// The answer is likely spread over several notes.
+    var spansNotes = false
 }
 
 package struct AssistantAnswer: Sendable, Equatable {
     var text: String
     var citedSources: [Int]
     var isAnswerFound: Bool
+}
+
+/// What one note says about a question, for an answer across several notes.
+package struct NoteFindings: Sendable, Equatable {
+    var points: [String]
+    var isRelevant: Bool
 }
 
 /// Understands questions and writes answers grounded in the user's notes.
@@ -51,6 +60,16 @@ package protocol NoteAssistant: Sendable {
         language: TranscriptionLanguage,
         now: Date
     ) async throws -> AssistantAnswer
+    /// Extracts what one note says about the question (the map step of `CrossNoteAnswering`).
+    func findings(question: String, in note: AssistantSource, language: TranscriptionLanguage, now: Date) async throws -> NoteFindings
+    /// Combines the findings of several notes, one numbered source per note, oldest first.
+    func answerAcrossNotes(
+        question: String,
+        notes: [AssistantSource],
+        history: [ChatTurn],
+        language: TranscriptionLanguage,
+        now: Date
+    ) async throws -> AssistantAnswer
 }
 
 /// Uses Apple's on-device foundation model.
@@ -58,7 +77,8 @@ package protocol NoteAssistant: Sendable {
 /// Both steps use guided generation (`@Generable`), so the output always has the expected
 /// structure. The model never computes dates: it only names a time frame, which the app
 /// converts with the calendar. Answers may only use the numbered sources and must cite
-/// them; citations that do not refer to a source are removed.
+/// them; citations that do not refer to a source are removed. Answers across notes first
+/// extract per note what it says, then combine the findings with the same rules.
 package struct FoundationModelNoteAssistant: NoteAssistant {
     package func plan(question: String, history: [ChatTurn], now: Date) async throws -> AssistantPlan {
         let session = LanguageModelSession(instructions: """
@@ -84,7 +104,8 @@ package struct FoundationModelNoteAssistant: NoteAssistant {
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty && !TextAnalysis.isSpeakerLabel($0) },
             timeframe: Timeframe(rawValue: generated.timeframe) ?? .none,
-            wantsList: generated.wantsList
+            wantsList: generated.wantsList,
+            spansNotes: generated.spansNotes
         )
     }
 
@@ -95,7 +116,6 @@ package struct FoundationModelNoteAssistant: NoteAssistant {
         language: TranscriptionLanguage,
         now: Date
     ) async throws -> AssistantAnswer {
-        let languageName = Locale(identifier: "en").localizedString(forLanguageCode: language.languageCode) ?? "German"
         let session = LanguageModelSession(instructions: """
         You are the assistant of the note app NotifyAI. You answer questions about the user's own notes: \
         transcripts of conversations, meetings and lectures, and imported documents. Today is \(Self.dateText(now)).
@@ -110,26 +130,10 @@ package struct FoundationModelNoteAssistant: NoteAssistant {
         - Be concrete: names, numbers, amounts, dates and deadlines.
         - If the sources do not contain the answer, set answerFound to false and say so in one sentence.
         - Keep it short: one to five sentences, or a short list with "- " when there are several items.
-        - Write in \(languageName).
+        - Write in \(Self.languageName(language)).
         """)
 
-        var prompt = ""
-        if !history.isEmpty {
-            prompt += "Previous conversation:\n\(Self.historyText(history))\n\n"
-        }
-        prompt += "Sources:\n"
-        for source in sources {
-            var header = "[\(source.number)] Note \"\(source.noteTitle)\" from \(Self.dateText(source.noteDate))"
-            if !source.labels.isEmpty {
-                header += " (labels: \(source.labels.joined(separator: ", ")))"
-            }
-            if let start = source.start {
-                header += ", at minute \(TimeFormatting.timestamp(start))"
-            }
-            prompt += "\(header):\n\(source.text)\n\n"
-        }
-        prompt += "Question: \(question)"
-
+        let prompt = Self.historySection(history) + "Sources:\n" + sources.map(Self.sourceText).joined() + "Question: \(question)"
         let response = try await session.respond(
             to: prompt,
             generating: GeneratedAnswer.self,
@@ -141,6 +145,70 @@ package struct FoundationModelNoteAssistant: NoteAssistant {
             usedSources: content.usedSources,
             answerFound: content.answerFound,
             sourceCount: sources.count
+        )
+    }
+
+    package func findings(question: String, in note: AssistantSource, language: TranscriptionLanguage, now: Date) async throws -> NoteFindings {
+        let session = LanguageModelSession(instructions: """
+        You read one of the user's notes: a transcript of a conversation, meeting or lecture, or an imported \
+        document. Extract what it says about a question. Another step combines the findings of several notes. \
+        Today is \(Self.dateText(now)).
+        Rules:
+        - Use only the note. Never add outside knowledge and never guess.
+        - Every point is one self-contained statement with the names, numbers, amounts, dates and deadlines it needs, \
+        so it can be understood without the note.
+        - In transcripts, "\(SpeakerLabels.user)" is the user. Other labels are people in the conversation.
+        - Relative dates in the note ("Freitag", "next week") refer to the note's date; state the actual date.
+        - If the note says nothing about the question, set relevant to false and leave the points empty.
+        - Write in \(Self.languageName(language)).
+        """)
+        let response = try await session.respond(
+            to: Self.sourceText(note) + "Question: \(question)",
+            generating: GeneratedNoteFindings.self,
+            options: GenerationOptions(temperature: 0.1, maximumResponseTokens: 400)
+        )
+        let content = response.content
+        let points = content.points.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        return NoteFindings(points: points, isRelevant: content.relevant && !points.isEmpty)
+    }
+
+    package func answerAcrossNotes(
+        question: String,
+        notes: [AssistantSource],
+        history: [ChatTurn],
+        language: TranscriptionLanguage,
+        now: Date
+    ) async throws -> AssistantAnswer {
+        let session = LanguageModelSession(instructions: """
+        You are the assistant of the note app NotifyAI. You answer questions about the user's own notes: \
+        transcripts of conversations, meetings and lectures, and imported documents. Today is \(Self.dateText(now)).
+        Every numbered source is one note, oldest first, with what it says about the question.
+        Rules:
+        - Use only the numbered sources. Never add outside knowledge and never guess.
+        - Combine the notes into one answer. Put the number of every note a statement comes from after it, \
+        for example [2] or [1][3]. Name the same item only once, citing all notes that mention it.
+        - If something changed between notes, say so with the dates; the most recent note states the current status.
+        - In transcripts, "\(SpeakerLabels.user)" is the user. Address the user directly and informally \
+        (German: "du"). Other labels are people in the conversation.
+        - Labels name the context of a note, such as the company, project or course the user gave it.
+        - Be concrete: names, numbers, amounts, dates and deadlines.
+        - If the sources do not contain the answer, set answerFound to false and say so in one sentence.
+        - Keep it concise: a few sentences, or a list with "- " of at most ten items.
+        - Write in \(Self.languageName(language)).
+        """)
+
+        let prompt = Self.historySection(history) + "Notes:\n" + notes.map(Self.sourceText).joined() + "Question: \(question)"
+        let response = try await session.respond(
+            to: prompt,
+            generating: GeneratedAnswer.self,
+            options: GenerationOptions(temperature: 0.2, maximumResponseTokens: 800)
+        )
+        let content = response.content
+        return Self.validated(
+            answer: content.answer,
+            usedSources: content.usedSources,
+            answerFound: content.answerFound,
+            sourceCount: notes.count
         )
     }
 
@@ -171,6 +239,26 @@ package struct FoundationModelNoteAssistant: NoteAssistant {
         date.formatted(Date.FormatStyle(date: .complete, time: .shortened).locale(Locale(identifier: "en_US")))
     }
 
+    private static func languageName(_ language: TranscriptionLanguage) -> String {
+        Locale(identifier: "en").localizedString(forLanguageCode: language.languageCode) ?? "German"
+    }
+
+    /// A numbered source with its note, date, labels and position.
+    private static func sourceText(_ source: AssistantSource) -> String {
+        var header = "[\(source.number)] Note \"\(source.noteTitle)\" from \(dateText(source.noteDate))"
+        if !source.labels.isEmpty {
+            header += " (labels: \(source.labels.joined(separator: ", ")))"
+        }
+        if let start = source.start {
+            header += ", at minute \(TimeFormatting.timestamp(start))"
+        }
+        return "\(header):\n\(source.text)\n\n"
+    }
+
+    private static func historySection(_ history: [ChatTurn]) -> String {
+        history.isEmpty ? "" : "Previous conversation:\n\(historyText(history))\n\n"
+    }
+
     private static func historyText(_ history: [ChatTurn]) -> String {
         history.suffix(3).map { turn in
             "Q: \(turn.question)\nA: \(String(turn.answer.prefix(400)))"
@@ -199,6 +287,9 @@ struct GeneratedSearchPlan {
 
     @Guide(description: "True only if the user asks for a list of notes or recordings, not for information from them")
     var wantsList: Bool
+
+    @Guide(description: "True if the answer is likely spread over several notes: everything decided or agreed so far, open tasks across meetings, how something developed or changed over time, or a comparison of meetings. False if one fact answers the question.")
+    var spansNotes: Bool
 }
 
 @Generable(description: "An answer that is based only on the numbered sources")
@@ -211,4 +302,13 @@ struct GeneratedAnswer {
 
     @Guide(description: "False if the sources do not contain the information needed to answer the question")
     var answerFound: Bool
+}
+
+@Generable(description: "What one note says about a question")
+struct GeneratedNoteFindings {
+    @Guide(description: "False if the note says nothing about the question")
+    var relevant: Bool
+
+    @Guide(description: "Self-contained statements from the note that answer the question, with names, numbers and dates", .maximumCount(5))
+    var points: [String]
 }

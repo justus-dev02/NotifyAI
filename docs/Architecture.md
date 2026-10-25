@@ -46,7 +46,7 @@ Zusammenfassung, die Zusammenfassung keine Warteschlange, die Suche keine Aufnah
 | `NotifyAISettings` | `AppSettings` und ihre Gruppen | Verarbeitung, UI |
 | `NotifyAIProcessing` | `ProcessingCoordinator` und Pipeline-Schritte | Aufnahme, Suche, Use Cases |
 | `NotifyAIExport` | `ExportDocument` und die Formate | Verarbeitung, Integrationen |
-| `NotifyAIKnowledge` | `KnowledgeIndex`, `PassageVectors`, `HybridRetriever`, `RelatedNotesFinder`, `QueryPlanner`, `NoteChatModel`, `NoteQuestionAnswering` | Aufnahme, Use Cases |
+| `NotifyAIKnowledge` | `KnowledgeIndex`, `PassageVectors`, `HybridRetriever`, `RelatedNotesFinder`, `QueryPlanner`, `NoteChatModel`, `NoteQuestionAnswering`, `CrossNoteAnswering` | Aufnahme, Use Cases |
 | `NotifyAIIntegrations` | `IntegrationService`, Obsidian, Notion, Webhooks | Aufnahme, Use Cases |
 | `NotifyAIRecording` | `RecordingController`, Live-Transkript, Live-Kapitel, Wiederherstellung | Suche, Use Cases |
 | `NotifyAILibrary` | `NoteLibrary`, `NoteLabels`, `NoteCollections`, `TaskBoard`, `SummaryTemplates`, `SpeakerDirectory`, `TranscriptEditor`, Import, Speicher, Diagnose, App-Sperre | Aufnahme |
@@ -122,6 +122,18 @@ Ab 0,32 beantwortet ein Abschnitt die Frage; darunter erscheint nichts, und „N
 gefunden hat. Ohne kalibrierte Vektoren (Modell nicht geladen, andere Schrift) zählt die Abdeckung allein, ab 0,22.
 Vektoren tragen ihren Raum (Modell und Revision); er gehört zum Fingerabdruck einer Notiz, sodass ein neues Modell
 alle Notizen neu indexiert. Wie die Werte gewählt und geprüft wurden, steht in [Quality.md](Quality.md).
+
+**Fragen über mehrere Notizen.** „Was wurde mit Samsung bisher entschieden?“ oder „Welche Aufgaben aus den
+Meetings mit Anna sind offen?“ beantworten wenige beste Stellen nur scheinbar vollständig. Erkennen Regeln
+(„bisher“, „insgesamt“, „entwickelt“, „Meetings“ …) oder der Suchplan des Sprachmodells eine solche Frage und
+passen mindestens zwei Notizen, liest `CrossNoteAnswering` die bis zu sechs besten einzeln: Kontext pro Notiz ist
+ihre Zusammenfassung (deckt die ganze Notiz ab) plus ihre passenden Abschnitte. Passt alles in eine Anfrage, sind
+das die Quellen; sonst zieht das Modell pro Notiz heraus, was sie zur Frage sagt (Map), Punkte ohne gemeinsames
+Inhaltswort mit der Notiz fallen weg (`SummaryGrounding`), und eine Notiz, an der das Modell scheitert, trägt ihre
+beste Stelle bei. Eine letzte Anfrage führt die Notizen ältester zuerst zusammen (Reduce), nennt Änderungen mit
+Datum und zitiert jede Notiz; die Quellkarte zeigt die beste Stelle der Notiz im Wortlaut. Weitere Treffer,
+Fehlschläge und gekürzte Funde nennt der Hinweis unter der Antwort. „Fasse alle … zusammen“ bleibt die
+Sammelzusammenfassung, die jede Notiz vollständig liest.
 
 Verwandte Notizen vergleichen die Mittelwertvektoren nach Abzug des Mittels aller Notizen: Transkripte ähneln
 einander mehr als allem anderen, entscheidend ist, was zwei Notizen darüber hinaus teilen.

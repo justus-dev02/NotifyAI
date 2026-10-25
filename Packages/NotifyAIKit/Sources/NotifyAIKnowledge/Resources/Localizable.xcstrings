@@ -330,6 +330,56 @@
           }
         }
       }
+    },
+    "Aus %lld von %lld Notizen ist nicht jedes Detail in die Antwort eingeflossen, weil der Platz nicht reichte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not every detail from %1$lld of %2$lld notes made it into the answer because there was not enough room."
+          }
+        }
+      }
+    },
+    "Führe %lld Notizen zusammen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combining %lld notes …"
+          }
+        }
+      }
+    },
+    "Ich habe die %lld passendsten von %lld Notizen ausgewertet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I read the %1$lld best-matching of %2$lld notes."
+          }
+        }
+      }
+    },
+    "In %lld von %lld Notizen konnte Apple Intelligence nichts herauslesen; dort zählt die passendste Stelle." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence could not read %1$lld of %2$lld notes; their best-matching passage was used instead."
+          }
+        }
+      }
+    },
+    "Lese Notiz %lld von %lld …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading note %1$lld of %2$lld …"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

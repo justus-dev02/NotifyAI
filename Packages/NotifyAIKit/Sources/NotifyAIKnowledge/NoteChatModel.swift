@@ -54,6 +54,8 @@ public struct ChatMessage: Identifiable, Sendable {
     /// for one ("Fasse alle Samsung-Meetings zusammen").
     public var collectionNoteIDs: [UUID] = []
     public var isPending = false
+    /// While pending: the current step of a longer answer ("Lese Notiz 2 von 5 …").
+    public var status: String?
 }
 
 /// "Notizen fragen": the conversation about all notes – its messages, sending, cancelling.
@@ -64,7 +66,9 @@ public struct ChatMessage: Identifiable, Sendable {
 ///    structured search plan (rewritten query, synonyms, people, time frame, follow-ups).
 /// 2. **Retrieve** – hybrid full-text and semantic search with the filters applied.
 /// 3. **Answer** – the language model answers from the best passages only and cites them.
-///    Without Apple Intelligence the best passages are shown directly.
+///    A question spread over several notes ("Was wurde bisher entschieden?") is answered from
+///    every matching note instead (`CrossNoteAnswering`). Without Apple Intelligence the best
+///    passages are shown directly.
 @MainActor
 @Observable
 public final class NoteChatModel {
@@ -106,7 +110,11 @@ public final class NoteChatModel {
         isResponding = true
         responseTask = Task { [weak self] in
             guard let self else { return }
-            let answer = await respond(to: question, history: history)
+            let answer = await answering.respond(to: question, history: history, now: now()) { status in
+                if let index = self.messages.lastIndex(where: { $0.isPending }) {
+                    self.messages[index].status = status
+                }
+            }
             guard !Task.isCancelled else { return }
             if let index = messages.lastIndex(where: { $0.isPending }) {
                 messages[index] = answer

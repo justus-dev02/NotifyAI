@@ -56,6 +56,9 @@ struct QueryPlan: Equatable, Sendable {
     var wantsList = false
     /// The user wants one summary across the notes found ("Fasse alle Samsung-Meetings zusammen").
     var wantsCollectionSummary = false
+    /// The answer is spread over several notes ("Was wurde mit Samsung bisher entschieden?"):
+    /// every matching note is read on its own and the findings are combined (`CrossNoteAnswering`).
+    var spansNotes = false
 }
 
 /// Understands dates, labels, people, note kinds and focus in questions with deterministic rules.
@@ -131,6 +134,8 @@ struct RuleBasedQueryParser: Sendable {
         plan.wantsList = folded.containsAny([" zeig", " liste", " welche notizen", " welche aufnahmen", " alle ", " show ", " list "])
             && !folded.containsAny([" was ", " wie ", " warum ", " what ", " how ", " why "])
         plan.wantsCollectionSummary = Self.asksForCollectionSummary(folded)
+        plan.spansNotes = Self.spansNotes(folded)
+        removable += Self.spanningWords
         if plan.wantsCollectionSummary {
             removable += Self.collectionWords
         }
@@ -165,6 +170,22 @@ struct RuleBasedQueryParser: Sendable {
         ])
         return summarizing && several
     }
+
+    /// "Was wurde bisher entschieden?", "Wie hat sich das Budget entwickelt?", "Welche Aufgaben
+    /// aus den Meetings mit Anna sind noch offen?": questions about everything said so far, about
+    /// changes over time or about several meetings at once.
+    static func spansNotes(_ folded: String) -> Bool {
+        folded.containsAny([
+            " bisher", " bislang", " insgesamt", " jeweils", " alle ", " allen ", " aller ", " samtliche",
+            " entwickelt", " entwicklung", " verlauf", " verandert", " geandert", " im laufe",
+            " meetings ", " besprechungen ", " gesprachen ", " gesprache ", " terminen ", " calls ", " vorlesungen ",
+            " so far", " overall", " across ", " over time", " all ", " each ", " evolved", " changed",
+        ])
+    }
+
+    /// Words that only say the question is about everything so far. No note contains them, so
+    /// as search terms they would count as rare and push every passage below the threshold.
+    static let spanningWords = ["bisher", "bislang", "insgesamt", "jeweils", "so far", "overall"]
 
     /// Words of a request for a summary that are no search terms: the request itself and what
     /// it is about in general ("alle Meetings"). What remains is the topic ("zum Budget").

@@ -181,7 +181,7 @@ private struct ChatMessageView: View {
         if message.isPending {
             HStack(spacing: Theme.Spacing.small) {
                 ProgressView().controlSize(.small)
-                Text("Durchsuche deine Notizen …")
+                Text(message.status ?? String(localized: "Durchsuche deine Notizen …"))
                     .foregroundStyle(.secondary)
             }
         } else {
@@ -195,9 +195,15 @@ private struct ChatMessageView: View {
                 }
 
                 if !message.text.isEmpty {
-                    Text(Self.formatted(message.text))
+                    Text(Self.formatted(message.text, sources: message.sources))
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
+                        .environment(\.openURL, OpenURLAction { url in
+                            // A source number in the text opens its source like its card does.
+                            guard let source = Self.source(for: url, in: message.sources) else { return .systemAction }
+                            onOpen(source.noteID, source.start)
+                            return .handled
+                        })
                 }
 
                 if let notice = message.notice {
@@ -240,8 +246,8 @@ private struct ChatMessageView: View {
         }
     }
 
-    /// Source numbers like "[2]" are shown as small superscript badges.
-    static func formatted(_ text: String) -> AttributedString {
+    /// Source numbers like "[2]" are shown as small superscript badges that open their source.
+    static func formatted(_ text: String, sources: [ChatSource]) -> AttributedString {
         var result = AttributedString()
         var remainder = Substring(text)
         while let match = remainder.firstMatch(of: /\[(\d+)\]/) {
@@ -250,11 +256,22 @@ private struct ChatMessageView: View {
             badge.font = .caption2.weight(.bold)
             badge.foregroundColor = .accentColor
             badge.baselineOffset = 5
+            if let number = Int(match.1), sources.contains(where: { $0.number == number }) {
+                badge.link = URL(string: "\(sourceLinkScheme):\(number)")
+            }
             result += badge
             remainder = remainder[match.range.upperBound...]
         }
         result += AttributedString(String(remainder))
         return result
+    }
+
+    /// Links of source numbers stay in the chat; the system never sees them.
+    private static let sourceLinkScheme = "notifyai-source"
+
+    static func source(for url: URL, in sources: [ChatSource]) -> ChatSource? {
+        guard url.scheme == sourceLinkScheme, let number = Int(url.absoluteString.dropFirst(sourceLinkScheme.count + 1)) else { return nil }
+        return sources.first { $0.number == number }
     }
 }
 

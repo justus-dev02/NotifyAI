@@ -25,7 +25,8 @@ import Testing
 
 // MARK: - Fixtures
 
-private enum Fixture {
+/// Notes and dates of the search tests, shared with `CrossNoteAnsweringTests`.
+enum Fixture {
     static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
@@ -275,6 +276,22 @@ struct QueryPlannerTests {
         #expect(!parser.plan(for: "Was wurde im Meeting entschieden?", knownPersons: []).wantsList)
     }
 
+    @Test("Questions about several notes are recognized, single facts are not")
+    func spansNotes() {
+        for question in [
+            "Was wurde mit Samsung bisher entschieden?",
+            "Welche Aufgaben aus den Meetings mit Anna sind noch offen?",
+            "Wie hat sich das Budget entwickelt?",
+            "What did we decide so far?",
+        ] {
+            #expect(parser.plan(for: question, knownPersons: []).spansNotes, "\(question)")
+        }
+        #expect(parser.plan(for: "Was wurde bisher entschieden?", knownPersons: []).searchText == "Was wurde entschieden?")
+        for question in ["Wie hoch ist das Budget?", "Was wurde im Meeting entschieden?", "Wann startet die Kampagne?"] {
+            #expect(!parser.plan(for: question, knownPersons: []).spansNotes, "\(question)")
+        }
+    }
+
     @Test("The language model adds what the rules missed; rules win for explicit dates")
     func merge() {
         var plan = parser.plan(for: "Was hat sie gestern gesagt?", knownPersons: [])
@@ -284,6 +301,12 @@ struct QueryPlannerTests {
         #expect(plan.expansions == ["Meinung"])
         #expect(plan.filters.persons == ["Anna"])
         #expect(plan.filters.dateRange == Timeframe.yesterday.dateRange(now: Fixture.now, calendar: Fixture.calendar))
+        #expect(!plan.spansNotes)
+
+        var spanning = parser.plan(for: "Was ist der Stand beim Budget?", knownPersons: [])
+        let across = AssistantPlan(searchQuery: "Stand Budget", relatedTerms: [], persons: [], timeframe: .none, wantsList: false, spansNotes: true)
+        NoteChatModel.merge(across, into: &spanning, now: Fixture.now, calendar: Fixture.calendar)
+        #expect(spanning.spansNotes)
     }
 }
 
@@ -366,6 +389,20 @@ private struct MockAssistant: NoteAssistant {
 
     func answer(question: String, sources: [AssistantSource], history: [ChatTurn], language: TranscriptionLanguage, now: Date) async throws -> AssistantAnswer {
         FoundationModelNoteAssistant.validated(answer: answerText, usedSources: [], answerFound: found, sourceCount: sources.count)
+    }
+
+    func findings(question: String, in note: AssistantSource, language: TranscriptionLanguage, now: Date) async throws -> NoteFindings {
+        NoteFindings(points: [], isRelevant: false)
+    }
+
+    func answerAcrossNotes(
+        question: String,
+        notes: [AssistantSource],
+        history: [ChatTurn],
+        language: TranscriptionLanguage,
+        now: Date
+    ) async throws -> AssistantAnswer {
+        FoundationModelNoteAssistant.validated(answer: answerText, usedSources: [], answerFound: found, sourceCount: notes.count)
     }
 }
 

@@ -52,7 +52,7 @@ package struct SummaryGrounding: Sendable {
     }
 
     /// Whether the statement shares a content word with the text.
-    func isSupported(_ statement: String) -> Bool {
+    package func isSupported(_ statement: String) -> Bool {
         let terms = TextAnalysis.terms(in: statement, languageCode: languageCode)
         return terms.contains { textTerms.contains($0) }
     }

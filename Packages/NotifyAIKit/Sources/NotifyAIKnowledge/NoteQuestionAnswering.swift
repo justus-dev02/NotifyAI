@@ -11,7 +11,8 @@ import NotifyAISupport
 import OSLog
 
 /// Answers one question about the notes: understands it, searches, and lets the language
-/// model answer from the passages found – or shows them, or offers a summary across the
+/// model answer from the passages found – or, for questions spread over several notes, from
+/// every matching note (`CrossNoteAnswering`) – or shows them, or offers a summary across the
 /// notes found. Stateless; `NoteChatModel` keeps the conversation.
 @MainActor
 struct NoteQuestionAnswering {
@@ -45,8 +46,8 @@ struct NoteQuestionAnswering {
         availability(settings.transcription.language)
     }
 
-    /// Answers one question.
-    func respond(to question: String, history: [ChatTurn], now date: Date) async -> ChatMessage {
+    /// Answers one question. `progress` describes longer steps for the pending message.
+    func respond(to question: String, history: [ChatTurn], now date: Date, progress: (String) -> Void = { _ in }) async -> ChatMessage {
         await knowledge.refreshAndWait()
         let index = knowledge.index
         guard !index.notes.isEmpty else {
@@ -65,7 +66,8 @@ struct NoteQuestionAnswering {
             languageCode: settings.transcription.language.languageCode
         )
         let noteLimit = plan.wantsCollectionSummary ? Self.maximumCollectionNotes : 10
-        let result = await Self.search(request, in: index, embedder: knowledge.embedder, noteLimit: noteLimit)
+        let passageLimit = plan.spansNotes ? CrossNoteAnswering.passageLimit : 12
+        let result = await Self.search(request, in: index, embedder: knowledge.embedder, passageLimit: passageLimit, noteLimit: noteLimit)
 
         var message = ChatMessage(role: .assistant, text: "", filters: plan.filterDescriptions)
         message.notes = result.notes.map {
@@ -75,10 +77,7 @@ struct NoteQuestionAnswering {
             message.notice = String(localized: "Keine Notiz erwähnt \(result.relaxedPersons.joined(separator: ", ")). Ich habe ohne diesen Filter gesucht.", bundle: .module)
         }
         if !result.relaxedLabels.isEmpty {
-            message.notice = [
-                message.notice,
-                String(localized: "Keine Notiz hat das Label \(result.relaxedLabels.joined(separator: ", ")). Ich habe danach im Text gesucht.", bundle: .module),
-            ].compactMap { $0 }.joined(separator: " ")
+            Self.append(String(localized: "Keine Notiz hat das Label \(result.relaxedLabels.joined(separator: ", ")). Ich habe danach im Text gesucht.", bundle: .module), to: &message)
         }
 
         guard result.candidateCount > 0 else {
@@ -100,6 +99,11 @@ struct NoteQuestionAnswering {
             message.text = result.notes.count == 1
                 ? String(localized: "Ich habe eine passende Notiz gefunden.", bundle: .module)
                 : String(localized: "Ich habe \(result.notes.count) passende Notizen gefunden.", bundle: .module)
+            return message
+        }
+
+        if plan.spansNotes, canUseModel, CrossNoteAnswering.readableNotes(in: result).count >= 2 {
+            await answerAcrossNotes(question, from: result, history: history, now: date, progress: progress).apply(to: &message)
             return message
         }
 
@@ -128,8 +132,110 @@ struct NoteQuestionAnswering {
     }
 
     @concurrent
-    private static func search(_ request: SearchRequest, in index: KnowledgeIndex, embedder: any SentenceEmbedding, noteLimit: Int) async -> SearchResult {
-        HybridRetriever(index: index, embedder: embedder).search(request, noteLimit: noteLimit)
+    private static func search(
+        _ request: SearchRequest,
+        in index: KnowledgeIndex,
+        embedder: any SentenceEmbedding,
+        passageLimit: Int,
+        noteLimit: Int
+    ) async -> SearchResult {
+        HybridRetriever(index: index, embedder: embedder).search(request, passageLimit: passageLimit, noteLimit: noteLimit)
+    }
+
+    /// What an answer across notes adds to the message.
+    private struct CrossNoteReply {
+        var text = ""
+        var sources: [ChatSource] = []
+        var notices: [String] = []
+
+        func apply(to message: inout ChatMessage) {
+            message.text = text
+            message.sources = sources
+            for notice in notices {
+                NoteQuestionAnswering.append(notice, to: &message)
+            }
+        }
+    }
+
+    /// Reads every matching note on its own and combines what they say. Each cited note gets
+    /// one source card, which shows and opens its best passage: the findings are the model's
+    /// words, the card shows the note's own.
+    private func answerAcrossNotes(
+        _ question: String,
+        from result: SearchResult,
+        history: [ChatTurn],
+        now date: Date,
+        progress: (String) -> Void
+    ) async -> CrossNoteReply {
+        let answering = CrossNoteAnswering(assistant: assistant, language: settings.transcription.language)
+        var reply = CrossNoteReply()
+        let outcome: CrossNoteAnswering.Outcome
+        do {
+            outcome = try await answering.answer(question, from: result, history: history, now: date) { step in
+                switch step {
+                case .reading(let note, let count):
+                    progress(String(localized: "Lese Notiz \(note) von \(count) …", bundle: .module))
+                case .combining(let count):
+                    progress(String(localized: "Führe \(count) Notizen zusammen …", bundle: .module))
+                }
+            }
+        } catch is CancellationError {
+            return reply
+        } catch {
+            logger.error("Answering a question across notes failed: \(error.localizedDescription, privacy: .public)")
+            reply.text = String(localized: "Das sind die passendsten Stellen in deinen Notizen:", bundle: .module)
+            reply.sources = Array(selectSources(from: result.passages).prefix(5))
+            reply.notices.append(String(localized: "Apple Intelligence konnte keine Antwort formulieren.", bundle: .module))
+            return reply
+        }
+
+        guard !outcome.sources.isEmpty else {
+            reply.text = String(localized: "Dazu habe ich in deinen Notizen nichts gefunden.", bundle: .module)
+            reply.notices.append(String(localized: "Die passendsten Notizen findest du unten.", bundle: .module))
+            return reply
+        }
+        reply.text = outcome.answer.text
+        if outcome.answer.isAnswerFound {
+            let cited = Set(outcome.answer.citedSources)
+            let shown = cited.isEmpty ? outcome.sources : outcome.sources.filter { cited.contains($0.number) }
+            reply.sources = shown.map(Self.chatSource)
+        } else {
+            reply.notices.append(String(localized: "Die passendsten Notizen findest du unten.", bundle: .module))
+        }
+
+        let readable = CrossNoteAnswering.readableNotes(in: result).count
+        let read = min(readable, CrossNoteAnswering.maximumNotes)
+        if readable > read {
+            reply.notices.append(String(localized: "Ich habe die \(read) passendsten von \(readable) Notizen ausgewertet.", bundle: .module))
+        }
+        if outcome.failedNotes > 0 {
+            reply.notices.append(String(localized: "In \(outcome.failedNotes) von \(read) Notizen konnte Apple Intelligence nichts herauslesen; dort zählt die passendste Stelle.", bundle: .module))
+        }
+        if outcome.shortenedNotes > 0 {
+            reply.notices.append(String(localized: "Aus \(outcome.shortenedNotes) von \(read) Notizen ist nicht jedes Detail in die Antwort eingeflossen, weil der Platz nicht reichte.", bundle: .module))
+        }
+        return reply
+    }
+
+    private static func chatSource(_ source: CrossNoteAnswering.NoteSource) -> ChatSource {
+        let note = source.hit.note
+        let passage = source.passage?.passage
+        let text = passage?.text ?? source.text
+        return ChatSource(
+            number: source.number,
+            noteID: note.id,
+            noteTitle: note.title,
+            noteDate: note.createdAt,
+            labels: note.labels,
+            noteKind: note.kind,
+            start: passage?.start,
+            excerpt: text.count > maximumSourceCharacters ? String(text.prefix(maximumSourceCharacters)) + " …" : text,
+            isSummary: passage.map { $0.kind == .summary } ?? true
+        )
+    }
+
+    nonisolated private static func append(_ notice: String, to message: inout ChatMessage) {
+        message.notice = [message.notice, notice].compactMap { $0 }.joined(separator: " ")
     }
 
     /// Lets the language model answer from the sources and keeps only the sources it cited.
@@ -186,7 +292,7 @@ struct NoteQuestionAnswering {
         // A request for a summary keeps the rules' topic: the model would search for
         // "Meetings" again and find only notes that say the word.
         if !plan.wantsCollectionSummary {
-            let query = RuleBasedQueryParser.removing(plan.filters.labels, from: generated.searchQuery)
+            let query = RuleBasedQueryParser.removing(plan.filters.labels + RuleBasedQueryParser.spanningWords, from: generated.searchQuery)
             if !query.isEmpty {
                 plan.searchText = query
             }
@@ -204,6 +310,7 @@ struct NoteQuestionAnswering {
             plan.filterDescriptions.append(String(localized: "Person: \(person)", bundle: .module))
         }
         plan.wantsList = plan.wantsList || generated.wantsList
+        plan.spansNotes = plan.spansNotes || generated.spansNotes
     }
 
     /// Numbered sources within the token budget, best first.

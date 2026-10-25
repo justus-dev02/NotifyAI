@@ -235,6 +235,20 @@ private final class SourceRecordingAssistant: NoteAssistant {
         self.sources.withLock { $0 = sources }
         return AssistantAnswer(text: "Antwort [1].", citedSources: [1], isAnswerFound: true)
     }
+
+    func findings(question: String, in note: AssistantSource, language: TranscriptionLanguage, now: Date) async throws -> NoteFindings {
+        NoteFindings(points: [], isRelevant: false)
+    }
+
+    func answerAcrossNotes(
+        question: String,
+        notes: [AssistantSource],
+        history: [ChatTurn],
+        language: TranscriptionLanguage,
+        now: Date
+    ) async throws -> AssistantAnswer {
+        AssistantAnswer(text: "", citedSources: [], isAnswerFound: false)
+    }
 }
 
 @Suite("Labels and collections in the chat")
