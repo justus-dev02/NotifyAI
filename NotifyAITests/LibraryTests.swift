@@ -111,6 +111,39 @@ struct LibraryTests {
         #expect(note.summary?.overview == "Neu")
     }
 
+    @Test("A summary that cannot be encoded keeps the stored summary and its tasks")
+    func unencodableSummaryKeepsStoredOne() throws {
+        let note = try insertNote(summary: NoteSummary(
+            overview: "Planung",
+            actionItems: [ActionItem(task: "Folien bauen")],
+            source: .extractive
+        ))
+        let revision = note.contentRevision
+
+        // JSON has no NaN: encoding this summary fails.
+        note.summary = NoteSummary(
+            overview: "Kaputt",
+            actionItems: [ActionItem(task: "Etwas anderes")],
+            source: .extractive,
+            sourceTimes: ["Kaputt": .nan]
+        )
+
+        #expect(note.summary?.overview == "Planung")
+        #expect(note.summary?.actionItems.map(\.task) == ["Folien bauen"])
+        #expect(note.contentRevision == revision)
+    }
+
+    @Test("Speakers are decoded once while their data is unchanged")
+    func speakersAreCached() throws {
+        let note = try insertNote()
+        note.speakers = [NoteSpeaker(label: "Anna", origin: .named)]
+        let data = try #require(note.speakersData)
+        #expect(note.decodingCache.speakers(for: data).map(\.label) == ["Anna"])
+        note.speakers = []
+        #expect(note.speakersData == nil)
+        #expect(note.speakers.isEmpty)
+    }
+
     @Test("Deleting a note reaches the search index and the processing")
     func deletionIsFollowed() async throws {
         let note = try insertNote(summary: NoteSummary(overview: "Planung", source: .extractive))

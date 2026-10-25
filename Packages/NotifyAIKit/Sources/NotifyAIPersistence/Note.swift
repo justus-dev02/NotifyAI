@@ -5,6 +5,7 @@
 
 import Foundation
 import NotifyAICore
+import OSLog
 import SwiftData
 
 public typealias Note = NotifyAISchemaV7.Note
@@ -71,10 +72,15 @@ extension Note {
     public package(set) var sourceActivity: SourceActivity? {
         get {
             guard let sourceActivityData else { return nil }
-            return try? JSONDecoder().decode(SourceActivity.self, from: sourceActivityData)
+            return decodingCache.sourceActivity(for: sourceActivityData)
         }
         set {
-            sourceActivityData = newValue.flatMap { try? JSONEncoder().encode($0) }
+            guard let newValue else {
+                sourceActivityData = nil
+                return
+            }
+            guard let data = JSONAttribute.encode(newValue, attribute: "sourceActivity") else { return }
+            sourceActivityData = data
         }
     }
 
@@ -84,7 +90,12 @@ extension Note {
             return decodingCache.markers(for: markersData)
         }
         set {
-            markersData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue.sorted { $0.time < $1.time })
+            guard !newValue.isEmpty else {
+                markersData = nil
+                return
+            }
+            guard let data = JSONAttribute.encode(newValue.sorted { $0.time < $1.time }, attribute: "markers") else { return }
+            markersData = data
         }
     }
 
@@ -106,11 +117,18 @@ extension Note {
 
     /// Stores the summary. `dueDates` resolves the tasks' spoken deadlines; tests pass a
     /// resolver with a fixed calendar.
+    ///
+    /// A summary that cannot be encoded changes nothing: the previous summary and its tasks stay.
     package func setSummary(_ summary: NoteSummary?, dueDates: DueDateResolver = DueDateResolver()) {
-        replaceTasks(with: summary, dueDates: dueDates)
         var stored = summary
         stored?.actionItems = []
-        summaryData = stored.flatMap { try? JSONEncoder().encode($0) }
+        var data: Data?
+        if let stored {
+            guard let encoded = JSONAttribute.encode(stored, attribute: "summary") else { return }
+            data = encoded
+        }
+        replaceTasks(with: summary, dueDates: dueDates)
+        summaryData = data
         summaryOverview = summary?.overview ?? ""
         contentRevision += 1
     }
@@ -119,10 +137,15 @@ extension Note {
     public package(set) var speakers: [NoteSpeaker] {
         get {
             guard let speakersData else { return [] }
-            return (try? JSONDecoder().decode([NoteSpeaker].self, from: speakersData)) ?? []
+            return decodingCache.speakers(for: speakersData)
         }
         set {
-            speakersData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue)
+            guard !newValue.isEmpty else {
+                speakersData = nil
+                return
+            }
+            guard let data = JSONAttribute.encode(newValue, attribute: "speakers") else { return }
+            speakersData = data
         }
     }
 
@@ -135,7 +158,12 @@ extension Note {
     /// transcript is not free.
     public func decodedTranscript() -> [TranscriptSegment] {
         guard let transcriptData else { return [] }
-        return (try? Transcript.decode(transcriptData)) ?? []
+        do {
+            return try Transcript.decode(transcriptData)
+        } catch {
+            Logger.persistence.error("Decoding a transcript failed: \(error.localizedDescription, privacy: .public)")
+            return []
+        }
     }
 
     /// Stores an already encoded transcript together with its plain text.
@@ -317,10 +345,30 @@ extension SummaryTemplate {
     /// The standard sections the template generates.
     public package(set) var sections: Set<SummarySection> {
         get { (try? JSONDecoder().decode(Set<SummarySection>.self, from: sectionsData)) ?? Set(SummarySection.allCases) }
-        set { sectionsData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+        set {
+            guard let data = JSONAttribute.encode(newValue, attribute: "template sections") else { return }
+            sectionsData = data
+        }
     }
 
     package static func encode(_ sections: Set<SummarySection>) -> Data {
-        (try? JSONEncoder().encode(sections)) ?? Data()
+        // A set of enum cases always encodes; the fallback reads as "all sections".
+        JSONAttribute.encode(sections, attribute: "template sections") ?? Data()
+    }
+}
+
+/// Encoding of the models' JSON attributes.
+///
+/// Setters must not replace stored data with `nil` because encoding failed (a non-finite
+/// time, for example): that would silently delete a summary or the speakers. They call
+/// this, and on failure keep what is stored; the failure is logged.
+enum JSONAttribute {
+    static func encode(_ value: some Encodable, attribute: String) -> Data? {
+        do {
+            return try JSONEncoder().encode(value)
+        } catch {
+            Logger.persistence.fault("Encoding the \(attribute, privacy: .public) failed, the stored value is kept: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 }
